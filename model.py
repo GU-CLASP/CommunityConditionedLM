@@ -3,65 +3,44 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+class CommunityConditionedLM(nn.Module):
+
+    def __init__(self, n_tokens, n_comms, hidden_size, comm_emsize, encoder_before=None, encoder_after=None, use_community=True, dropout=0.5):
+        super(CommunityConditionedLM, self).__init__()
+        self.drop = nn.Dropout(dropout)
+        self.token_embed = nn.Embedding(n_tokens, hidden_size)
+        self.decoder = nn.Linear(hidden_size, n_tokens)
+        self.encoder_before = encoder_before
+        self.encoder_after = encoder_after
+        if use_community:
+            self.comm_embed = nn.Embedding(n_comms, comm_emsize)
+            self.comm_linear = nn.Linear(hidden_size + comm_emsize, hidden_size)
+        self.use_community = use_community
+
+    def forward(self, text, comm):
+        x = self.drop(self.token_embed(text))
+        if self.encoder_before is not None:
+            x = self.drop(self.encoder_before(x))
+        if self.use_community:
+            x_comm = self.comm_embed(comm).repeat(text.shape[0],1,1)
+            x = torch.cat((x, x_comm), 2)
+            x = self.drop(self.comm_linear(x))
+        if self.encoder_after is not None:
+            x = self.drop(self.encoder_after(x))
+        x = self.decoder(x)
+        return F.log_softmax(x, dim=-1)
+
 class LSTMLM(nn.Module):
     """Container module with an encoder, a recurrent module, and a decoder."""
 
-    def __init__(self, ntoken, ncomms, nhid, layers_before, layers_after, community_emsize, dropout=0.5):
+    def __init__(self, n_tokens, hidden_size, n_layers, dropout=0.5):
         super(LSTMLM, self).__init__()
-        emsize = nhid # set these sequal so we can uniformly handle 
-        self.ntoken = ntoken
-        self.drop = nn.Dropout(dropout)
-        self.encoder = nn.Embedding(ntoken, emsize)
-        self.community_encoder = nn.Embedding(ncomms, community_emsize)
-        self.community_linear = nn.Linear(nhid + community_emsize, nhid)
-        if layers_before == 0:
-            self.lstm1 = None
-        else:
-            lstm1_dropout = 0 if layers_before == 1 else dropout
-            self.lstm1 = nn.LSTM(nhid, nhid, layers_before, dropout=lstm1_dropout)
-        if layers_after == 0:
-            self.lstm2 = None
-        else:
-            lstm2_dropout = 0 if layers_after == 1 else dropout
-            self.lstm2 = nn.LSTM(nhid, nhid, layers_after, dropout=lstm2_dropout)
+        dropout = dropout if n_layers > 1 else 0
+        self.lstm = nn.LSTM(hidden_size, hidden_size, n_layers, dropout=dropout)
 
-        self.decoder = nn.Linear(nhid, ntoken)
-
-        # Optionally tie weights as in:
-        # "Using the Output Embedding to Improve Language Models" (Press & Wolf 2016)
-        # https://arxiv.org/abs/1608.05859
-        # and
-        # "Tying Word Vectors and Word Classifiers: A Loss Framework for Language Modeling" (Inan et al. 2016)
-        # https://arxiv.org/abs/1611.01462
-        self.decoder.weight = self.encoder.weight
-
-        self.init_weights()
-
-        self.nhid = nhid
-        self.layers_before = layers_before
-        self.layers_afer = layers_after
-
-    def init_weights(self):
-        initrange = 0.1
-        nn.init.uniform_(self.encoder.weight, -initrange, initrange)
-        nn.init.zeros_(self.decoder.weight)
-        nn.init.uniform_(self.decoder.weight, -initrange, initrange)
-
-    def forward(self, text, community):
-        x = self.drop(self.encoder(text))
-        if self.lstm1 is not None:
-            x, hidden = self.lstm1(x)
-            x = self.drop(x)
-        if community is not None: 
-            x_comm = self.community_encoder(community).repeat(text.shape[0],1,1)
-            x = torch.cat((x, x_comm), 2)
-            x = self.community_linear(x)
-        if self.lstm2 is not None:
-            x, hidden = self.lstm2(x)
-        x = self.drop(x)
-        x = self.decoder(x)
-        x = x.view(-1, self.ntoken)
-        return F.log_softmax(x, dim=1)
+    def forward(self, x):
+        x, hidden = self.lstm(x)
+        return x
 
 class PositionalEncoding(nn.Module):
     r"""Inject some information about the relative or absolute position of the tokens
@@ -109,61 +88,27 @@ class PositionalEncoding(nn.Module):
 class TransformerLM(nn.Module):
     """Container module with an encoder, a recurrent or transformer module, and a decoder."""
 
-    def __init__(self, ntoken, ncomms, nhead, nhid, layers_before, layers_after, community_emsize, dropout=0.5):
+    def __init__(self, n_tokens, n_heads, hidden_size, n_layers, dropout=0.5):
         super(TransformerLM, self).__init__()
-        try:
-            from torch.nn import TransformerEncoder, TransformerEncoderLayer
-        except:
-            raise ImportError('TransformerEncoder module does not exist in PyTorch 1.1 or lower.')
-        self.model_type = 'Transformer'
-        ninp = nhid # Like the LSTM we use the same size hidden/token embedding
         self.src_mask = None
-        self.pos_encoder = PositionalEncoding(ninp, dropout)
-        self.community_encoder = nn.Embedding(ncomms, community_emsize)
-        self.community_linear = nn.Linear(nhid + community_emsize, nhid)
-        encoder_layers = TransformerEncoderLayer(ninp, nhead, nhid, dropout)
-        if layers_before == 0:
-            self.transformer_encoder1 = None
-        else:
-            self.transformer_encoder1 = TransformerEncoder(encoder_layers, layers_before)
-        if layers_after == 0:
-            self.transformer_encoder2 = None
-        else:
-            self.transformer_encoder2 = TransformerEncoder(encoder_layers, layers_after)
-        self.encoder = nn.Embedding(ntoken, ninp)
-        self.ninp = ninp
-        self.decoder = nn.Linear(ninp, ntoken)
-
-        self.init_weights()
+        self.pos_encoder = PositionalEncoding(hidden_size, dropout)
+        encoder_layers = nn.TransformerEncoderLayer(hidden_size, n_heads, hidden_size, dropout)
+        self.transformer_encoder = nn.TransformerEncoder(encoder_layers, n_layers)
 
     def _generate_square_subsequent_mask(self, sz):
         mask = (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1)
         mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
         return mask
 
-    def init_weights(self):
-        initrange = 0.1
-        nn.init.uniform_(self.encoder.weight, -initrange, initrange)
-        nn.init.uniform_(self.decoder.weight, -initrange, initrange)
+    def forward(self, x):
 
-    def forward(self, text, community, has_mask=True):
-        if has_mask:
-            device = text.device
-            if self.src_mask is None or self.src_mask.size(0) != len(text):
-                mask = self._generate_square_subsequent_mask(len(text)).to(device)
-                self.src_mask = mask
-        else:
-            self.src_mask = None
+        # Create left-to-right language modelling mask 
+        device = x.device
+        if self.src_mask is None or self.src_mask.size(0) != len(x):
+            mask = self._generate_square_subsequent_mask(len(x)).to(device)
+            self.src_mask = mask
 
-        x = self.encoder(text) * math.sqrt(self.ninp)
+        #x = self.encoder(text) * math.sqrt(self.hidden_size) # TODO: is this needed? on both encoders??
         x = self.pos_encoder(x)
-        if self.transformer_encoder1 is not None:
-            x = self.transformer_encoder1(x, self.src_mask)
-        if community is not None: 
-            x_comm = self.community_encoder(community).repeat(text.shape[0],1,1)
-            x = torch.cat((x, x_comm), 2)
-            x = self.community_linear(x)
-        if self.transformer_encoder2 is not None:
-            x = self.transformer_encoder2(x, self.src_mask)
-        x = self.decoder(x)
-        return F.log_softmax(x, dim=-1)
+        x = self.transformer_encoder(x, self.src_mask)
+        return x
