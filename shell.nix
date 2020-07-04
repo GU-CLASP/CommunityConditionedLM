@@ -34,6 +34,7 @@ let
          matplotlib
          pandas
          scikitlearn
+         plotly
         ];
       ignoreCollisions = true;};
 in

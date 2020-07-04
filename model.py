@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+
 class CommunityConditionedLM(nn.Module):
 
     def __init__(self, n_tokens, n_comms, hidden_size, comm_emsize, encoder_before=None, encoder_after=None, use_community=True, dropout=0.5):
@@ -112,3 +113,22 @@ class TransformerLM(nn.Module):
         x = self.pos_encoder(x)
         x = self.transformer_encoder(x, self.src_mask)
         return x
+
+def load_model(weights_file, architecture, encoder_layers, condition_community, community_layer_no, 
+        vocab_size, n_communities, hidden_size, community_emsize, heads):
+
+    layers_before = community_layer_no
+    layers_after = encoder_layers - community_layer_no
+    if architecture == 'Transformer':
+        encoder_model = TransformerLM
+        encoder_args = (vocab_size, heads, hidden_size)
+    elif architecture == 'LSTM':
+        encoder_model = LSTMLM
+        encoder_args = (vocab_size, hidden_size)
+    encoder_before = encoder_model(*encoder_args, layers_before, 0) if layers_before > 0 else None
+    encoder_after  = encoder_model(*encoder_args, layers_after,  0) if layers_after  > 0 else None
+    lm = CommunityConditionedLM(vocab_size, n_communities, hidden_size, community_emsize,
+            encoder_before, encoder_after, condition_community, 0)
+
+    lm.load_state_dict(torch.load(weights_file))
+    return lm

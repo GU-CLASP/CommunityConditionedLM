@@ -30,8 +30,9 @@ def train(lm, batches, vocab_size, condition_community, comm_unk_idx, criterion,
         optimizer.zero_grad()
         batch_size_ = len(batch)
         x_comm = batch.community if condition_community else None
-        x_text = batch.text[:-1]
-        y = batch.text[1:]
+        text, lengths = batch.text
+        x_text = text[:-1]
+        y = text[1:]
         y_hat = lm(x_text, x_comm)
         loss = criterion(y_hat.view(-1, vocab_size), y.view(-1)).mean()
         loss.backward()
@@ -50,9 +51,10 @@ def evaluate(lm, batches, vocab_size, condition_community, comm_unk_idx, criteri
     for batch in batches:
         with torch.no_grad():
             batch_size_ = len(batch)
+            text, lengths = batch.text
             x_comm = batch.community if condition_community else None
-            x_text = batch.text[:-1]
-            y = batch.text[1:]
+            x_text = text[:-1]
+            y = text[1:]
             y_hat = lm(x_text, x_comm)
             loss = criterion(y_hat.view(-1, vocab_size), y.view(-1))
             eval_losses += list(loss)
