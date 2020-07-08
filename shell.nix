@@ -35,6 +35,7 @@ let
          pandas
          scikitlearn
          plotly
+         statsmodels
         ];
       ignoreCollisions = true;};
 in
