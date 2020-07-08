@@ -1,3 +1,11 @@
+"""
+Pytorch implementation of conditional language models, conditioned on some categorical variable, here
+refered to as a "community", but it could be anything.
+
+The Transformer and LSTM encoders are adapted from the Pytorch language model tutorial here:
+https://pytorch.org/tutorials/beginner/transformer_tutorial.html
+"""
+
 import math
 import torch
 import torch.nn as nn
@@ -32,7 +40,6 @@ class CommunityConditionedLM(nn.Module):
         return F.log_softmax(x, dim=-1)
 
 class LSTMLM(nn.Module):
-    """Container module with an encoder, a recurrent module, and a decoder."""
 
     def __init__(self, n_tokens, hidden_size, n_layers, dropout=0.5):
         super(LSTMLM, self).__init__()
