@@ -32,6 +32,7 @@ Experiments:
   - Mean number of post per user. (or the correponding power law
     exponent estimator:
     https://en.wikipedia.org/wiki/Power_law#Maximum_likelihood)
+  - Proportion of comments which are replies to other comments
   - Community/People co-occurence matrix / LSA
 
 
