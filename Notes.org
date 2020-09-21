@@ -47,3 +47,9 @@ Experiments:
 * Open questions:
 -  Where in the architecture should the embedding go in general
 - Can the topically-driven language model smooth the embedding
+
+* Related work:
+
+** Topic modelling
+- Discovering Discrete Latent Topics with Neural Variational Inference https://arxiv.org/pdf/1706.00359.pdf
+- JeyHan Lau's work
