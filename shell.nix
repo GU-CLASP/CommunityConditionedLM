@@ -9,10 +9,12 @@ let
            packageOverrides = python-self: python-super: {
 	     sacremoses = python-self.callPackage /opt/nix/sacremoses-0.0.35.nix {};
 	     sentencepiece = python-self.callPackage /opt/nix/sentencepiece-0.1.84.nix {};
-             transformers = python-self.callPackage /opt/nix/transformers-2.1.1.nix { };
+             #transformers = python-self.callPackage /opt/nix/transformers-2.1.1.nix { };
              torchtext = python-self.callPackage /opt/nix/torchtext-0.4.0.nix { };
+             snapy = python-self.callPackage /opt/nix/snapy-1.0.2.nix { };
+             mmh3 = python-self.callPackage /opt/nix/mmh3-2.5.1.nix { };
            };};})
-      (import /opt/nix/nvidia-410.78.nix)  # fix version of nvidia drivers
+      ((import /opt/nix/nvidia-450.66.nix  ) pkgs_source )  # fix version of nvidia drivers
       (self: super: {
           cudatoolkit = super.cudatoolkit_10; # fix version of cuda
           cudnn = super.cudnn_cudatoolkit_10;})
@@ -27,7 +29,7 @@ let
       extraLibs = with py.pkgs;
         [
          # If you want to have a local virtualenv, see here: https://github.com/NixOS/nixpkgs/blob/master/doc/languages-frameworks/python.section.md
-         transformers 
+         #transformers 
          pytorch
          torchtext
          notebook
@@ -36,6 +38,9 @@ let
          scikitlearn
          plotly
          statsmodels
+         numpy
+         mmh3
+         snapy
         ];
       ignoreCollisions = true;};
 in
