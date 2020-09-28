@@ -11,18 +11,23 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+comm_batch = torch.LongTensor([random.randrange(n_comms) for _ in range(batch_size)])
+comm_batch_hot = F.one_hot(comm_batch, num_classes=n_comms).type(torch.FloatTensor)
 
 class CommunityConditionedLM(nn.Module):
 
     def __init__(self, n_tokens, n_comms, hidden_size, comm_emsize, encoder_before=None, encoder_after=None, use_community=True, dropout=0.5):
         super(CommunityConditionedLM, self).__init__()
+        self.n_comms = n_comms
         self.drop = nn.Dropout(dropout)
         self.token_embed = nn.Embedding(n_tokens, hidden_size)
         self.decoder = nn.Linear(hidden_size, n_tokens)
         self.encoder_before = encoder_before
         self.encoder_after = encoder_after
+        self._tune_comm = False
         if use_community:
-            self.comm_embed = nn.Embedding(n_comms, comm_emsize)
+            self.comm_estimate = nn.Linear(hidden_size, n_comms)
+            self.comm_embed = nn.WeightedEmbedding(n_comms, comm_emsize)
             self.comm_linear = nn.Linear(hidden_size + comm_emsize, hidden_size)
         self.use_community = use_community
 
@@ -31,6 +36,10 @@ class CommunityConditionedLM(nn.Module):
         if self.encoder_before is not None:
             x = self.drop(self.encoder_before(x))
         if self.use_community:
+            if self._tune_comm:
+                comm = self.comm_estimate(x).softmax(1)
+            else:
+                comm = F.one_hot(comm_batch, num_classes=self.n_comms).type(torch.FloatTensor)
             x_comm = self.comm_embed(comm).repeat(text.shape[0],1,1)
             x = torch.cat((x, x_comm), 2)
             x = self.drop(self.comm_linear(x))
@@ -38,6 +47,30 @@ class CommunityConditionedLM(nn.Module):
             x = self.drop(self.encoder_after(x))
         x = self.decoder(x)
         return F.log_softmax(x, dim=-1)
+
+    def tune_comm(self):
+        self._tune_comm = False
+        for module in self.children():
+            module.eval()
+        self.comm_estimate.train()
+        return self
+
+class WeightedEmbedding(nn.Module):
+    def __init__(self, num_embeddings, embedding_dim, padding_idx=None):
+        super(WeightedEmbedding, self).__init__()
+        self.padding_idx = padding_idx
+        self.weight = torch.nn.Parameter(torch.Tensor(num_embeddings, embedding_dim))
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        nn.init.normal_(self.weight)
+        if self.padding_idx is not None:
+            with torch.no_grad():
+                self.weight[self.padding_idx].fill_(0)
+
+    def forward(self, input):
+        assert all(input.sum(axis=1) == 1) # input is a probability distribution
+        return input.mm(self.weight)
 
 class LSTMLM(nn.Module):
 
