@@ -11,9 +11,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-comm_batch = torch.LongTensor([random.randrange(n_comms) for _ in range(batch_size)])
-comm_batch_hot = F.one_hot(comm_batch, num_classes=n_comms).type(torch.FloatTensor)
-
 class CommunityConditionedLM(nn.Module):
 
     def __init__(self, n_tokens, n_comms, hidden_size, comm_emsize, encoder_before=None, encoder_after=None, use_community=True, dropout=0.5):
