@@ -60,9 +60,8 @@ def cli(architecture, model_filename, data_dir, vocab_size, encoder_layers, head
 
     log = util.create_logger('tune', f"model/{model_filename}_tuning.log", True)
 
-    data_files = [data_dir+f'{sub}.txt' for sub in util.get_subs()]
-    log.info(f"Loading dataset from {len(data_files)} files.")
-    dataset, fields = data.load_data_and_fields(data_files, max_seq_len, vocab_size, False, file_limit)
+    log.info(f"Loading dataset from {data_dir} files.")
+    dataset, fields = data.load_data_and_fields(data_dir, max_seq_len, vocab_size, rebuild_vocab, file_limit)
     vocab_size = len(fields['text'].vocab.itos)
     comm_vocab_size = len(fields['community'].vocab.itos)
     comm_unk_idx = fields['community'].vocab.stoi['<unk>']
