@@ -23,20 +23,21 @@ class CommunityConditionedLM(nn.Module):
         self.encoder_after = encoder_after
         self._tune_comm = False
         if use_community:
-            self.comm_estimate = nn.Linear(hidden_size, n_comms)
-            self.comm_embed = nn.WeightedEmbedding(n_comms, comm_emsize)
+            self.comm_inference = nn.Linear(hidden_size, n_comms)
+            self.comm_embed = WeightedEmbedding(n_comms, comm_emsize)
             self.comm_linear = nn.Linear(hidden_size + comm_emsize, hidden_size)
         self.use_community = use_community
 
     def forward(self, text, comm):
+        device = text.device
         x = self.drop(self.token_embed(text))
         if self.encoder_before is not None:
             x = self.drop(self.encoder_before(x))
         if self.use_community:
             if self._tune_comm:
-                comm = self.comm_estimate(x).softmax(1)
+                comm = self.comm_inference(x).softmax(1)
             else:
-                comm = F.one_hot(comm_batch, num_classes=self.n_comms).type(torch.FloatTensor)
+                comm = F.one_hot(comm, num_classes=self.n_comms).type(torch.FloatTensor).to(device)
             x_comm = self.comm_embed(comm).repeat(text.shape[0],1,1)
             x = torch.cat((x, x_comm), 2)
             x = self.drop(self.comm_linear(x))

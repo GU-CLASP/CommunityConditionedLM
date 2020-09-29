@@ -9,6 +9,7 @@ import torch.nn.functional as F
 import math
 import random
 import logging
+import util
 
 def create_logger(name, filename, debug):
     logging.basicConfig(level=logging.DEBUG,
@@ -30,7 +31,7 @@ def train(lm, batches, vocab_size, condition_community, comm_unk_idx, criterion,
         optimizer.zero_grad()
         batch_size_ = len(batch)
         x_comm = batch.community if condition_community else None
-        text, lengths = batch.text
+        text = batch.text
         x_text = text[:-1]
         y = text[1:]
         y_hat = lm(x_text, x_comm)
@@ -51,7 +52,7 @@ def evaluate(lm, batches, vocab_size, condition_community, comm_unk_idx, criteri
     for batch in batches:
         with torch.no_grad():
             batch_size_ = len(batch)
-            text, lengths = batch.text
+            text = batch.text
             x_comm = batch.community if condition_community else None
             x_text = text[:-1]
             y = text[1:]
@@ -64,7 +65,7 @@ def evaluate(lm, batches, vocab_size, condition_community, comm_unk_idx, criteri
 @click.command()
 @click.argument('architecture', type=click.Choice(['Transformer', 'LSTM'], case_sensitive=False))
 @click.argument('model_filename', type=click.Path(exists=False))
-@click.argument('data_files', type=click.Path(exists=True), nargs=-1)
+@click.argument('data_dir', type=click.Path(exists=True))
 @click.option('--rebuild-vocab/--no-rebuild-vocab', default=False)
 @click.option('--vocab-size', default=40000)
 @click.option('--encoder-layers', default=1)
@@ -80,13 +81,14 @@ def evaluate(lm, batches, vocab_size, condition_community, comm_unk_idx, criteri
         help="Number of examples per file (community).")
 @click.option('--gpu-id', type=int, default=None,
         help="ID of the GPU, if traning with CUDA")
-def cli(architecture, model_filename, data_files, rebuild_vocab, vocab_size, encoder_layers, heads, hidden_size,
+def cli(architecture, model_filename, data_dir, rebuild_vocab, vocab_size, encoder_layers, heads, hidden_size,
         condition_community, community_emsize, community_layer_no, dropout,
         batch_size, max_seq_len, file_limit, gpu_id):
 
     log = create_logger('train', f"model/{model_filename}_training.log", True)
     log.info(f"Model will be saved with prefix {model_filename}.")
 
+    data_files = [data_dir+f'{sub}.txt' for sub in util.get_subs()]
     log.info(f"Loading dataset from {len(data_files)} files.")
     dataset, fields = data.load_data_and_fields(data_files, max_seq_len, vocab_size, rebuild_vocab, file_limit)
     vocab_size = len(fields['text'].vocab.itos)
