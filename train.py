@@ -8,20 +8,43 @@ import torchtext as tt
 import torch.nn.functional as F
 import math
 import random
-import logging
 import util
 
-def create_logger(name, filename, debug):
-    logging.basicConfig(level=logging.DEBUG,
-            format='%(asctime)s %(name)-12s [%(levelname)-7s] %(message)s',
-            datefmt='%m-%d %H:%M', filename=filename, filemode='a')
-    console_log_level = logging.DEBUG if debug else logging.INFO
-    console = logging.StreamHandler()
-    console.setLevel(console_log_level)
-    console.setFormatter(logging.Formatter('[%(levelname)-8s] %(message)s'))
-    logger = logging.getLogger(name)
-    logger.addHandler(console)
-    return logger
+def init_model(architecture, encoder_layers, condition_community, community_layer_no,
+        vocab_size, comm_vocab_size, hidden_size, community_emsize, dropout, log):
+
+    if community_layer_no > encoder_layers:
+        raise ValueError(f"Community layer position cannot be greater than the number of encoder layers.")
+    layers_before = community_layer_no
+    layers_after = encoder_layers - community_layer_no
+
+    log.info(f"Building {architecture} LM {'with' if condition_community else 'without'} community conditioning.")
+
+    if condition_community:
+        log.info(f"Encoder layers before community: {layers_before}")
+        log.info(f"Encoder layers after community:  {layers_after}")
+    else:
+        log.info(f"Encoder layers: {encoder_layers}.")
+    log.info(f"Vocab size: {vocab_size}")
+    log.info(f"Hidden size: {hidden_size}")
+    if architecture == 'Transformer':
+        log.info(f"Attention heads: {heads}")
+
+    if architecture == 'Transformer':
+        encoder_model = model.TransformerLM
+        encoder_args = (vocab_size, heads, hidden_size)
+    elif architecture == 'LSTM':
+        encoder_model = model.LSTMLM
+        encoder_args = (vocab_size, hidden_size)
+    encoder_before = encoder_model(*encoder_args, layers_before, dropout) if layers_before > 0 else None
+    encoder_after  = encoder_model(*encoder_args, layers_after,  dropout) if layers_after  > 0 else None
+    lm = model.CommunityConditionedLM(vocab_size, comm_vocab_size, hidden_size, community_emsize,
+            encoder_before, encoder_after, condition_community, dropout)
+    total_params = sum(p.numel() for p in lm.parameters() if p.requires_grad)
+    log.info(f"Built model with {total_params} parameters.")
+    log.debug(str(lm))
+    return lm
+
 
 def train(lm, batches, vocab_size, condition_community, comm_unk_idx, criterion, optimizer, log):
     lm.train()
@@ -85,7 +108,7 @@ def cli(architecture, model_filename, data_dir, rebuild_vocab, vocab_size, encod
         condition_community, community_emsize, community_layer_no, dropout,
         batch_size, max_seq_len, file_limit, gpu_id):
 
-    log = create_logger('train', f"model/{model_filename}_training.log", True)
+    log = util.create_logger('train', f"model/{model_filename}_training.log", True)
     log.info(f"Model will be saved with prefix {model_filename}.")
 
     data_files = [data_dir+f'{sub}.txt' for sub in util.get_subs()]
@@ -97,35 +120,8 @@ def cli(architecture, model_filename, data_dir, rebuild_vocab, vocab_size, encod
     text_pad_idx = fields['text'].vocab.stoi['<pad>']
     log.info(f"Loaded {len(dataset)} examples.")
 
-    if community_layer_no > encoder_layers:
-        raise ValueError(f"Community layer position cannot be greater than the number of encoder layers.")
-    layers_before = community_layer_no
-    layers_after = encoder_layers - community_layer_no
-
-    log.info(f"Building {architecture} LM {'with' if condition_community else 'without'} community conditioning.")
-    if condition_community:
-        log.info(f"Encoder layers before community: {layers_before}")
-        log.info(f"Encoder layers after community:  {layers_after}")
-    else:
-        log.info(f"Encoder layers: {encoder_layers}.")
-    log.info(f"Vocab size: {vocab_size}")
-    log.info(f"Hidden size: {hidden_size}")
-    if architecture == 'Transformer':
-        log.info(f"Attention heads: {heads}")
-
-    if architecture == 'Transformer':
-        encoder_model = model.TransformerLM
-        encoder_args = (vocab_size, heads, hidden_size)
-    elif architecture == 'LSTM':
-        encoder_model = model.LSTMLM
-        encoder_args = (vocab_size, hidden_size)
-    encoder_before = encoder_model(*encoder_args, layers_before, dropout) if layers_before > 0 else None
-    encoder_after  = encoder_model(*encoder_args, layers_after,  dropout) if layers_after  > 0 else None
-    lm = model.CommunityConditionedLM(vocab_size, comm_vocab_size, hidden_size, community_emsize,
-            encoder_before, encoder_after, condition_community, dropout)
-    total_params = sum(p.numel() for p in lm.parameters() if p.requires_grad)
-    log.info(f"Built model with {total_params} parameters.")
-    log.debug(lm)
+    lm = init_model(architecture, encoder_layers, condition_community, community_layer_no,
+        vocab_size, comm_vocab_size, hidden_size, community_emsize, dropout, log)
 
     device = torch.device(f'cuda:{gpu_id}' if gpu_id is not None else 'cpu')
     lm.to(device)

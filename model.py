@@ -23,7 +23,7 @@ class CommunityConditionedLM(nn.Module):
         self.encoder_after = encoder_after
         self._tune_comm = False
         if use_community:
-            self.comm_inference = nn.Linear(hidden_size, n_comms)
+            self.comm_inference = nn.Embedding(n_comms, n_comms)
             self.comm_embed = WeightedEmbedding(n_comms, comm_emsize)
             self.comm_linear = nn.Linear(hidden_size + comm_emsize, hidden_size)
         self.use_community = use_community
@@ -35,7 +35,7 @@ class CommunityConditionedLM(nn.Module):
             x = self.drop(self.encoder_before(x))
         if self.use_community:
             if self._tune_comm:
-                comm = self.comm_inference(x).softmax(1)
+                comm = self.comm_inference(comm).softmax(1)
             else:
                 comm = F.one_hot(comm, num_classes=self.n_comms).type(torch.FloatTensor).to(device)
             x_comm = self.comm_embed(comm).repeat(text.shape[0],1,1)
@@ -48,9 +48,10 @@ class CommunityConditionedLM(nn.Module):
 
     def tune_comm(self):
         self._tune_comm = True
-        for module in self.children():
-            module.eval()
-        self.comm_inference.train()
+        params = list(self.named_parameters())
+        for n, p in params:
+            if n != 'comm_inference.weight':
+                p.requires_grad = False
         return self
 
 class WeightedEmbedding(nn.Module):
@@ -67,7 +68,6 @@ class WeightedEmbedding(nn.Module):
                 self.weight[self.padding_idx].fill_(0)
 
     def forward(self, input):
-        assert all(input.sum(axis=1) == 1) # input is a probability distribution
         return input.mm(self.weight)
 
 class LSTMLM(nn.Module):
