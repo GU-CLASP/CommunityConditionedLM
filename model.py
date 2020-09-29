@@ -47,10 +47,10 @@ class CommunityConditionedLM(nn.Module):
         return F.log_softmax(x, dim=-1)
 
     def tune_comm(self):
-        self._tune_comm = False
+        self._tune_comm = True
         for module in self.children():
             module.eval()
-        self.comm_estimate.train()
+        self.comm_inference.train()
         return self
 
 class WeightedEmbedding(nn.Module):
