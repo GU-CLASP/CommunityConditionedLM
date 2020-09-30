@@ -8,92 +8,10 @@ import torchtext as tt
 import torch.nn.functional as F
 import math
 import random
-import logging
+import util
 
-def create_logger(name, filename, debug):
-    logging.basicConfig(level=logging.DEBUG,
-            format='%(asctime)s %(name)-12s [%(levelname)-7s] %(message)s',
-            datefmt='%m-%d %H:%M', filename=filename, filemode='a')
-    console_log_level = logging.DEBUG if debug else logging.INFO
-    console = logging.StreamHandler()
-    console.setLevel(console_log_level)
-    console.setFormatter(logging.Formatter('[%(levelname)-8s] %(message)s'))
-    logger = logging.getLogger(name)
-    logger.addHandler(console)
-    return logger
-
-def train(lm, batches, vocab_size, condition_community, comm_unk_idx, criterion, optimizer, log):
-    lm.train()
-    batches.init_epoch()
-    train_loss = 0
-    for batch_no, batch in enumerate(batches):
-        optimizer.zero_grad()
-        batch_size_ = len(batch)
-        x_comm = batch.community if condition_community else None
-        text, lengths = batch.text
-        x_text = text[:-1]
-        y = text[1:]
-        y_hat = lm(x_text, x_comm)
-        loss = criterion(y_hat.view(-1, vocab_size), y.view(-1)).mean()
-        loss.backward()
-        optimizer.step()
-        train_loss += loss.item()
-        if batch_no % 1000 == 0 and batch_no > 0:
-            cur_loss = train_loss / 1000
-            log.info(f"{batch_no:5d}/{len(batches):5d} batches | loss {cur_loss:5.2f} | ppl {math.exp(cur_loss):0.2f}")
-            train_loss = 0
-    return lm
-
-def evaluate(lm, batches, vocab_size, condition_community, comm_unk_idx, criterion):
-    lm.eval()
-    batches.init_epoch()
-    eval_losses = []
-    for batch in batches:
-        with torch.no_grad():
-            batch_size_ = len(batch)
-            text, lengths = batch.text
-            x_comm = batch.community if condition_community else None
-            x_text = text[:-1]
-            y = text[1:]
-            y_hat = lm(x_text, x_comm)
-            loss = criterion(y_hat.view(-1, vocab_size), y.view(-1))
-            eval_losses += list(loss)
-    return eval_losses
-
-
-@click.command()
-@click.argument('architecture', type=click.Choice(['Transformer', 'LSTM'], case_sensitive=False))
-@click.argument('model_filename', type=click.Path(exists=False))
-@click.argument('data_files', type=click.Path(exists=True), nargs=-1)
-@click.option('--rebuild-vocab/--no-rebuild-vocab', default=False)
-@click.option('--vocab-size', default=40000)
-@click.option('--encoder-layers', default=1)
-@click.option('--heads', default=8)
-@click.option('--hidden-size', default=256)
-@click.option('--condition-community/--no-condition-community', default=True)
-@click.option('--community-emsize', default=16)
-@click.option('--community-layer-no', default=0)
-@click.option('--dropout', default=0.1)
-@click.option('--batch-size', default=32)
-@click.option('--max-seq-len', default=64)
-@click.option('--file-limit', type=int, default=None,
-        help="Number of examples per file (community).")
-@click.option('--gpu-id', type=int, default=None,
-        help="ID of the GPU, if traning with CUDA")
-def cli(architecture, model_filename, data_files, rebuild_vocab, vocab_size, encoder_layers, heads, hidden_size,
-        condition_community, community_emsize, community_layer_no, dropout,
-        batch_size, max_seq_len, file_limit, gpu_id):
-
-    log = create_logger('train', f"model/{model_filename}_training.log", True)
-    log.info(f"Model will be saved with prefix {model_filename}.")
-
-    log.info(f"Loading dataset from {len(data_files)} files.")
-    dataset, fields = data.load_data_and_fields(data_files, max_seq_len, vocab_size, rebuild_vocab, file_limit)
-    vocab_size = len(fields['text'].vocab.itos)
-    comm_vocab_size = len(fields['community'].vocab.itos)
-    comm_unk_idx = fields['community'].vocab.stoi['<unk>']
-    text_pad_idx = fields['text'].vocab.stoi['<pad>']
-    log.info(f"Loaded {len(dataset)} examples.")
+def init_model(architecture, encoder_layers, condition_community, community_layer_no,
+        vocab_size, comm_vocab_size, hidden_size, community_emsize, dropout, log):
 
     if community_layer_no > encoder_layers:
         raise ValueError(f"Community layer position cannot be greater than the number of encoder layers.")
@@ -101,6 +19,7 @@ def cli(architecture, model_filename, data_files, rebuild_vocab, vocab_size, enc
     layers_after = encoder_layers - community_layer_no
 
     log.info(f"Building {architecture} LM {'with' if condition_community else 'without'} community conditioning.")
+
     if condition_community:
         log.info(f"Encoder layers before community: {layers_before}")
         log.info(f"Encoder layers after community:  {layers_after}")
@@ -123,7 +42,85 @@ def cli(architecture, model_filename, data_files, rebuild_vocab, vocab_size, enc
             encoder_before, encoder_after, condition_community, dropout)
     total_params = sum(p.numel() for p in lm.parameters() if p.requires_grad)
     log.info(f"Built model with {total_params} parameters.")
-    log.debug(lm)
+    log.debug(str(lm))
+    return lm
+
+
+def train(lm, batches, vocab_size, condition_community, comm_unk_idx, criterion, optimizer, log):
+    lm.train()
+    batches.init_epoch()
+    train_loss = 0
+    for batch_no, batch in enumerate(batches):
+        optimizer.zero_grad()
+        batch_size_ = len(batch)
+        x_comm = batch.community if condition_community else None
+        text = batch.text
+        x_text = text[:-1]
+        y = text[1:]
+        y_hat = lm(x_text, x_comm)
+        loss = criterion(y_hat.view(-1, vocab_size), y.view(-1)).mean()
+        loss.backward()
+        optimizer.step()
+        train_loss += loss.item()
+        if batch_no % 1000 == 0 and batch_no > 0:
+            cur_loss = train_loss / 1000
+            log.info(f"{batch_no:5d}/{len(batches):5d} batches | loss {cur_loss:5.2f} | ppl {math.exp(cur_loss):0.2f}")
+            train_loss = 0
+    return lm
+
+def evaluate(lm, batches, vocab_size, condition_community, comm_unk_idx, criterion):
+    lm.eval()
+    batches.init_epoch()
+    eval_losses = []
+    for batch in batches:
+        with torch.no_grad():
+            batch_size_ = len(batch)
+            text = batch.text
+            x_comm = batch.community if condition_community else None
+            x_text = text[:-1]
+            y = text[1:]
+            y_hat = lm(x_text, x_comm)
+            loss = criterion(y_hat.view(-1, vocab_size), y.view(-1))
+            eval_losses += list(loss)
+    return eval_losses
+
+
+@click.command()
+@click.argument('architecture', type=click.Choice(['Transformer', 'LSTM'], case_sensitive=False))
+@click.argument('model_filename', type=click.Path(exists=False))
+@click.argument('data_dir', type=click.Path(exists=True))
+@click.option('--rebuild-vocab/--no-rebuild-vocab', default=False)
+@click.option('--vocab-size', default=40000)
+@click.option('--encoder-layers', default=1)
+@click.option('--heads', default=8)
+@click.option('--hidden-size', default=256)
+@click.option('--condition-community/--no-condition-community', default=True)
+@click.option('--community-emsize', default=16)
+@click.option('--community-layer-no', default=0)
+@click.option('--dropout', default=0.1)
+@click.option('--batch-size', default=32)
+@click.option('--max-seq-len', default=64)
+@click.option('--file-limit', type=int, default=None,
+        help="Number of examples per file (community).")
+@click.option('--gpu-id', type=int, default=None,
+        help="ID of the GPU, if traning with CUDA")
+def cli(architecture, model_filename, data_dir, rebuild_vocab, vocab_size, encoder_layers, heads, hidden_size,
+        condition_community, community_emsize, community_layer_no, dropout,
+        batch_size, max_seq_len, file_limit, gpu_id):
+
+    log = util.create_logger('train', f"model/{model_filename}_training.log", True)
+    log.info(f"Model will be saved with prefix {model_filename}.")
+
+    log.info(f"Loading dataset from {data_dir} files.")
+    dataset, fields = data.load_data_and_fields(data_dir, max_seq_len, vocab_size, rebuild_vocab, file_limit)
+    vocab_size = len(fields['text'].vocab.itos)
+    comm_vocab_size = len(fields['community'].vocab.itos)
+    comm_unk_idx = fields['community'].vocab.stoi['<unk>']
+    text_pad_idx = fields['text'].vocab.stoi['<pad>']
+    log.info(f"Loaded {len(dataset)} examples.")
+
+    lm = init_model(architecture, encoder_layers, condition_community, community_layer_no,
+        vocab_size, comm_vocab_size, hidden_size, community_emsize, dropout, log)
 
     device = torch.device(f'cuda:{gpu_id}' if gpu_id is not None else 'cpu')
     lm.to(device)

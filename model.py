@@ -23,20 +23,21 @@ class CommunityConditionedLM(nn.Module):
         self.encoder_after = encoder_after
         self._tune_comm = False
         if use_community:
-            self.comm_estimate = nn.Linear(hidden_size, n_comms)
-            self.comm_embed = nn.WeightedEmbedding(n_comms, comm_emsize)
+            self.comm_inference = nn.Embedding(n_comms, n_comms)
+            self.comm_embed = WeightedEmbedding(n_comms, comm_emsize)
             self.comm_linear = nn.Linear(hidden_size + comm_emsize, hidden_size)
         self.use_community = use_community
 
     def forward(self, text, comm):
+        device = text.device
         x = self.drop(self.token_embed(text))
         if self.encoder_before is not None:
             x = self.drop(self.encoder_before(x))
         if self.use_community:
             if self._tune_comm:
-                comm = self.comm_estimate(x).softmax(1)
+                comm = self.comm_inference(comm).softmax(1)
             else:
-                comm = F.one_hot(comm_batch, num_classes=self.n_comms).type(torch.FloatTensor)
+                comm = F.one_hot(comm, num_classes=self.n_comms).type(torch.FloatTensor).to(device)
             x_comm = self.comm_embed(comm).repeat(text.shape[0],1,1)
             x = torch.cat((x, x_comm), 2)
             x = self.drop(self.comm_linear(x))
@@ -46,10 +47,11 @@ class CommunityConditionedLM(nn.Module):
         return F.log_softmax(x, dim=-1)
 
     def tune_comm(self):
-        self._tune_comm = False
-        for module in self.children():
-            module.eval()
-        self.comm_estimate.train()
+        self._tune_comm = True
+        params = list(self.named_parameters())
+        for n, p in params:
+            if n != 'comm_inference.weight':
+                p.requires_grad = False
         return self
 
 class WeightedEmbedding(nn.Module):
@@ -66,7 +68,6 @@ class WeightedEmbedding(nn.Module):
                 self.weight[self.padding_idx].fill_(0)
 
     def forward(self, input):
-        assert all(input.sum(axis=1) == 1) # input is a probability distribution
         return input.mm(self.weight)
 
 class LSTMLM(nn.Module):
