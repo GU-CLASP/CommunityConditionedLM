@@ -87,7 +87,7 @@ def evaluate(lm, batches, vocab_size, condition_community, comm_unk_idx, criteri
 
 @click.command()
 @click.argument('architecture', type=click.Choice(['Transformer', 'LSTM'], case_sensitive=False))
-@click.argument('model_family_dir', type=click.Path(exists=False))
+@click.argument('model_family_dir', type=click.Path(exists=True))
 @click.argument('model_name', type=str)
 @click.argument('data_dir', type=click.Path(exists=True))
 @click.option('--rebuild-vocab/--no-rebuild-vocab', default=False)
@@ -101,6 +101,7 @@ def evaluate(lm, batches, vocab_size, condition_community, comm_unk_idx, criteri
 @click.option('--dropout', default=0.1)
 @click.option('--batch-size', default=32)
 @click.option('--max-seq-len', default=64)
+@click.option('--lr', default=0.01)
 @click.option('--file-limit', type=int, default=None,
         help="Number of examples per file (community).")
 @click.option('--gpu-id', type=int, default=None,
@@ -108,7 +109,7 @@ def evaluate(lm, batches, vocab_size, condition_community, comm_unk_idx, criteri
 def cli(architecture, model_family_dir, model_name, data_dir, rebuild_vocab,
         vocab_size, encoder_layers, heads, hidden_size,
         condition_community, community_emsize, community_layer_no, dropout,
-        batch_size, max_seq_len, file_limit, gpu_id):
+        batch_size, max_seq_len, lr, file_limit, gpu_id):
 
     model_dir = os.path.join(model_family_dir, model_name)
     util.mkdir(model_dir)
@@ -116,7 +117,7 @@ def cli(architecture, model_family_dir, model_name, data_dir, rebuild_vocab,
     log.info(f"Model will be saved to {model_dir}.")
 
     log.info(f"Loading dataset from {data_dir} files.")
-    dataset, fields = data.load_data_and_fields(data_dir, model_family_dir, 
+    dataset, fields = data.load_data_and_fields(data_dir, model_family_dir,
             max_seq_len, vocab_size, rebuild_vocab, file_limit)
     vocab_size = len(fields['text'].vocab.itos)
     comm_vocab_size = len(fields['community'].vocab.itos)
@@ -133,7 +134,7 @@ def cli(architecture, model_family_dir, model_name, data_dir, rebuild_vocab,
     random.seed(42)
     random_state = random.getstate()
     train_data, val_data, test_data = dataset.split(split_ratio=[0.8,0.1,0.1], stratified=True, strata_field='community', random_state=random_state)
-    log.info(f"Split {len(train_data)} to train and {len(val_data)} to validation and {len(test_data)} to test.")
+    log.info(f"Splits: train: {len(train_data)} val: {len(val_data)} test: {len(test_data)} ")
 
     train_iterator = tt.data.BucketIterator(
         train_data,
@@ -149,7 +150,7 @@ def cli(architecture, model_family_dir, model_name, data_dir, rebuild_vocab,
         train=False)
 
     criterion = nn.NLLLoss(ignore_index=text_pad_idx, reduction='none')
-    optimizer = torch.optim.SGD(lm.parameters(), lr=0.01, momentum=0.9)
+    optimizer = torch.optim.Adam(lm.parameters(), lr=lr)
 
     val_losses = []
     epoch = 0
@@ -161,7 +162,7 @@ def cli(architecture, model_family_dir, model_name, data_dir, rebuild_vocab,
         val_loss = sum(val_loss) / len(val_loss)
         if epoch == 1 or val_loss < min(val_losses):
             torch.save(lm.state_dict(), os.path.join(model_dir, 'model.bin'))
-            with open(os.path.join(model_dir, saved-epoch.txt), 'w') as f:
+            with open(os.path.join(model_dir, 'saved-epoch.txt'), 'w') as f:
                 f.write(f'{epoch:03d}')
         val_losses.append(val_loss)
         log.info(f"Epoch {epoch:3d} | val loss {val_loss:5.2f} | ppl {math.exp(val_loss):0.2f}")

@@ -29,7 +29,7 @@ def tune(lm, batches, vocab_size, criterion, optimizer, log):
         train_loss += loss.item()
         if batch_no % 1000 == 0 and batch_no > 0:
             cur_loss = train_loss / 1000
-            print(lm.comm_inference.weight)
+            print(F.normalize(lm.comm_inference.weight, p=1, dim=1))
             for param_group in optimizer.param_groups:
                 lr = param_group['lr']
             log.info(f"{batch_no:5d}/{len(batches):5d} batches | loss {cur_loss:5.2f} | ppl {math.exp(cur_loss):0.2f} | lr {lr}")
@@ -38,7 +38,8 @@ def tune(lm, batches, vocab_size, criterion, optimizer, log):
 
 @click.command()
 @click.argument('architecture', type=click.Choice(['Transformer', 'LSTM'], case_sensitive=False))
-@click.argument('model_filename', type=click.Path(exists=False))
+@click.argument('model_family_dir', type=click.Path(exists=False))
+@click.argument('model_name', type=str)
 @click.argument('data_dir', type=click.Path(exists=True))
 @click.option('--vocab-size', default=40000)
 @click.option('--encoder-layers', default=1)
@@ -54,30 +55,33 @@ def tune(lm, batches, vocab_size, criterion, optimizer, log):
         help="Number of examples per file (community).")
 @click.option('--gpu-id', type=int, default=None,
         help="ID of the GPU, if traning with CUDA")
-def cli(architecture, model_filename, data_dir, vocab_size, encoder_layers, heads, hidden_size,
+def cli(architecture, model_family_dir, model_name, data_dir, vocab_size, encoder_layers, heads, hidden_size,
         condition_community, community_emsize, community_layer_no, dropout,
         batch_size, max_seq_len, file_limit, gpu_id):
 
-    log = util.create_logger('tune', f"model/{model_filename}_tuning.log", True)
+    model_dir = os.path.join(model_family_dir, model_name)
+    log = util.create_logger('tune', os.path.join(model_dir, 'training.log'), True)
 
     log.info(f"Loading dataset from {data_dir} files.")
-    dataset, fields = data.load_data_and_fields(data_dir, max_seq_len, vocab_size, rebuild_vocab, file_limit)
+    dataset, fields = data.load_data_and_fields(data_dir, model_family_dir,
+            max_seq_len, vocab_size, False, file_limit)
     vocab_size = len(fields['text'].vocab.itos)
     comm_vocab_size = len(fields['community'].vocab.itos)
     comm_unk_idx = fields['community'].vocab.stoi['<unk>']
     text_pad_idx = fields['text'].vocab.stoi['<pad>']
     log.info(f"Loaded {len(dataset)} examples.")
 
+    print(fields['community'].vocab.stoi)
+
     random.seed(42)
     random_state = random.getstate()
-    _, _, tune_data = dataset.split(split_ratio=[0.8,0.1,0.1], stratified=True, strata_field='community', random_state=random_state)
-    tune_train_data, tune_val_data, tune_test_data = tune_data.split(split_ratio=[0.8,0.1,0.1], stratified=True, strata_field='community', random_state=random_state)
+    train_data, val_data, test_data = dataset.split(split_ratio=[0.8,0.1,0.1], stratified=True, strata_field='community', random_state=random_state)
+    log.info(f"Splits: train: {len(train_data)} val: {len(val_data)} test: {len(test_data)} ")
 
-    log.info(f"Split {len(tune_train_data)} to train and {len(tune_val_data)} to validation and {len(tune_test_data)} to test.")
-
-    log.info(f"Model loading model {model_filename}.")
+    log.info(f"Loading model from {model_dir}.")
     lm = init_model(architecture, encoder_layers, condition_community, community_layer_no,
         vocab_size, comm_vocab_size, hidden_size, community_emsize, dropout, log)
+    lm.load_state_dict(torch.load(os.path.join(model_dir, 'model.bin')))
 
     device = torch.device(f'cuda:{gpu_id}' if gpu_id is not None else 'cpu')
     lm.to(device)
@@ -93,13 +97,13 @@ def cli(architecture, model_filename, data_dir, vocab_size, encoder_layers, head
 
 
     tune_iterator = tt.data.BucketIterator(
-        tune_train_data,
+        train_data,
         device=device,
         batch_size=batch_size,
         sort_key=lambda x: len(x.text),
         train=True)
     val_iterator = tt.data.BucketIterator(
-        tune_val_data,
+        val_data,
         device=device,
         batch_size=batch_size,
         sort_key=lambda x: len(x.text),
@@ -117,11 +121,12 @@ def cli(architecture, model_filename, data_dir, vocab_size, encoder_layers, head
         val_loss = evaluate(lm, val_iterator, vocab_size, condition_community, comm_unk_idx, criterion)
         val_loss = sum(val_loss) / len(val_loss)
         if epoch == 1 or val_loss < min(val_losses):
-            torch.save(lm.state_dict(), f'model/{model_filename}_tuned.bin')
-            with open(f'model/{model_filename}_saved-epoch_tuned.txt', 'w') as f:
+            torch.save(lm.state_dict(), os.path.join(model_dir, 'model_tuned.bin'))
+            with open(os.path.join(model_dir, 'saved-epoch_tuned.txt'), 'w') as f:
                 f.write(f'{epoch:03d}')
         val_losses.append(val_loss)
         log.info(f"Epoch {epoch:3d} | val loss {val_loss:5.2f} | ppl {math.exp(val_loss):0.2f}")
+        print(lm.comm_inference.weight)
         if val_losses[-1] > min(val_losses) and val_losses[-2] > min(val_losses):
             log.info(f'Stopping early after epoch {epoch}.')
             break

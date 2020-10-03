@@ -4,10 +4,14 @@ import click
 from pathlib import Path
 import json
 
-def get_comms(data_dir):
-    return [os.path.basename(file) for file in os.listdir(data_dir)]
+def get_community_label(file_path):
+    base = os.path.basename(file_path)
+    return os.path.splitext(base)[0]
 
-def get_data_filename(data_dir, comm):
+def get_communities(data_dir):
+    return [get_community_label(f) for f in  os.listdir(data_dir)]
+
+def data_filename(data_dir, comm):
     return Path(data_dir)/f'{comm}.txt'
 
 def mkdir(path):
@@ -30,10 +34,10 @@ def create_logger(name, filename, debug):
     return logger
 
 def iter_data(data_dir, file_limit=None):
-    communities = get_comms(data_dir)
+    communities = get_communities(data_dir)
     for community in communities:
-        filename = get_data_filename(data_dir, community)
-        for i, line in enumerate(iter_file(filename, )):
+        filename = data_filename(data_dir, community)
+        for i, line in enumerate(iter_file(filename)):
             yield community, line
             if file_limit and i >= file_limit:
                 break

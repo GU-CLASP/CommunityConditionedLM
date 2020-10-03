@@ -3,6 +3,7 @@ import random
 import scipy.stats as stats
 import itertools
 import click
+import os
 
 START = '<S>'
 STOP = '</S>'
@@ -24,13 +25,14 @@ class MarkovChain:
         return self.state
 
 @click.command()
+@click.argument('output_dir', type=click.Path(exists=True))
 @click.argument('n_communities', type=int)
 @click.argument('samples_per_community', type=int)
 @click.option('--max-seq-len', default=100)
 @click.option('--vocab-size', default=10)
 @click.option('--alpha-start', default=0.01)
 @click.option('--alpha-end', default=1.5)
-def cli(n_communities, samples_per_community, max_seq_len, vocab_size, alpha_start, alpha_end):
+def cli(output_dir, n_communities, samples_per_community, max_seq_len, vocab_size, alpha_start, alpha_end):
 
     vocab = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")[:vocab_size]
     t_dim = len(vocab) + 1
@@ -40,7 +42,7 @@ def cli(n_communities, samples_per_community, max_seq_len, vocab_size, alpha_sta
         print(f"Generating {comm}")
         t_mat = np.array([np.random.dirichlet([alpha] * t_dim) for _ in range(t_dim)])
         mc = MarkovChain(t_mat, vocab)
-        with open('data/synthetic/' + comm + '.txt', 'w') as f:
+        with open(os.path.join(output_dir, comm + '.txt'), 'w') as f:
             for i in range(samples_per_community):
                 sample = ' '.join(itertools.islice(mc, max_seq_len))
                 if sample:
