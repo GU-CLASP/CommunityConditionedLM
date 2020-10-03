@@ -29,7 +29,6 @@ def tune(lm, batches, vocab_size, criterion, optimizer, log):
         train_loss += loss.item()
         if batch_no % 1000 == 0 and batch_no > 0:
             cur_loss = train_loss / 1000
-            print(F.normalize(lm.comm_inference.weight, p=1, dim=1))
             for param_group in optimizer.param_groups:
                 lr = param_group['lr']
             log.info(f"{batch_no:5d}/{len(batches):5d} batches | loss {cur_loss:5.2f} | ppl {math.exp(cur_loss):0.2f} | lr {lr}")
@@ -70,8 +69,6 @@ def cli(architecture, model_family_dir, model_name, data_dir, vocab_size, encode
     comm_unk_idx = fields['community'].vocab.stoi['<unk>']
     text_pad_idx = fields['text'].vocab.stoi['<pad>']
     log.info(f"Loaded {len(dataset)} examples.")
-
-    print(fields['community'].vocab.stoi)
 
     random.seed(42)
     random_state = random.getstate()

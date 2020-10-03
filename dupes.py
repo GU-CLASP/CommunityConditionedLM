@@ -34,7 +34,6 @@ def find_dupes_in_file(filename, min_tokens):
     return dupe_ids
 
 def copy_without_dupes(in_file, out_file, dupes):
-    print(in_file)
     with open(out_file, 'w') as f:
         for i, line in enumerate(iter_file(in_file, dupes=dupes)):
             f.write(line + '\n') 
