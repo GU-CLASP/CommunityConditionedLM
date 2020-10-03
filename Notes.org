@@ -6,8 +6,8 @@ Experiments:
  - train transformer model with added community embedding at various levels.
  - test if the model can predict which community a message is coming from
    - leading idea:
-     - to get the community embedding, multiply matrices of embedding by a weight W.
-       - in training W is a one-hot encoding of the community. 
+     - to get the community embedding, multiply matrices of community embeddings by a weight W.
+       - in training W is a one-hot encoding of the community.
          - (Data is the whole training set)
        - in testing, let W be optimised (and the rest is fixed)
          - Then entropy of W (seen as a distribution) gives a level of confidence about the community.
@@ -34,6 +34,9 @@ Experiments:
     https://en.wikipedia.org/wiki/Power_law#Maximum_likelihood)
   - Proportion of comments which are replies to other comments
   - Community/People co-occurence matrix / LSA
+    - construct the matrix as follows:
+      - for each message posted by user u in community c, M (u,c) += 1
+      - apply LSA
 
 
 - Correlation between embeddings of several models.
