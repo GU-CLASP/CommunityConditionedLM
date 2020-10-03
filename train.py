@@ -87,7 +87,8 @@ def evaluate(lm, batches, vocab_size, condition_community, comm_unk_idx, criteri
 
 @click.command()
 @click.argument('architecture', type=click.Choice(['Transformer', 'LSTM'], case_sensitive=False))
-@click.argument('model_filename', type=click.Path(exists=False))
+@click.argument('model_family_dir', type=click.Path(exists=False))
+@click.argument('model_name', type=str)
 @click.argument('data_dir', type=click.Path(exists=True))
 @click.option('--rebuild-vocab/--no-rebuild-vocab', default=False)
 @click.option('--vocab-size', default=40000)
@@ -104,15 +105,19 @@ def evaluate(lm, batches, vocab_size, condition_community, comm_unk_idx, criteri
         help="Number of examples per file (community).")
 @click.option('--gpu-id', type=int, default=None,
         help="ID of the GPU, if traning with CUDA")
-def cli(architecture, model_filename, data_dir, rebuild_vocab, vocab_size, encoder_layers, heads, hidden_size,
+def cli(architecture, model_family_dir, model_name, data_dir, rebuild_vocab,
+        vocab_size, encoder_layers, heads, hidden_size,
         condition_community, community_emsize, community_layer_no, dropout,
         batch_size, max_seq_len, file_limit, gpu_id):
 
-    log = util.create_logger('train', f"model/{model_filename}_training.log", True)
-    log.info(f"Model will be saved with prefix {model_filename}.")
+    model_dir = os.path.join(model_family_dir, model_name)
+    util.mkdir(model_dir)
+    log = util.create_logger('train', os.path.join(model_dir, 'training.log'), True)
+    log.info(f"Model will be saved to {model_dir}.")
 
     log.info(f"Loading dataset from {data_dir} files.")
-    dataset, fields = data.load_data_and_fields(data_dir, max_seq_len, vocab_size, rebuild_vocab, file_limit)
+    dataset, fields = data.load_data_and_fields(data_dir, model_family_dir, 
+            max_seq_len, vocab_size, rebuild_vocab, file_limit)
     vocab_size = len(fields['text'].vocab.itos)
     comm_vocab_size = len(fields['community'].vocab.itos)
     comm_unk_idx = fields['community'].vocab.stoi['<unk>']
@@ -155,8 +160,8 @@ def cli(architecture, model_filename, data_dir, rebuild_vocab, vocab_size, encod
         val_loss = evaluate(lm, val_iterator, vocab_size, condition_community, comm_unk_idx, criterion)
         val_loss = sum(val_loss) / len(val_loss)
         if epoch == 1 or val_loss < min(val_losses):
-            torch.save(lm.state_dict(), f'model/{model_filename}.bin')
-            with open(f'model/{model_filename}_saved-epoch.txt', 'w') as f:
+            torch.save(lm.state_dict(), os.path.join(model_dir, 'model.bin'))
+            with open(os.path.join(model_dir, saved-epoch.txt), 'w') as f:
                 f.write(f'{epoch:03d}')
         val_losses.append(val_loss)
         log.info(f"Epoch {epoch:3d} | val loss {val_loss:5.2f} | ppl {math.exp(val_loss):0.2f}")
