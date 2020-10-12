@@ -1,7 +1,7 @@
 import os
 import click
 import data
-from train import init_model, evaluate
+from train import evaluate
 import model
 import torch
 import torch.nn as nn
@@ -10,6 +10,7 @@ import torch.nn.functional as F
 import math
 import random
 import util
+import json
 
 def tune(lm, batches, vocab_size, criterion, optimizer, log):
     lm.train()
@@ -31,22 +32,15 @@ def tune(lm, batches, vocab_size, criterion, optimizer, log):
             cur_loss = train_loss / 1000
             for param_group in optimizer.param_groups:
                 lr = param_group['lr']
-            log.info(f"{batch_no:5d}/{len(batches):5d} batches | loss {cur_loss:5.2f} | ppl {math.exp(cur_loss):0.2f} | lr {lr}")
+            sim = F.cosine_similarity(torch.matmul(lm.comm_inference.weight, lm.comm_embed.weight), lm.comm_embed.weight)[1:] # ignore <unk>
+            log.info(f"{batch_no:5d}/{len(batches):5d} batches | loss {cur_loss:5.4f} | ppl {math.exp(cur_loss):0.2f} | comm embed sim {sim.mean():0.4f} |lr {lr}")
             train_loss = 0
     return lm
 
 @click.command()
-@click.argument('architecture', type=click.Choice(['Transformer', 'LSTM'], case_sensitive=False))
 @click.argument('model_family_dir', type=click.Path(exists=False))
 @click.argument('model_name', type=str)
 @click.argument('data_dir', type=click.Path(exists=True))
-@click.option('--vocab-size', default=40000)
-@click.option('--encoder-layers', default=1)
-@click.option('--heads', default=8)
-@click.option('--hidden-size', default=256)
-@click.option('--condition-community/--no-condition-community', default=True)
-@click.option('--community-emsize', default=16)
-@click.option('--community-layer-no', default=0)
 @click.option('--dropout', default=0.1)
 @click.option('--batch-size', default=32)
 @click.option('--max-seq-len', default=64)
@@ -55,8 +49,7 @@ def tune(lm, batches, vocab_size, criterion, optimizer, log):
         help="Number of examples per file (community).")
 @click.option('--gpu-id', type=int, default=None,
         help="ID of the GPU, if traning with CUDA")
-def cli(architecture, model_family_dir, model_name, data_dir, vocab_size, encoder_layers, heads, hidden_size,
-        condition_community, community_emsize, community_layer_no, dropout,
+def cli(model_family_dir, model_name, data_dir, dropout,
         batch_size, max_seq_len, lr, file_limit, gpu_id):
 
     model_dir = os.path.join(model_family_dir, model_name)
@@ -64,7 +57,7 @@ def cli(architecture, model_family_dir, model_name, data_dir, vocab_size, encode
 
     log.info(f"Loading dataset from {data_dir} files.")
     dataset, fields = data.load_data_and_fields(data_dir, model_family_dir,
-            max_seq_len, vocab_size, False, file_limit)
+            max_seq_len, file_limit)
     vocab_size = len(fields['text'].vocab.itos)
     comm_vocab_size = len(fields['community'].vocab.itos)
     comm_unk_idx = fields['community'].vocab.stoi['<unk>']
@@ -77,8 +70,8 @@ def cli(architecture, model_family_dir, model_name, data_dir, vocab_size, encode
     log.info(f"Splits: train: {len(train_data)} val: {len(val_data)} test: {len(test_data)} ")
 
     log.info(f"Loading model from {model_dir}.")
-    lm = init_model(architecture, encoder_layers, heads, condition_community, community_layer_no,
-        vocab_size, comm_vocab_size, hidden_size, community_emsize, dropout, log)
+    model_args = json.load(open(os.path.join(model_dir, 'model_args.json')))
+    lm = model.CommunityConditionedLM.build_model(**model_args)
     lm.load_state_dict(torch.load(os.path.join(model_dir, 'model.bin')))
 
     device = torch.device(f'cuda:{gpu_id}' if gpu_id is not None else 'cpu')
@@ -116,15 +109,14 @@ def cli(architecture, model_family_dir, model_name, data_dir, vocab_size, encode
         epoch += 1
         log.info(f'Starting epoch {epoch}')
         lm = tune(lm, tune_iterator, vocab_size, criterion, optimizer, log)
-        val_loss = evaluate(lm, val_iterator, vocab_size, condition_community, comm_unk_idx, criterion)
+        val_loss = evaluate(lm, val_iterator, vocab_size, comm_unk_idx, criterion)
         val_loss = sum(val_loss) / len(val_loss)
         if epoch == 1 or val_loss < min(val_losses):
             torch.save(lm.state_dict(), os.path.join(model_dir, 'model_tuned.bin'))
             with open(os.path.join(model_dir, 'saved-epoch_tuned.txt'), 'w') as f:
                 f.write(f'{epoch:03d}')
         val_losses.append(val_loss)
-        log.info(f"Epoch {epoch:3d} | val loss {val_loss:5.2f} | ppl {math.exp(val_loss):0.2f}")
-        print(lm.comm_inference.weight)
+        log.info(f"Epoch {epoch:3d} | val loss {val_loss:5.6f} | ppl {math.exp(val_loss):0.2f}")
         if val_losses[-1] > min(val_losses) and val_losses[-2] > min(val_losses):
             log.info(f'Stopping early after epoch {epoch}.')
             break

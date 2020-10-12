@@ -10,52 +10,14 @@ import math
 import random
 import util
 
-def init_model(architecture, encoder_layers, heads, condition_community, community_layer_no,
-        vocab_size, comm_vocab_size, hidden_size, community_emsize, dropout, log):
-
-    if not condition_community:
-        community_layer_no = 0
-    if community_layer_no > encoder_layers:
-        raise ValueError(f"Community layer position cannot be greater than the number of encoder layers.")
-    layers_before = community_layer_no
-    layers_after = encoder_layers - community_layer_no
-
-    log.info(f"Building {architecture} LM {'with' if condition_community else 'without'} community conditioning.")
-
-    if condition_community:
-        log.info(f"Encoder layers before community: {layers_before}")
-        log.info(f"Encoder layers after community:  {layers_after}")
-    else:
-        log.info(f"Encoder layers: {encoder_layers}.")
-    log.info(f"Vocab size: {vocab_size}")
-    log.info(f"Hidden size: {hidden_size}")
-    if architecture == 'Transformer':
-        log.info(f"Attention heads: {heads}")
-
-    if architecture == 'Transformer':
-        encoder_model = model.TransformerLM
-        encoder_args = (vocab_size, heads, hidden_size)
-    elif architecture == 'LSTM':
-        encoder_model = model.LSTMLM
-        encoder_args = (vocab_size, hidden_size)
-    encoder_before = encoder_model(*encoder_args, layers_before, dropout) if layers_before > 0 else None
-    encoder_after  = encoder_model(*encoder_args, layers_after,  dropout) if layers_after  > 0 else None
-    lm = model.CommunityConditionedLM(vocab_size, comm_vocab_size, hidden_size, community_emsize,
-            encoder_before, encoder_after, condition_community, dropout)
-    total_params = sum(p.numel() for p in lm.parameters() if p.requires_grad)
-    log.info(f"Built model with {total_params} parameters.")
-    log.debug(str(lm))
-    return lm
-
-
-def train(lm, batches, vocab_size, condition_community, comm_unk_idx, criterion, optimizer, log):
+def train(lm, batches, vocab_size, comm_unk_idx, criterion, optimizer, log):
     lm.train()
     batches.init_epoch()
     train_loss = 0
     for batch_no, batch in enumerate(batches):
         optimizer.zero_grad()
         batch_size_ = len(batch)
-        x_comm = batch.community if condition_community else None
+        x_comm = batch.community if lm.use_community else None
         text = batch.text
         x_text = text[:-1]
         y = text[1:]
@@ -70,7 +32,7 @@ def train(lm, batches, vocab_size, condition_community, comm_unk_idx, criterion,
             train_loss = 0
     return lm
 
-def evaluate(lm, batches, vocab_size, condition_community, comm_unk_idx, criterion):
+def evaluate(lm, batches, vocab_size, comm_unk_idx, criterion):
     lm.eval()
     batches.init_epoch()
     eval_losses = []
@@ -78,7 +40,7 @@ def evaluate(lm, batches, vocab_size, condition_community, comm_unk_idx, criteri
         with torch.no_grad():
             batch_size_ = len(batch)
             text = batch.text
-            x_comm = batch.community if condition_community else None
+            x_comm = batch.community if lm.use_community else None
             x_text = text[:-1]
             y = text[1:]
             y_hat = lm(x_text, x_comm)
@@ -120,15 +82,40 @@ def cli(architecture, model_dir, model_name, data_dir, rebuild_vocab,
 
     log.info(f"Loading dataset from {data_dir} files.")
     dataset, fields = data.load_data_and_fields(data_dir, model_dir,
-            max_seq_len, vocab_size, rebuild_vocab, file_limit)
+            max_seq_len, file_limit, vocab_size, rebuild_vocab)
     vocab_size = len(fields['text'].vocab.itos)
     comm_vocab_size = len(fields['community'].vocab.itos)
     comm_unk_idx = fields['community'].vocab.stoi['<unk>']
     text_pad_idx = fields['text'].vocab.stoi['<pad>']
     log.info(f"Loaded {len(dataset)} examples.")
 
-    lm = init_model(architecture, encoder_layers, heads, condition_community, community_layer_no,
-        vocab_size, comm_vocab_size, hidden_size, community_emsize, dropout, log)
+    if not condition_community:
+        community_layer_no = 0
+    if community_layer_no > encoder_layers:
+        raise ValueError(f"Community layer position cannot be greater than the number of encoder layers.")
+    layers_before = community_layer_no
+    layers_after = encoder_layers - community_layer_no
+    log.info(f"Building {architecture} LM {'with' if condition_community else 'without'} community conditioning.")
+    if condition_community:
+        log.info(f"Encoder layers before community: {layers_before}")
+        log.info(f"Encoder layers after community:  {layers_after}")
+    else:
+        log.info(f"Encoder layers: {encoder_layers}.")
+
+    log.info(f"Vocab size: {vocab_size}")
+    log.info(f"Hidden size: {hidden_size}")
+    if architecture == 'Transformer':
+        log.info(f"Attention heads: {heads}")
+
+    model.CommunityConditionedLM.build_model(
+            architecture, heads, hidden_size, vocab_size, 
+            condition_community, community_emsize, 
+            layers_before, layers_after, comm_vocab_size,
+            dropout, save_args_file=os.path.join(save_dir, 'model_args.json'))
+
+    total_params = sum(p.numel() for p in lm.parameters() if p.requires_grad)
+    log.info(f"Built model with {total_params} parameters.")
+    log.debug(str(lm))
 
     device = torch.device(f'cuda:{gpu_id}' if gpu_id is not None else 'cpu')
     lm.to(device)
@@ -159,8 +146,8 @@ def cli(architecture, model_dir, model_name, data_dir, rebuild_vocab,
     while True:
         epoch += 1
         log.info(f'Starting epoch {epoch}')
-        lm = train(lm, train_iterator, vocab_size, condition_community, comm_unk_idx, criterion, optimizer, log)
-        val_loss = evaluate(lm, val_iterator, vocab_size, condition_community, comm_unk_idx, criterion)
+        lm = train(lm, train_iterator, vocab_size, comm_unk_idx, criterion, optimizer, log)
+        val_loss = evaluate(lm, val_iterator, vocab_size, comm_unk_idx, criterion)
         val_loss = sum(val_loss) / len(val_loss)
         if epoch == 1 or val_loss < min(val_losses):
             torch.save(lm.state_dict(), os.path.join(save_dir, 'model.bin'))

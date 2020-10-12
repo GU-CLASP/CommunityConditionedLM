@@ -27,7 +27,7 @@ def build_fields(fields, data, vocab_size):
 
     return fields
 
-def load_data_and_fields(data_dir, field_dir, max_seq_len, vocab_size, rebuild_vocab, file_limit):
+def load_data_and_fields(data_dir, field_dir, max_seq_len, file_limit, vocab_size=None, rebuild_vocab=False):
     text_field_file = os.path.join(field_dir, 'text.field')
     comm_field_file = os.path.join(field_dir, 'community.field')
     if not rebuild_vocab and os.path.exists(text_field_file):

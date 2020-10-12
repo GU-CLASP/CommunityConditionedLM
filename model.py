@@ -10,6 +10,7 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import json
 
 class CommunityConditionedLM(nn.Module):
 
@@ -21,12 +22,35 @@ class CommunityConditionedLM(nn.Module):
         self.decoder = nn.Linear(hidden_size, n_tokens)
         self.encoder_before = encoder_before
         self.encoder_after = encoder_after
-        self._tune_comm = False
+        self.use_tunned_comm = False
         if use_community:
             self.comm_inference = nn.Embedding(n_comms, n_comms)
             self.comm_embed = WeightedEmbedding(n_comms, comm_emsize)
             self.comm_linear = nn.Linear(hidden_size + comm_emsize, hidden_size)
         self.use_community = use_community
+
+    @classmethod
+    def build_model(cls, architecture='LSTM', heads=8, hidden_size=64, vocab_size=10000,
+        condition_community=True, community_emsize=16,
+        layers_before=2, layers_after=2, comm_vocab_size=8,
+        dropout=0.1, save_args_file=None):
+        if save_args_file:
+            args = locals()
+            del args['save_args_file']
+            del args['cls']
+            with open(save_args_file, 'w') as f:
+                json.dump(args, f)
+        if architecture == 'Transformer':
+            encoder_model = TransformerLM
+            encoder_args = (vocab_size, heads, hidden_size)
+        elif architecture == 'LSTM':
+            encoder_model = LSTMLM
+            encoder_args = (vocab_size, hidden_size)
+        encoder_before = encoder_model(*encoder_args, layers_before, dropout) if layers_before > 0 else None
+        encoder_after  = encoder_model(*encoder_args, layers_after,  dropout) if layers_after  > 0 else None
+        lm = cls(vocab_size, comm_vocab_size, hidden_size, community_emsize,
+                encoder_before, encoder_after, condition_community, dropout)
+        return lm
 
     def forward(self, text, comm):
         device = text.device
@@ -34,7 +58,7 @@ class CommunityConditionedLM(nn.Module):
         if self.encoder_before is not None:
             x = self.drop(self.encoder_before(x))
         if self.use_community:
-            if self._tune_comm:
+            if self.use_tunned_comm:
                 x_comm = self.comm_inference(comm).softmax(1)
             else:
                 x_comm = F.one_hot(comm, num_classes=self.n_comms).type(torch.FloatTensor).to(device)
@@ -47,7 +71,7 @@ class CommunityConditionedLM(nn.Module):
         return F.log_softmax(x, dim=-1)
 
     def tune_comm(self):
-        self._tune_comm = True
+        self.use_tunned_comm = True
         params = list(self.named_parameters())
         for n, p in params:
             if n != 'comm_inference.weight':
