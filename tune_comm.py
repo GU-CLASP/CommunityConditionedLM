@@ -50,13 +50,14 @@ def tune(lm, batches, vocab_size, criterion, optimizer, log):
 @click.option('--dropout', default=0.1)
 @click.option('--batch-size', default=32)
 @click.option('--max-seq-len', default=64)
+@click.option('--lr', default=0.001)
 @click.option('--file-limit', type=int, default=None,
         help="Number of examples per file (community).")
 @click.option('--gpu-id', type=int, default=None,
         help="ID of the GPU, if traning with CUDA")
 def cli(architecture, model_family_dir, model_name, data_dir, vocab_size, encoder_layers, heads, hidden_size,
         condition_community, community_emsize, community_layer_no, dropout,
-        batch_size, max_seq_len, file_limit, gpu_id):
+        batch_size, max_seq_len, lr, file_limit, gpu_id):
 
     model_dir = os.path.join(model_family_dir, model_name)
     log = util.create_logger('tune', os.path.join(model_dir, 'training.log'), True)
@@ -76,7 +77,7 @@ def cli(architecture, model_family_dir, model_name, data_dir, vocab_size, encode
     log.info(f"Splits: train: {len(train_data)} val: {len(val_data)} test: {len(test_data)} ")
 
     log.info(f"Loading model from {model_dir}.")
-    lm = init_model(architecture, encoder_layers, condition_community, community_layer_no,
+    lm = init_model(architecture, encoder_layers, heads, condition_community, community_layer_no,
         vocab_size, comm_vocab_size, hidden_size, community_emsize, dropout, log)
     lm.load_state_dict(torch.load(os.path.join(model_dir, 'model.bin')))
 
@@ -107,7 +108,7 @@ def cli(architecture, model_family_dir, model_name, data_dir, vocab_size, encode
         train=False)
 
     criterion = nn.NLLLoss(ignore_index=text_pad_idx, reduction='none')
-    optimizer = torch.optim.Adam(lm.parameters(), lr=0.01)
+    optimizer = torch.optim.AdamW(lm.parameters(), lr=lr)
 
     val_losses = []
     epoch = 0

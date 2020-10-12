@@ -10,9 +10,11 @@ import math
 import random
 import util
 
-def init_model(architecture, encoder_layers, condition_community, community_layer_no,
+def init_model(architecture, encoder_layers, heads, condition_community, community_layer_no,
         vocab_size, comm_vocab_size, hidden_size, community_emsize, dropout, log):
 
+    if not condition_community:
+        community_layer_no = 0
     if community_layer_no > encoder_layers:
         raise ValueError(f"Community layer position cannot be greater than the number of encoder layers.")
     layers_before = community_layer_no
@@ -87,7 +89,7 @@ def evaluate(lm, batches, vocab_size, condition_community, comm_unk_idx, criteri
 
 @click.command()
 @click.argument('architecture', type=click.Choice(['Transformer', 'LSTM'], case_sensitive=False))
-@click.argument('model_family_dir', type=click.Path(exists=True))
+@click.argument('model_dir', type=click.Path(exists=True))
 @click.argument('model_name', type=str)
 @click.argument('data_dir', type=click.Path(exists=True))
 @click.option('--rebuild-vocab/--no-rebuild-vocab', default=False)
@@ -101,23 +103,23 @@ def evaluate(lm, batches, vocab_size, condition_community, comm_unk_idx, criteri
 @click.option('--dropout', default=0.1)
 @click.option('--batch-size', default=32)
 @click.option('--max-seq-len', default=64)
-@click.option('--lr', default=0.01)
+@click.option('--lr', default=0.001)
 @click.option('--file-limit', type=int, default=None,
         help="Number of examples per file (community).")
 @click.option('--gpu-id', type=int, default=None,
         help="ID of the GPU, if traning with CUDA")
-def cli(architecture, model_family_dir, model_name, data_dir, rebuild_vocab,
+def cli(architecture, model_dir, model_name, data_dir, rebuild_vocab,
         vocab_size, encoder_layers, heads, hidden_size,
         condition_community, community_emsize, community_layer_no, dropout,
         batch_size, max_seq_len, lr, file_limit, gpu_id):
 
-    model_dir = os.path.join(model_family_dir, model_name)
-    util.mkdir(model_dir)
-    log = util.create_logger('train', os.path.join(model_dir, 'training.log'), True)
-    log.info(f"Model will be saved to {model_dir}.")
+    save_dir = os.path.join(model_dir, model_name)
+    util.mkdir(save_dir)
+    log = util.create_logger('train', os.path.join(save_dir, 'training.log'), True)
+    log.info(f"Model will be saved to {save_dir}.")
 
     log.info(f"Loading dataset from {data_dir} files.")
-    dataset, fields = data.load_data_and_fields(data_dir, model_family_dir,
+    dataset, fields = data.load_data_and_fields(data_dir, model_dir,
             max_seq_len, vocab_size, rebuild_vocab, file_limit)
     vocab_size = len(fields['text'].vocab.itos)
     comm_vocab_size = len(fields['community'].vocab.itos)
@@ -125,7 +127,7 @@ def cli(architecture, model_family_dir, model_name, data_dir, rebuild_vocab,
     text_pad_idx = fields['text'].vocab.stoi['<pad>']
     log.info(f"Loaded {len(dataset)} examples.")
 
-    lm = init_model(architecture, encoder_layers, condition_community, community_layer_no,
+    lm = init_model(architecture, encoder_layers, heads, condition_community, community_layer_no,
         vocab_size, comm_vocab_size, hidden_size, community_emsize, dropout, log)
 
     device = torch.device(f'cuda:{gpu_id}' if gpu_id is not None else 'cpu')
@@ -150,7 +152,7 @@ def cli(architecture, model_family_dir, model_name, data_dir, rebuild_vocab,
         train=False)
 
     criterion = nn.NLLLoss(ignore_index=text_pad_idx, reduction='none')
-    optimizer = torch.optim.Adam(lm.parameters(), lr=lr)
+    optimizer = torch.optim.AdamW(lm.parameters(), lr=lr)
 
     val_losses = []
     epoch = 0
@@ -161,8 +163,8 @@ def cli(architecture, model_family_dir, model_name, data_dir, rebuild_vocab,
         val_loss = evaluate(lm, val_iterator, vocab_size, condition_community, comm_unk_idx, criterion)
         val_loss = sum(val_loss) / len(val_loss)
         if epoch == 1 or val_loss < min(val_losses):
-            torch.save(lm.state_dict(), os.path.join(model_dir, 'model.bin'))
-            with open(os.path.join(model_dir, 'saved-epoch.txt'), 'w') as f:
+            torch.save(lm.state_dict(), os.path.join(save_dir, 'model.bin'))
+            with open(os.path.join(save_dir, 'saved-epoch.txt'), 'w') as f:
                 f.write(f'{epoch:03d}')
         val_losses.append(val_loss)
         log.info(f"Epoch {epoch:3d} | val loss {val_loss:5.2f} | ppl {math.exp(val_loss):0.2f}")

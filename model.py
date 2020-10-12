@@ -35,10 +35,10 @@ class CommunityConditionedLM(nn.Module):
             x = self.drop(self.encoder_before(x))
         if self.use_community:
             if self._tune_comm:
-                comm = self.comm_inference(comm).softmax(1)
+                x_comm = self.comm_inference(comm).softmax(1)
             else:
-                comm = F.one_hot(comm, num_classes=self.n_comms).type(torch.FloatTensor).to(device)
-            x_comm = self.comm_embed(comm).repeat(text.shape[0],1,1)
+                x_comm = F.one_hot(comm, num_classes=self.n_comms).type(torch.FloatTensor).to(device)
+            x_comm = self.comm_embed(x_comm).repeat(text.shape[0],1,1)
             x = torch.cat((x, x_comm), 2)
             x = self.drop(self.comm_linear(x))
         if self.encoder_after is not None:
