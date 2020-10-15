@@ -5,6 +5,11 @@
 Experiments:
  - train transformer model with added community embedding at various levels.
  - test if the model can predict which community a message is coming from
+   - we could apply Bayes theorem:
+      - P(comm | message) = P (message | comm) * P(message) / P(comm)
+      - P(comm) is known
+      - P(message) = Σ(c) P(message | c), this is our normalisation factor.
+      - P(message | comm) could be read out of the model.
    - leading idea:
      - to get the community embedding, multiply matrix of community
        embeddings by a weight W.
@@ -29,6 +34,7 @@ Experiments:
        it' down to a combined F score measuring the ability to
        identify a community.
      - TODO: scatterplot for 2 models.
+
 
 * Analysis of model quality
 
