@@ -1,3 +1,7 @@
+"""
+Creates a community embedding for the set of subreddits from the author/community cooccurance matrix
+"""
+
 import csv
 from collections import Counter
 from scipy.sparse import coo_matrix
@@ -39,5 +43,5 @@ for (comm, author), count in author_counts.items():
 author_comm_mat = coo_matrix((data, (row, col))).tocsr()
 svd = TruncatedSVD(n_components=16)
 comm_author_embed = svd.fit_transform(author_comm_mat)
-np.save('model/reddit2015/comm_author_embed_svd16dim.pickle', comm_author_embed)
+np.save('model/reddit2015/comm_author_embed_svd16dim', comm_author_embed)
 
