@@ -10,6 +10,8 @@ Experiments:
       - P(comm) is known
       - P(message) = Σ(c) P(message | c), this is our normalisation factor.
       - P(message | comm) could be read out of the model.
+      -> W(i,j) = P (community=i | message) for message in community j
+         --> This is a confusion matrix
    - leading idea:
      - to get the community embedding, multiply matrix of community
        embeddings by a weight W.
@@ -33,8 +35,8 @@ Experiments:
      - actually W can be seen as a confusion matrix. So we can 'boil
        it' down to a combined F score measuring the ability to
        identify a community.
-     - TODO: scatterplot for 2 models.
-
+   - TODO: scatterplot for 2 models.
+   
 
 * Analysis of model quality
 
