@@ -5,25 +5,47 @@
 Experiments:
  - train transformer model with added community embedding at various levels.
  - test if the model can predict which community a message is coming from
+   - we could apply Bayes theorem:
+      - P(comm | message) = P (message | comm) * P(message) / P(comm)
+      - P(comm) is known
+      - P(message) = Σ(c) P(message | c), this is our normalisation factor.
+      - P(message | comm) could be read out of the model.
    - leading idea:
-     - to get the community embedding, multiply matrices of community embeddings by a weight W.
+     - to get the community embedding, multiply matrix of community
+       embeddings by a weight W.
        - in training W is a one-hot encoding of the community.
-         - (Data is the whole training set)
+         - Or, if data is the whole training set, W is the identity matrix
        - in testing, let W be optimised (and the rest is fixed)
-         - Then entropy of W (seen as a distribution) gives a level of confidence about the community.
+         - actually it's convenient to optimise the community
+           embeddings all at once, and let W be a c*c matrix. The ith
+           row is selected when facing a message from community i.
+         - Then entropy of W (seen as a distribution) gives a level of
+           confidence about the community.
          - data is: a single input. (and all the things that were
            parameter before are fixed and thus treated as input data)
+     - so W(i) tells you the distribution of communities from the set
+       of messages assigned we assigned to i.
+     - entropy of W(i) is low if the community i is very specific from
+       the point of view of our (linguistic) model (so messages can be
+       easily identified as comming from a specific community; ie they
+       get assigned a significantly higher loss if considered from the
+       wrong community.).
+     - actually W can be seen as a confusion matrix. So we can 'boil
+       it' down to a combined F score measuring the ability to
+       identify a community.
+     - TODO: scatterplot for 2 models.
+
 
 * Analysis of model quality
 
-- Difference in information gains for simple/complex models
-- Plot loss for each community (histogram or scatterplot for 2 variables)
+- P_m(i) = average loss per message, for community i, for model m.
+- Analysis of difference in information gains for simple/complex models:
+- Plot P_m(i) vs P_n(i) for each i (gives scatterplot, which shows
+  information gain between m and n for each community.)
   - eg. bigram model loss vs. transformer model loss.
 
 
-
 * Analysis of community embeddings
-
 
 
 - Correlation with the extra-linguistic properties of communities?.
@@ -38,14 +60,17 @@ Experiments:
       - for each message posted by user u in community c, M (u,c) += 1
       - apply LSA
 
-
 - Correlation between embeddings of several models.
-  - Basic idea: check the Pearson collelation beween <c^m_i, c^m_j> for every
+  - Basic idea: check the Pearson correlation beween cosine similarity (c^m_i, c^m_j) for every
     pair of community (j,i), between to models (m).
   - If r=1, then you have a perfect orthogonal mapping
   - This is a very strong condition, because all dimensions play some role.
-    -> Other idea is to do a projection on the n most relevant dimensions first.
-       - For n=1 this is checking that the most relevant dimension is the same for both models
+    Other idea is to do a projection on the n most relevant dimensions first.
+     - For n=1 this is checking that the most relevant dimension is the same for both models
+     - To do this, do a LSA/SVD decomp of embeddings first
+       (sklearn.decomposition.TruncatedSVD), and truncate at n dimensions.
+       sklearn.decomposition.TruncatedSVD(n_components=n)
+     - Then compute Pearson correlation
 
 * Open questions:
 -  Where in the architecture should the embedding go in general
