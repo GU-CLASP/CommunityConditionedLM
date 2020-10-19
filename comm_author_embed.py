@@ -2,10 +2,12 @@
 Creates a community embedding for the set of subreddits from the author/community cooccurance matrix
 """
 
+import data
 import csv
 from collections import Counter
 from scipy.sparse import coo_matrix
 from sklearn.decomposition import TruncatedSVD
+import numpy as np
 
 dataset, fields = data.load_data_and_fields('data/reddit2015', 'model/reddit2015', 64, 5)
 comms = fields['community'].vocab.itos
@@ -39,9 +41,10 @@ for (comm, author), count in author_counts.items():
     data.append(count)
     row.append(comm)
     col.append(author)
-
 author_comm_mat = coo_matrix((data, (row, col))).tocsr()
-svd = TruncatedSVD(n_components=16)
+np.save('model/reddit2015/comm_author_counts', author_comm_mat)
+
+svd = TruncatedSVD(n_components=16, n_iter=20) #, algorithm='arpack')
 comm_author_embed = svd.fit_transform(author_comm_mat)
-np.save('model/reddit2015/comm_author_embed_svd16dim', comm_author_embed)
+np.save('model/reddit2015/comm_author_embed_svd16dim.20iter', comm_author_embed)
 
