@@ -50,24 +50,69 @@
 
 We propose to test the following hypotheses:
 
- - Different communities have different levels of linguistic complexity
- - different language models are able to recognize such differences
- - level at which the community embedding is taken into account in the language model influences this.
- - community vectors are correlated with extra-linguistic information.
- - stability is correlated with language complexity
+\begin{enumerate}
+\item Different communities have different levels of linguistic
+  complexity
+\item different language models are able to recognize such differences
+\item level at which the community embedding is taken into account in the language model influences this.
+\item community vectors are correlated with extra-linguistic information.
+\item stability is correlated with language complexity
+\end{enumerate}
+
+\section{Experimental setup}
+\subsection{Data Sets}
+\subsection{Models}
+\subsection{Training scheme}
+
+\section{Results and analysis}
+
+% Computation of loss/community/model (show all)
+\begin{table}
+  \centering
+  \begin{tabular}{ccc}
+    todo &todo &todo 
+  \end{tabular}
+  \caption{Model losses per community}
+  \label{tab:losses}
+\end{table}
+TODO commentary
+
+TODO: say why we can't use the losses directly!
+Turn a CCLM into a community classifier using Bayes theorem: The
+probability that a given post $m$ belongs to a community $c_i$ can be
+calculated as:
+\[P(c=c_i | m) = P(m | c_i)\frac {P(m)} {P(c=c_i)}\]
+
+$P(c=c_i)$ is the frequency of community $c_i$ in the dataset, and
+$P(m | c_i)$ is given by the CCLM. $P(m)$ is our normalisation factor, which can be set so that
+\[\sum_i P(c=c_i | m) = 1\].
+
+Knowing that $m$ \emph{actually} comes from community $c_j$, we test
+the recall and precision abilities of our classifier.  if we let
+$C_{ij} = average_{m ∈ Posts(c_j)}(P(c=c_i | m))$ then $C$ is a
+confusion matrix for it.
+
+(TODO: on what set?)
+
+TODO: show a few relevant matrices. (eg. show only best and worst model) and commentary.
+
+TODO: why don't we use F scores or such bullshit?
+
+TODO:Define \(D_j\) as the discrete probability distribution given by \(C_{ij}\) for fixed \(j\).
+
+We then compute the perplexity of the classifier, per given community
+$j$, as the exponential of the entropy of the distribution \(D_j\):
+
+\[Ppl_j = e^{-\sum_i C_{ij} log(C_{ij})}\]
 
 
- \section{Experimental setup}
- \subsection{Data Sets}
- \subsection{Models}
- \subsection{Training scheme}
+\(Ppl_j\) is a measure of the capability (or inability) of the model
+to correctly identify a message as coming from a certain
+community. (ie. it aggregates confusion on a column of the matrix).
 
- \section{Experimental setup}
- \section{Results and analysis}
- 
-- Computation of loss/community/model (show all)
-- Computation of confusion matrix for community inference per model (eg. show only best and worst model) (on test set)
-- Computation of H(c,m) entropy of community identification (on test set)
+We can then analyse the correlation between \(Ppl^M_j\) for various models $M$.
+
+
 - Correlation between H(c,m) for various models. Identification of specific communities by hand
 - Correlation between H(c,m) and Stability(c).
 
