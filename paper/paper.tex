@@ -66,6 +66,8 @@ We propose to test the following hypotheses:
 
 \section{Results and analysis}
 
+\subsection{Losses of CCLM}
+
 % Computation of loss/community/model (show all)
 \begin{table}
   \centering
@@ -75,46 +77,79 @@ We propose to test the following hypotheses:
   \caption{Model losses per community}
   \label{tab:losses}
 \end{table}
-TODO commentary
+TODO commentary. Why are some communities low/high.
 
-TODO: say why we can't use the losses directly!
-Turn a CCLM into a community classifier using Bayes theorem: The
-probability that a given post $m$ belongs to a community $c_i$ can be
-calculated as:
+\subsection{Analysis of community embeddings}
+
+- PCA plots: not conclusive:
+
+- Correlation with co-occurence matrix (not conclusive)
+
+- Analysis: probably because the model is not using dimensions
+with \emph{a priori} equal variance in all dimensions. (Both the LSTM and transformer are highly non-linear complex models)
+
+\subsection{Implicit language-model-based community classifiers}
+
+(TODO: Insert a the correlation plot between two models, on the exponential scale so that it's the same as the other later plots)
+TODO: So we can't use the losses directly. Why is this so?
+
+
+However, we are not so much interested in the ability of the CCLM to
+precisely model the language used in a community.
+
+We now turn our interest to language-model-based community classifiers
+(LMCC). Given a post $m$, and LMCC gives the probability that it
+belongs in a community $c_i$ Using the Bayes theorem, we can turn a
+CCLM into a LMCC. Indeed, the probability that a given post $m$
+belongs to a community $c_i$ can be calculated as follows:
 \[P(c=c_i | m) = P(m | c_i)\frac {P(m)} {P(c=c_i)}\]
-
+In the above,
 $P(c=c_i)$ is the frequency of community $c_i$ in the dataset, and
 $P(m | c_i)$ is given by the CCLM. $P(m)$ is our normalisation factor, which can be set so that
 \[\sum_i P(c=c_i | m) = 1\].
 
-Knowing that $m$ \emph{actually} comes from community $c_j$, we test
-the recall and precision abilities of our classifier.  if we let
-$C_{ij} = average_{m ∈ Posts(c_j)}(P(c=c_i | m))$ then $C$ is a
-confusion matrix for it.
-
-(TODO: on what set?)
+Knowing that $m$ \emph{actually} comes from community $c_j$, we can
+measure the the precision our classifier, as a confusion matrix $C$,
+which can be calculated as follows for a given set of posts:(TODO: what set exactly?)
+\[C_{ij} = average_{m ∈ Posts(c_j)}(P(c=c_i | m))\].
 
 TODO: show a few relevant matrices. (eg. show only best and worst model) and commentary.
 
-TODO: why don't we use F scores or such bullshit?
+TODO: why don't we use F scores?
 
-TODO:Define \(D_j\) as the discrete probability distribution given by \(C_{ij}\) for fixed \(j\).
-
-We then compute the perplexity of the classifier, per given community
-$j$, as the exponential of the entropy of the distribution \(D_j\):
-
+While the confusion matrices provide a lot of insight, they are
+somewhat \emph{too} fine-grained. For this reason, we will be
+interested in confusing the posts from community $c_j$ are to the
+LMCC. For this purpose, we consider the perplexity of the LMCC for a
+post coming from community $j$, defined as the exponential of the
+entropy of the distribution \(D_j\), which is the (discrete)
+probability distribution of predicted community for a random post from
+$c_j$. $D_j$ is simply the $j$th row in \(C\), and so we obtain the formula:
 \[Ppl_j = e^{-\sum_i C_{ij} log(C_{ij})}\]
 
-
-\(Ppl_j\) is a measure of the capability (or inability) of the model
-to correctly identify a message as coming from a certain
-community. (ie. it aggregates confusion on a column of the matrix).
+To recap, \(Ppl_j\) is a measure of the capability (or rather
+inability) of the model to correctly identify a message as coming from
+a certain community $c_j$. 
 
 We can then analyse the correlation between \(Ppl^M_j\) for various models $M$.
 
+TODO: show a scatter plot, compute r2, analyse out-of-balance points; discuss why they stand where they do.
 
-- Correlation between H(c,m) for various models. Identification of specific communities by hand
-- Correlation between H(c,m) and Stability(c).
+
+Finally, we investigate the correlation between the stability of a
+community and the perplexity of the LMCC for it. Stability is defined as TODO.
+
+- computer r2.
+
+We see a positive correlation: this suggests that the more stable a
+community is, the more difficult it is to identify posts as coming
+from it. What this suggests is that stable communities tend to use a
+varied and standard, subset of English, while unstable communities
+resort to more formulaic posts. This may suggests that to 'fit' in an
+unstable community, one must use more obvious linguistic cues than in
+a stable community. In fact, it is reasonable to think that a new
+member will ostensibly use community-specifc language, but once
+established in a community, a member would tend not to do so.
 
 \section{Discussion and Conclusion}
 
