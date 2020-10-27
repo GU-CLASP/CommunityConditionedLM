@@ -14,8 +14,10 @@
 
 \documentclass[11pt,a4paper]{article}
 \usepackage[hyperref]{acl2020}
+\usepackage[T1]{fontenc}
 \usepackage{times}
 \usepackage{latexsym}
+\usepackage{siunitx}
 \renewcommand{\UrlFont}{\ttfamily\small}
 
 % This is not strictly necessary, and may be commented out,
@@ -61,6 +63,29 @@ We propose to test the following hypotheses:
 
 \section{Experimental setup}
 \subsection{Data Sets}
+
+To investigate variation across communities, we use comments collected 
+from the social media website Reddit.\footnote{Comments were obtained 
+from the archive at \href{https://pushshift.io/}{pushshift.io} \cite{Baumgartner2020}.}
+
+Reddit is divided into forums called \textit{subreddits}, 
+which are typically organized around a topic of interest. 
+Our dataset includes comments from \num{46} subreddits, 
+randomly selected from the set of all forums 
+with at least \num{15000} comments per month for each month 
+in the three years between 2015 and 2017.\footnote{
+We initially selected \num{50} subreddits, 
+but excluded four from further analysis: 
+two which were primarily non-English and two with particularly short average comment lengths.}
+Each community corpus consist of \num{50000} randomly selected comments from the year 2015.
+
+Comments were preprocessed as follows: 
+We removed markdown formatting, extracting only rendered text. 
+We exclude the content of block quotes, code blocks, and tables. 
+We tokenized the comments using the default English model for the SpaCy tokenizer,\footnote{Version 2.2.3}
+and lower-cased all tokens. 
+
+
 \subsection{Models}
 \subsection{Training scheme}
 
@@ -154,5 +179,8 @@ established in a community, a member would tend not to do so.
 \section{Discussion and Conclusion}
 
 - Comparison with topic modelling
+
+\bibliography{paper}
+\bibliographystyle{acl_natbib}
 
 \end{document}
