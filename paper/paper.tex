@@ -62,7 +62,8 @@ We propose to test the following hypotheses:
 \end{enumerate}
 
 \section{Experimental setup}
-\subsection{Data Sets}
+
+\subsection{Data sets}
 
 To investigate variation across communities, we use comments collected 
 from the social media website Reddit.\footnote{Comments were obtained 
@@ -85,8 +86,19 @@ We exclude the content of block quotes, code blocks, and tables.
 We tokenized the comments using the default English model for the SpaCy tokenizer,\footnote{Version 2.2.3}
 and lower-cased all tokens. 
 
-
 \subsection{Models}
+
+At the the core of the community-conditioned language model (CCLM) 
+is a standard $n$-layer neural sequence encoder 
+with token embedding (we experiment with LSTM and transformer encoders).
+To condition the model, we additionally train a \emph{community embedding},
+which is concatenated with the hidden layer of the sequence encoder
+for some layer $l_c \leq n$ and passed through a linear layer, 
+which projects the resulting vector back down to the origial hidden size.
+For $l_c=0$, the community embedding is concatenated directly to the token embedding.
+For this reason, the hidden size of the sequence encoder 
+and the size of the token embedding are always the same.
+
 \subsection{Training scheme}
 
 \section{Results and analysis}
