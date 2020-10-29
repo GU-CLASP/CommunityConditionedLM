@@ -101,6 +101,37 @@ and the size of the token embedding are always the same.
 
 \subsection{Training scheme}
 
+We combined the 46 community corproa and split the combined corpus,
+reserving 10\% for testing, 10\% for validation and the rest for training.
+Splits were stratified by community so that the same number of training examples
+were available for each community.
+
+We used a vocabulary size of \num{40000} tokens, with a special out-of-vocabulary token.
+The vocabulary consisted of the most frequent tokens at the comment level,
+meaning that we only counted each token once per comment.
+The main reason for this was to avoid over-counting otherwise rare tokens that were spammed
+many times in a single comment.
+
+We trained the models on a simple left-to-right language modeling task 
+with cross entropy loss over the vocabulary 
+and AdamW \citep{Loshchilov2019} optimization, with an inital learning rate of \num{0.001}.
+We used a batch size of \num{256} and a maximum sequence length of \num{64} tokens.
+During training, a dropout rate of $0.1$ was applied between encoder layers 
+and after each linear layer.
+
+All experiments used models with \num{3} sequence encoder layers, 
+each with hidden (and token embedding) size of \num{256}. 
+The transformer models had \num{8} attention heads per layer.\footnote{
+  This number of attention heads was chosen to give the LSTM and transformer
+  models a comparable number of paramters 
+  (\num{22171203} and \num{21779523}, respectively).}
+The conditional models were given a community embedding with \num{16} dimensions. 
+
+We trained the models until the validation loss was smaller than the smallest
+validation loss for two epochs in a row. 
+The weights from the epoch with the smallest validation loss were used for testing.
+
+
 \section{Results and analysis}
 
 \subsection{Losses of CCLM}
