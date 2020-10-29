@@ -18,6 +18,7 @@
 \usepackage{times}
 \usepackage{latexsym}
 \usepackage{siunitx}
+\usepackage{booktabs}
 \renewcommand{\UrlFont}{\ttfamily\small}
 
 % This is not strictly necessary, and may be commented out,
@@ -131,10 +132,23 @@ We trained the models until the validation loss was smaller than the smallest
 validation loss for two epochs in a row. 
 The weights from the epoch with the smallest validation loss were used for testing.
 
+\begin{table}
+  \centering
+  \input{floats/best_epoch.tex}
+  \label{tab:best-epoch}
+  \caption{Epoch with the lowes validation loss.}
+\end{table}
 
 \section{Results and analysis}
 
 \subsection{Losses of CCLM}
+
+\begin{table*}
+  \centering
+  \input{floats/model_ppls.tex}
+  \label{tab:model-ppls}
+  \caption{Mean model test perplexity.}
+\end{table*}
 
 % Computation of loss/community/model (show all)
 \begin{table}
