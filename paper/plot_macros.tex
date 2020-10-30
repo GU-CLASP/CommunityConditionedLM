@@ -1,0 +1,34 @@
+\newcommand{\commpcaplot}[1]{%
+  \addplot[
+    scatter, only marks,
+    font=\tiny,
+    scatter src=explicit symbolic,
+    scatter/classes={
+      general-interest={mark=*, blue},
+      videogames={mark=*, red},
+      technology={mark=*, green},
+      sports={mark=*, cyan},
+      female-focused={mark=*, magenta},
+      other={mark=o, black}%
+    },
+    nodes near coords*={\community},
+    visualization depends on={value \thisrow{community} \as \community}
+  ] table [x=pca1, y=pca2, meta=category] {#1};
+}
+
+\newcommand{\commpcagroupplot}[2]{%
+  \begin{groupplot}[
+    group style={group size=2 by 1}, 
+    yticklabels={,,}, xticklabels={,,},
+    legend style={
+      scatter legend, anchor=north, legend columns=1, font=\tiny
+    }
+    ]
+    \nextgroupplot
+    \commpcaplot{#1}
+    \nextgroupplot
+    \commpcaplot{#2}
+    \legend{General interest,Videogames,Technology,Sports,Female-focused,Other}
+  \end{groupplot}
+}
+

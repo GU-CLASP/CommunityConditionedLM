@@ -1,0 +1,47 @@
+pca1	pca2	community	category
+-0.0113	 0.4605	streetwear	other
+-0.5093	-0.0395	Jokes	other
+ 0.2938	 0.4730	MaddenUltimateTeam	videogames
+-0.3695	 0.0794	cringe	other
+ 0.0849	 0.3987	CFB	sports
+-0.2783	-0.1307	food	other
+ 0.1306	-0.0062	pcmasterrace	technology
+ 0.6159	 0.0055	jailbreak	technology
+ 0.0511	 0.3612	MLS	sports
+-0.1991	 0.5265	MMA	sports
+-0.1282	 0.3850	rupaulsdragrace	other
+ 0.2257	 0.3459	GlobalOffensive	videogames
+-0.0978	 0.3288	bodybuilding	other
+-0.1881	 0.3445	Kappa	other
+-0.2276	 0.0406	videos	other
+ 0.1976	 0.3708	reddevils	sports
+-0.2836	-0.1349	todayilearned	general-interest
+ 0.3064	-0.1642	KerbalSpaceProgram	videogames
+-0.5380	-0.0320	justneckbeardthings	other
+-0.1030	-0.0459	LifeProTips	general-interest
+ 0.3037	 0.1107	airsoft	other
+ 0.1504	-0.1146	GameDeals	other
+-0.1430	-0.0199	toronto	other
+ 0.2738	-0.2348	eu4	videogames
+-0.0387	 0.0237	cars	other
+ 0.2039	-0.1012	Warframe	videogames
+ 0.0728	-0.1368	EarthPorn	other
+ 0.4706	-0.3405	techsupport	technology
+ 0.3309	 0.1969	heroesofthestorm	videogames
+-0.0194	-0.2813	Drugs	other
+ 0.2283	-0.1347	oculus	technology
+-0.1567	-0.1814	KotakuInAction	other
+-0.2589	-0.3298	exjw	other
+ 0.0899	-0.3110	stopdrinking	other
+-0.2516	-0.1219	AskWomen	female-focused
+ 0.2318	-0.1937	EDH	videogames
+ 0.0963	-0.2526	photography	other
+-0.1241	-0.0724	Fantasy	other
+-0.0064	-0.0648	femalefashionadvice	female-focused
+-0.1535	-0.0580	breakingmom	female-focused
+-0.0803	-0.0474	BabyBumps	female-focused
+-0.0723	-0.2475	explainlikeimfive	general-interest
+-0.0913	-0.0735	xxfitness	female-focused
+-0.1340	-0.1604	TwoXChromosomes	female-focused
+ 0.1417	-0.2834	Advice	general-interest
+-0.0360	-0.1370	relationships	general-interest
