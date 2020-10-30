@@ -20,9 +20,12 @@
 \usepackage{siunitx}
 \usepackage{booktabs}
 \usepackage{pgfplots}
+\usepackage{todonotes}
 \renewcommand{\UrlFont}{\ttfamily\small}
 \usepgfplotslibrary{groupplots}
 \pgfplotsset{compat=1.17}
+
+\newcommand\jp[1]{\todo[backgroundcolor=blue!10]{JP: #1}}
 
 % This is not strictly necessary, and may be commented out,
 % but it will improve the layout of the manuscript,
@@ -167,12 +170,12 @@ TODO: For space reasons, it might be better to put the community-level table in 
 and have the table in body just show the means (and perhaps medians/stddevs?) for each architecture.
 
 We also note that the conditioned models perform differently across different communities---\
-for some communities, the test perplexity of the conditioned models is a lot lowe, 
+for some communities, the test perplexity of the conditioned models is a lot lower,\jp{Where can I see this?}
 whereas for others it is the same or even slightly higher.
 (TODO: talk about this in terms of mutual information instead?)
 As an anecdotal observation, we note 
 that communities where conditioning has the least effect
-tend to be more organized around more ``general interest'' topics.
+tend to be more organized around more ``general interest'' topics.\jp{Is there a way to quantify general interest topics? Community size in terms of number of users?}
 This makes sense intuitively, since communities with more niche topics
 would tend to have more specialized vocabulary and speech patterns.
 
