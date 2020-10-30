@@ -94,11 +94,13 @@ is a standard $n$-layer neural sequence encoder
 with token embedding (we experiment with LSTM and transformer encoders).
 To condition the model, we additionally train a \emph{community embedding},
 which is concatenated with the hidden layer of the sequence encoder
-for some layer $l_c \leq n$ and passed through a linear layer, 
+for some layer $c \leq n$ and passed through a linear layer, 
 which projects the resulting vector back down to the origial hidden size.
-For $l_c=0$, the community embedding is concatenated directly to the token embedding.
-For this reason, the hidden size of the sequence encoder 
-and the size of the token embedding are always the same.
+For $c = n$, the output of this linear layer is passed directly to the softmax function,
+just as the final hidden layer of the sequence encoder is in other models.
+For $c=0$, the community embedding is concatenated with the token embedding.
+For this reason, we set the hidden size of the sequence encoder 
+and the size of the token to be embedding equal for all models. 
 
 \subsection{Training scheme}
 
@@ -123,7 +125,7 @@ and after each linear layer.
 All experiments used models with \num{3} sequence encoder layers, 
 each with hidden (and token embedding) size of \num{256}. 
 The transformer models had \num{8} attention heads per layer.\footnote{
-  This number of attention heads was chosen to give the LSTM and transformer
+  This number of attention heads was chosen in part to give the LSTM and transformer
   models a comparable number of paramters 
   (\num{22171203} and \num{21779523}, respectively).}
 The conditional models were given a community embedding with \num{16} dimensions. 
@@ -136,31 +138,52 @@ The weights from the epoch with the smallest validation loss were used for testi
   \centering
   \input{floats/best_epoch.tex}
   \label{tab:best-epoch}
-  \caption{Epoch with the lowes validation loss.}
+  \caption{Epoch with the lowest validation loss.}
 \end{table}
 
 \section{Results and analysis}
 
 \subsection{Losses of CCLM}
 
+As one would expect, 
+the conditioned models have lower perplexity 
+than their respective unconditioned baseline models,
+but this effect is different in magnitude
+for models with different community embedding depths .
+For the LSTM encoder, 
+the best model ($c=1$) concatenates the community embedding after the first encoder layer,
+with two more LSTM layers after that.
+The best transformer model ($c=3$), on the other hand,
+incorporates the community information last,
+after all the sequence encoder layers
+(Table \ref{tab:model-ppls}).
+
+TODO: For space reasons, it might be better to put the community-level table in the appendix
+and have the table in body just show the means (and perhaps medians/stddevs?) for each architecture.
+
+We also note that the conditioned models perform differently across different communities---\
+for some communities, the test perplexity of the conditioned models is a lot lowe, 
+whereas for others it is the same or even slightly higher.
+(TODO: talk about this in terms of mutual information instead?)
+As an anecdotal observation, we note 
+that communities where conditioning has the least effect
+tend to be more organized around more ``general interest'' topics.
+This makes sense intuitively, since communities with more niche topics
+would tend to have more specialized vocabulary and speech patterns.
+
+The pattern of how much the perplexity falls across different communities
+is similar across architectures, but with some differences.
+It could be interesting to further investigate these differences in future work,
+since it could reveal differences in the kind of linguistic variation the different
+model architectures capture.
+
 \begin{table*}
   \footnotesize
   \centering
   \input{floats/model_ppls.tex}
+  \caption{Mean model test perplexity per community.}
   \label{tab:model-ppls}
-  \caption{Mean model test perplexity.}
 \end{table*}
-
-% Computation of loss/community/model (show all)
-\begin{table}
-  \centering
-  \begin{tabular}{ccc}
-    todo &todo &todo 
-  \end{tabular}
-  \caption{Model losses per community}
-  \label{tab:losses}
-\end{table}
-TODO commentary. Why are some communities low/high.
 
 \subsection{Analysis of community embeddings}
 
