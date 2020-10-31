@@ -4,3 +4,7 @@ model/*
 *~
 scratch.py
 data/*
+*.aux
+*.log
+*.out
+*.pdf

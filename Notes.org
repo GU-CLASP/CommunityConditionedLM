@@ -1,4 +1,28 @@
+* Paper outline
 
+** Hypotheses to test 
+ - Different communities have different levels of linguistic complexity
+ - different language models are able to recognize such differences
+ - level at which the community embedding is taken into account in the
+   language model influences this.
+ - community vectors are correlated with extra-linguistic information.
+ - stability is correlated with language complexity
+
+** Definition of Models/Data/Training
+
+** Results
+
+- Computation of loss/community/model (show all)
+- Computation of confusion matrix for community inference per model (eg. show only best and worst model) (on test set)
+- Computation of H(c,m) entropy of community identification (on test set)
+- Correlation between H(c,m) for various models. Identification of specific communities by hand
+- Correlation between H(c,m) and Stability(c).
+
+** Bonus:
+- Correlation of community embeddings with "type" of community
+- Correlation of community embeddings between different models
+
+- Note that community embeddings gotten by co-occurence matrix don't say much
 
 * On what level of linguistic analysis is variation is happening between communities?
 
@@ -83,3 +107,10 @@ Experiments:
 ** Topic modelling
 - Discovering Discrete Latent Topics with Neural Variational Inference https://arxiv.org/pdf/1706.00359.pdf
 - JeyHan Lau's work
+
+** Pre-trained language models
+- Unsupervised Domain Clusters in Pretrained Language Models https://www.aclweb.org/anthology/2020.acl-main.692/
+
+** Language models for sociolinguistic variation
+- Del Tredici, M., & Fernández, R. (2017). Semantic Variation in Online Communities of Practice. https://www.aclweb.org/anthology/W17-6804
+

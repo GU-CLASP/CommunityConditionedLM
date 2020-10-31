@@ -1,0 +1,290 @@
+%
+% File acl2020.tex
+%
+%% Based on the style files for ACL 2020, which were
+%% Based on the style files for ACL 2018, NAACL 2018/19, which were
+%% Based on the style files for ACL-2015, with some improvements
+%%  taken from the NAACL-2016 style
+%% Based on the style files for ACL-2014, which were, in turn,
+%% based on ACL-2013, ACL-2012, ACL-2011, ACL-2010, ACL-IJCNLP-2009,
+%% EACL-2009, IJCNLP-2008...
+%% Based on the style files for EACL 2006 by 
+%%e.agirre@ehu.es or Sergi.Balari@uab.es
+%% and that of ACL 08 by Joakim Nivre and Noah Smith
+
+\documentclass[11pt,a4paper]{article}
+\usepackage[hyperref]{acl2020}
+\usepackage[T1]{fontenc}
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{pgfplots}
+\usepackage{todonotes}
+\renewcommand{\UrlFont}{\ttfamily\small}
+\usepgfplotslibrary{groupplots}
+\pgfplotsset{compat=1.17}
+
+\newcommand\jp[1]{\todo[backgroundcolor=blue!10]{JP: #1}}
+
+% This is not strictly necessary, and may be commented out,
+% but it will improve the layout of the manuscript,
+% and will typically save some space.
+\usepackage{microtype}
+
+%\aclfinalcopy % Uncomment this line for the final submission
+%\def\aclpaperid{***} %  Enter the acl Paper ID here
+
+%\setlength\titlebox{5cm}
+% You can expand the titlebox if you need extra space
+% to show all the authors. Please do not make the titlebox
+% smaller than 5cm (the original size); we will check this
+% in the camera-ready version and ask you to change it back.
+
+\newcommand\BibTeX{B\textsc{ib}\TeX}
+
+\input{plot_macros}
+
+\title{Community-Conditioned Language Models}
+
+\author{Anon.}
+
+\date{}
+
+\begin{document}
+\maketitle
+\begin{abstract}
+\end{abstract}
+
+
+\section{Introduction}
+
+We propose to test the following hypotheses:
+
+\begin{enumerate}
+\item Different communities have different levels of linguistic
+  complexity
+\item different language models are able to recognize such differences
+\item level at which the community embedding is taken into account in the language model influences this.
+\item community vectors are correlated with extra-linguistic information.
+\item stability is correlated with language complexity
+\end{enumerate}
+
+\section{Experimental setup}
+
+\subsection{Data sets}
+
+To investigate variation across communities, we use comments collected 
+from the social media website Reddit.\footnote{Comments were obtained 
+from the archive at \href{https://pushshift.io/}{pushshift.io} \cite{Baumgartner2020}.}
+
+Reddit is divided into forums called \textit{subreddits}, 
+which are typically organized around a topic of interest. 
+Our dataset includes comments from \num{46} subreddits, 
+randomly selected from the set of all forums 
+with at least \num{15000} comments per month for each month 
+in the three years between 2015 and 2017.\footnote{
+We initially selected \num{50} subreddits, 
+but excluded four from further analysis: 
+two which were primarily non-English and two with particularly short average comment lengths.}
+Each community corpus consist of \num{50000} randomly selected comments from the year 2015.
+
+Comments were preprocessed as follows: 
+We removed markdown formatting, extracting only rendered text. 
+We exclude the content of block quotes, code blocks, and tables. 
+We tokenized the comments using the default English model for the SpaCy tokenizer,\footnote{Version 2.2.3}
+and lower-cased all tokens. 
+
+\subsection{Models}
+
+At the the core of the community-conditioned language model (CCLM) 
+is a standard $n$-layer neural sequence encoder 
+with token embedding (we experiment with LSTM and transformer encoders).
+To condition the model, we additionally train a \emph{community embedding},
+which is concatenated with the hidden layer of the sequence encoder
+for some layer $c \leq n$ and passed through a linear layer, 
+which projects the resulting vector back down to the origial hidden size.
+For $c = n$, the output of this linear layer is passed directly to the softmax function,
+just as the final hidden layer of the sequence encoder is in other models.
+For $c=0$, the community embedding is concatenated with the token embedding.
+For this reason, we set the hidden size of the sequence encoder 
+and the size of the token to be embedding equal for all models. 
+
+\subsection{Training scheme}
+
+We combined the 46 community corproa and split the combined corpus,
+reserving 10\% for testing, 10\% for validation and the rest for training.
+Splits were stratified by community so that the same number of training examples
+were available for each community.
+
+We used a vocabulary size of \num{40000} tokens, with a special out-of-vocabulary token.
+The vocabulary consisted of the most frequent tokens at the comment level,
+meaning that we only counted each token once per comment.
+The main reason for this was to avoid over-counting otherwise rare tokens that were spammed
+many times in a single comment.
+
+We trained the models on a simple left-to-right language modeling task 
+with cross entropy loss over the vocabulary 
+and AdamW \citep{Loshchilov2019} optimization, with an inital learning rate of \num{0.001}.
+We used a batch size of \num{256} and a maximum sequence length of \num{64} tokens.
+During training, a dropout rate of $0.1$ was applied between encoder layers 
+and after each linear layer.
+
+All experiments used models with \num{3} sequence encoder layers, 
+each with hidden (and token embedding) size of \num{256}. 
+The transformer models had \num{8} attention heads per layer.\footnote{
+  This number of attention heads was chosen in part to give the LSTM and transformer
+  models a comparable number of paramters 
+  (\num{22171203} and \num{21779523}, respectively).}
+The conditional models were given a community embedding with \num{16} dimensions. 
+
+We trained the models until the validation loss was smaller than the smallest
+validation loss for two epochs in a row. 
+The weights from the epoch with the smallest validation loss were used for testing.
+
+\begin{table}
+  \centering
+  \input{floats/best_epoch.tex}
+  \label{tab:best-epoch}
+  \caption{Epoch with the lowest validation loss.}
+\end{table}
+
+\section{Results and analysis}
+
+\subsection{Losses of CCLM}
+
+As one would expect, 
+the conditioned models have lower perplexity 
+than their respective unconditioned baseline models,
+but this effect is different in magnitude
+for models with different community embedding depths .
+For the LSTM encoder, 
+the best model ($c=1$) concatenates the community embedding after the first encoder layer,
+with two more LSTM layers after that.
+The best transformer model ($c=3$), on the other hand,
+incorporates the community information last,
+after all the sequence encoder layers
+(Table \ref{tab:model-ppls}).
+
+TODO: For space reasons, it might be better to put the community-level table in the appendix
+and have the table in body just show the means (and perhaps medians/stddevs?) for each architecture.
+
+We also note that the conditioned models perform differently across different communities---\
+for some communities, the test perplexity of the conditioned models is a lot lower,\jp{Where can I see this?}
+whereas for others it is the same or even slightly higher.
+(TODO: talk about this in terms of mutual information instead?)
+As an anecdotal observation, we note 
+that communities where conditioning has the least effect
+tend to be more organized around more ``general interest'' topics.\jp{Is there a way to quantify general interest topics? Community size in terms of number of users?}
+This makes sense intuitively, since communities with more niche topics
+would tend to have more specialized vocabulary and speech patterns.
+
+The pattern of how much the perplexity falls across different communities
+is similar across architectures, but with some differences.
+It could be interesting to further investigate these differences in future work,
+since it could reveal differences in the kind of linguistic variation the different
+model architectures capture.
+
+\begin{table*}
+  \footnotesize
+  \centering
+  \input{floats/model_ppls.tex}
+  \caption{Mean model test perplexity per community.}
+  \label{tab:model-ppls}
+\end{table*}
+
+\subsection{Analysis of community embeddings}
+
+As a qualitative assesment of the community embeddings, 
+we identified several topic categories into which at least three
+of the selected communities fall. 
+We plotted the two-component PCA projection of the embeddings,
+annotated with these topic categories (Figure~\ref{comm-pca}).
+We see that there is some evidence of clustering according to
+the topic categories we identified,
+suggesting that the embedding space learned by the model is meaningful.
+
+\begin{figure*}
+\begin{tikzpicture}
+  \commpcagroupplot{floats/lstm-3-1_pca.csv}{floats/transformer-3-3_pca.csv}
+\end{tikzpicture}
+\caption{Community embedding PCA of the best LSTM (left, $c=1$) and transformer (right, $c=3$) models.}
+\label{fig:comm-pca}
+\end{figure*}
+
+- Correlation with co-occurence matrix (not conclusive)
+
+- Analysis: probably because the model is not using dimensions
+with \emph{a priori} equal variance in all dimensions. (Both the LSTM and transformer are highly non-linear complex models)
+
+\subsection{Implicit language-model-based community classifiers}
+
+(TODO: Insert a the correlation plot between two models, on the exponential scale so that it's the same as the other later plots)
+TODO: So we can't use the losses directly. Why is this so?
+
+
+However, we are not so much interested in the ability of the CCLM to
+precisely model the language used in a community.
+
+We now turn our interest to language-model-based community classifiers
+(LMCC). Given a post $m$, and LMCC gives the probability that it
+belongs in a community $c_i$ Using the Bayes theorem, we can turn a
+CCLM into a LMCC. Indeed, the probability that a given post $m$
+belongs to a community $c_i$ can be calculated as follows:
+\[P(c=c_i | m) = P(m | c_i)\frac {P(m)} {P(c=c_i)}\]
+In the above,
+$P(c=c_i)$ is the frequency of community $c_i$ in the dataset, and
+$P(m | c_i)$ is given by the CCLM. $P(m)$ is our normalisation factor, which can be set so that
+\[\sum_i P(c=c_i | m) = 1\].
+
+Knowing that $m$ \emph{actually} comes from community $c_j$, we can
+measure the the precision our classifier, as a confusion matrix $C$,
+which can be calculated as follows for a given set of posts:(TODO: what set exactly?)
+\[C_{ij} = average_{m ∈ Posts(c_j)}(P(c=c_i | m))\].
+
+TODO: show a few relevant matrices. (eg. show only best and worst model) and commentary.
+
+TODO: why don't we use F scores?
+
+While the confusion matrices provide a lot of insight, they are
+somewhat \emph{too} fine-grained. For this reason, we will be
+interested in confusing the posts from community $c_j$ are to the
+LMCC. For this purpose, we consider the perplexity of the LMCC for a
+post coming from community $j$, defined as the exponential of the
+entropy of the distribution \(D_j\), which is the (discrete)
+probability distribution of predicted community for a random post from
+$c_j$. $D_j$ is simply the $j$th row in \(C\), and so we obtain the formula:
+\[Ppl_j = e^{-\sum_i C_{ij} log(C_{ij})}\]
+
+To recap, \(Ppl_j\) is a measure of the capability (or rather
+inability) of the model to correctly identify a message as coming from
+a certain community $c_j$. 
+
+We can then analyse the correlation between \(Ppl^M_j\) for various models $M$.
+
+TODO: show a scatter plot, compute r2, analyse out-of-balance points; discuss why they stand where they do.
+
+
+Finally, we investigate the correlation between the stability of a
+community and the perplexity of the LMCC for it. Stability is defined as TODO.
+
+- computer r2.
+
+We see a positive correlation: this suggests that the more stable a
+community is, the more difficult it is to identify posts as coming
+from it. What this suggests is that stable communities tend to use a
+varied and standard, subset of English, while unstable communities
+resort to more formulaic posts. This may suggests that to 'fit' in an
+unstable community, one must use more obvious linguistic cues than in
+a stable community. In fact, it is reasonable to think that a new
+member will ostensibly use community-specifc language, but once
+established in a community, a member would tend not to do so.
+
+\section{Discussion and Conclusion}
+
+- Comparison with topic modelling
+
+\bibliography{paper}
+\bibliographystyle{acl_natbib}
+
+\end{document}
