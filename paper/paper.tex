@@ -256,6 +256,16 @@ which can be calculated as follows for a given set of posts:(TODO: what set exac
 
 TODO: show a few relevant matrices. (eg. show only best and worst model) and commentary.
 
+
+\begin{figure*}
+\begin{tikzpicture}
+  \confusiongroupplot{floats/lstm-3-1_comm_infer_confusion.csv}{floats/transformer-3-3_comm_infer_confusion.csv}
+\end{tikzpicture}
+\caption{LMCC confusion matrices for the best LSTM (left, $c=1$) and transformer (right, $c=3$) models.}
+\label{fig:comm-pca}
+\end{figure*}
+
+
 TODO: why don't we use F scores?
 
 While the confusion matrices provide a lot of insight, they are

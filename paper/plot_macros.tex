@@ -30,3 +30,32 @@
   \end{groupplot}
 }
 
+\newcommand{\confusionplot}[1]{%
+    \addplot[
+        matrix plot*,
+        shader=faceted,
+        mesh/cols=46,
+        point meta=explicit,
+] table [x=actual_comm, y=confered_to, meta=avg_prob] {#1};
+}
+
+\newcommand{\confusiongroupplot}[2]{%
+  \begin{groupplot}[
+  group style={group size=2 by 1}, 
+  enlargelimits=false,
+  axis line style={draw=none},
+  %axis equal,
+  xmin=0, xmax=46,
+  ymin=0, ymax=46,
+  width=8cm,
+  xticklabels={Advice,AskWomen,BabyBumps,CFB,Drugs,EDH,EarthPorn,Fantasy,GameDeals,GlobalOffensive,Jokes,Kappa,KerbalSpaceProgram,KotakuInAction,LifeProTips,MLS,MMA,MaddenUltimateTeam,TwoXChromosomes,Warframe,airsoft,bodybuilding,breakingmom,cars,cringe,eu4,exjw,explainlikeimfive,femalefashionadvice,food,heroesofthestorm,jailbreak,justneckbeardthings,oculus,pcmasterrace,photography,reddevils,relationships,rupaulsdragrace,stopdrinking,streetwear,techsupport,todayilearned,toronto,videos,xxfitness},
+  yticklabels=none,
+  xticklabel style={font=\tiny, rotate=90},
+  xtick=data
+    ]
+    \nextgroupplot
+    \confusionplot{#1}
+    \nextgroupplot[colorbar right]
+    \confusionplot{#2}
+  \end{groupplot}
+}
