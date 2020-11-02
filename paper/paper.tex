@@ -23,7 +23,7 @@
 \usepackage{todonotes}
 \renewcommand{\UrlFont}{\ttfamily\small}
 \usepgfplotslibrary{groupplots}
-\pgfplotsset{compat=1.17}
+\pgfplotsset{compat=1.16}
 
 \newcommand\jp[1]{\todo[backgroundcolor=blue!10]{JP: #1}}
 
@@ -80,20 +80,20 @@ from the archive at \href{https://pushshift.io/}{pushshift.io} \cite{Baumgartner
 
 Reddit is divided into forums called \textit{subreddits}, 
 which are typically organized around a topic of interest. 
-Our dataset includes comments from \num{46} subreddits, 
+Our dataset includes \emph{comments}\jp{Comments/Post terminology; make sure its consistens} from \num{46} subreddits, 
 randomly selected from the set of all forums 
-with at least \num{15000} comments per month for each month 
-in the three years between 2015 and 2017.\footnote{
+with at least \num{15000} comments per month for each month
+in the three years between 2015 and 2017. 
 We initially selected \num{50} subreddits, 
-but excluded four from further analysis: 
-two which were primarily non-English and two with particularly short average comment lengths.}
+but excluded four of them from further analysis: 
+two which were primarily non-English and two with particularly\jp{quantify?} short average comment lengths.
 Each community corpus consist of \num{50000} randomly selected comments from the year 2015.
 
 Comments were preprocessed as follows: 
-We removed markdown formatting, extracting only rendered text. 
-We exclude the content of block quotes, code blocks, and tables. 
-We tokenized the comments using the default English model for the SpaCy tokenizer,\footnote{Version 2.2.3}
-and lower-cased all tokens. 
+We excluded the content of block quotes, code blocks, and tables.
+We removed any markup (formatting) commands from the remaining text, extracting only rendered text.
+We tokenized the comments using the default English model for the SpaCy tokenizer Version 2.2.3\jp{citation?}
+and lower-cased all tokens.
 
 \subsection{Models}
 
@@ -112,7 +112,7 @@ and the size of the token to be embedding equal for all models.
 
 \subsection{Training scheme}
 
-We combined the 46 community corproa and split the combined corpus,
+We combined the 46 community corpora and split the combined corpus\jp{unclear if there is balancing between },
 reserving 10\% for testing, 10\% for validation and the rest for training.
 Splits were stratified by community so that the same number of training examples
 were available for each community.
