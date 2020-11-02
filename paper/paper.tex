@@ -21,6 +21,7 @@
 \usepackage{booktabs}
 \usepackage{pgfplots}
 \usepackage{todonotes}
+\usepackage{enumitem}
 \renewcommand{\UrlFont}{\ttfamily\small}
 \usepgfplotslibrary{groupplots}
 \pgfplotsset{compat=1.16}
@@ -43,6 +44,10 @@
 
 \newcommand\BibTeX{B\textsc{ib}\TeX}
 
+\newlist{hypotheses}{enumerate}{3}
+\setlist[hypotheses,1]{parsep=0pt,itemsep=1pt,font=\bfseries,label=(H\arabic*)}
+
+
 \input{plot_macros}
 
 \title{Community-Conditioned Language Models}
@@ -59,16 +64,23 @@
 
 \section{Introduction}
 
+- What are linguistic communities
+  - Linguistic complexity
+- Conditioned language models
+
+
 We propose to test the following hypotheses:
 
-\begin{enumerate}
+\begin{hypotheses}
 \item Different communities have different levels of linguistic
   complexity
-\item different language models are able to recognize such differences
-\item level at which the community embedding is taken into account in the language model influences this.
-\item community vectors are correlated with extra-linguistic information.
-\item stability is correlated with language complexity
-\end{enumerate}
+\item Different language models are able to recognize such differences
+\item The level at which the community embedding is taken into account
+  in the language model influences this.
+\item Community embedding are correlated with extra-linguistic
+  properties of the community.
+\item Community stability is correlated with language complexity
+\end{hypotheses}
 
 \section{Experimental setup}
 
@@ -268,7 +280,7 @@ TODO: show a scatter plot, compute r2, analyse out-of-balance points; discuss wh
 Finally, we investigate the correlation between the stability of a
 community and the perplexity of the LMCC for it. Stability is defined as TODO.
 
-- computer r2.
+- compute pearson correlation coefficient
 
 We see a positive correlation: this suggests that the more stable a
 community is, the more difficult it is to identify posts as coming
