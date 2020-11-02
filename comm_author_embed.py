@@ -46,5 +46,5 @@ np.save('model/reddit2015/comm_author_counts', author_comm_mat)
 
 svd = TruncatedSVD(n_components=16, n_iter=20) #, algorithm='arpack')
 comm_author_embed = svd.fit_transform(author_comm_mat)
-np.save('model/reddit2015/comm_author_embed_svd16dim.20iter', comm_author_embed)
+np.save('model/reddit2015/comm_author_embed_svd16dim', comm_author_embed)
 
