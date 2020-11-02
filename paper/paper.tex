@@ -98,10 +98,10 @@ and lower-cased all tokens.
 \subsection{Models}
 
 At the the core of the community-conditioned language model (CCLM) 
-is a standard $n$-layer neural sequence encoder 
+is a standard $n$\jp{with n=3}-layer neural sequence encoder
 with token embedding (we experiment with LSTM and transformer encoders).
-To condition the model, we additionally train a \emph{community embedding},
-which is concatenated with the hidden layer of the sequence encoder
+To condition the model, we additionally train a \emph{community embedding} parameter.
+This parameter is concatenated with the hidden layer of the sequence encoder
 for some layer $c \leq n$ and passed through a linear layer, 
 which projects the resulting vector back down to the origial hidden size.
 For $c = n$, the output of this linear layer is passed directly to the softmax function,
@@ -112,25 +112,25 @@ and the size of the token to be embedding equal for all models.
 
 \subsection{Training scheme}
 
-We combined the 46 community corpora and split the combined corpus\jp{unclear if there is balancing between },
+We combined the 46 community corpora and split the combined corpus,
 reserving 10\% for testing, 10\% for validation and the rest for training.
 Splits were stratified by community so that the same number of training examples
-were available for each community.
+were available for each community.\jp{is it the same for testing/validation? How can you maintain this split?}
 
-We used a vocabulary size of \num{40000} tokens, with a special out-of-vocabulary token.
+We used\jp{past tense is a bit awkward?} a vocabulary size of \num{40000} tokens, including a special out-of-vocabulary token.
 The vocabulary consisted of the most frequent tokens at the comment level,
 meaning that we only counted each token once per comment.
-The main reason for this was to avoid over-counting otherwise rare tokens that were spammed
+The main reason for this choice was to avoid over-counting otherwise rare tokens that were spammed
 many times in a single comment.
 
-We trained the models on a simple left-to-right language modeling task 
+We trained the models on a simple left-to-right\jp{I don't think that this applies for the transformer model} language modeling task 
 with cross entropy loss over the vocabulary 
 and AdamW \citep{Loshchilov2019} optimization, with an inital learning rate of \num{0.001}.
-We used a batch size of \num{256} and a maximum sequence length of \num{64} tokens.
+We used a batch size of \num{256} and a maximum sequence length of \num{64} tokens.\jp{What happens with longer sequences? Are sequences split at sentence boundaries?}
 During training, a dropout rate of $0.1$ was applied between encoder layers 
 and after each linear layer.
 
-All experiments used models with \num{3} sequence encoder layers, 
+All experiments used models with \num{3} sequence encoder layers,
 each with hidden (and token embedding) size of \num{256}. 
 The transformer models had \num{8} attention heads per layer.\footnote{
   This number of attention heads was chosen in part to give the LSTM and transformer
@@ -138,8 +138,8 @@ The transformer models had \num{8} attention heads per layer.\footnote{
   (\num{22171203} and \num{21779523}, respectively).}
 The conditional models were given a community embedding with \num{16} dimensions. 
 
-We trained the models until the validation loss was smaller than the smallest
-validation loss for two epochs in a row. 
+We trained the models until the validation loss stopped decreasing for two epochs in a row.
+\jp{How many epochs does that turn out to be? Is there a meaningful difference between lstm/}
 The weights from the epoch with the smallest validation loss were used for testing.
 
 \begin{table}
