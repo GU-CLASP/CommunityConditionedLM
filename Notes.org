@@ -85,6 +85,8 @@ Experiments:
     - construct the matrix as follows:
       - for each message posted by user u in community c, M (u,c) += 1
       - apply LSA
+      - Done here: https://github.com/trevormartin/shorttails/blob/master/subredditalgebra/subredditalgebra.r
+      - https://www.shorttails.io/interactive-map-of-reddit-and-subreddit-similarity-calculator/
 
 - Correlation between embeddings of several models.
   - Basic idea: check the Pearson correlation beween cosine similarity (c^m_i, c^m_j) for every

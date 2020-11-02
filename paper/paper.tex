@@ -23,7 +23,7 @@
 \usepackage{todonotes}
 \renewcommand{\UrlFont}{\ttfamily\small}
 \usepgfplotslibrary{groupplots}
-\pgfplotsset{compat=1.17}
+\pgfplotsset{compat=1.16}
 
 \newcommand\jp[1]{\todo[backgroundcolor=blue!10]{JP: #1}}
 
@@ -80,28 +80,28 @@ from the archive at \href{https://pushshift.io/}{pushshift.io} \cite{Baumgartner
 
 Reddit is divided into forums called \textit{subreddits}, 
 which are typically organized around a topic of interest. 
-Our dataset includes comments from \num{46} subreddits, 
+Our dataset includes \emph{comments}\jp{Comments/Post terminology; make sure its consistens} from \num{46} subreddits, 
 randomly selected from the set of all forums 
-with at least \num{15000} comments per month for each month 
-in the three years between 2015 and 2017.\footnote{
+with at least \num{15000} comments per month for each month
+in the three years between 2015 and 2017. 
 We initially selected \num{50} subreddits, 
-but excluded four from further analysis: 
-two which were primarily non-English and two with particularly short average comment lengths.}
+but excluded four of them from further analysis: 
+two which were primarily non-English and two with particularly\jp{quantify?} short average comment lengths.
 Each community corpus consist of \num{50000} randomly selected comments from the year 2015.
 
 Comments were preprocessed as follows: 
-We removed markdown formatting, extracting only rendered text. 
-We exclude the content of block quotes, code blocks, and tables. 
-We tokenized the comments using the default English model for the SpaCy tokenizer,\footnote{Version 2.2.3}
-and lower-cased all tokens. 
+We excluded the content of block quotes, code blocks, and tables.
+We removed any markup (formatting) commands from the remaining text, extracting only rendered text.
+We tokenized the comments using the default English model for the SpaCy tokenizer Version 2.2.3\jp{citation?}
+and lower-cased all tokens.
 
 \subsection{Models}
 
 At the the core of the community-conditioned language model (CCLM) 
-is a standard $n$-layer neural sequence encoder 
+is a standard $n$\jp{with n=3}-layer neural sequence encoder
 with token embedding (we experiment with LSTM and transformer encoders).
-To condition the model, we additionally train a \emph{community embedding},
-which is concatenated with the hidden layer of the sequence encoder
+To condition the model, we additionally train a \emph{community embedding} parameter.
+This parameter is concatenated with the hidden layer of the sequence encoder
 for some layer $c \leq n$ and passed through a linear layer, 
 which projects the resulting vector back down to the origial hidden size.
 For $c = n$, the output of this linear layer is passed directly to the softmax function,
@@ -112,25 +112,25 @@ and the size of the token to be embedding equal for all models.
 
 \subsection{Training scheme}
 
-We combined the 46 community corproa and split the combined corpus,
+We combined the 46 community corpora and split the combined corpus,
 reserving 10\% for testing, 10\% for validation and the rest for training.
 Splits were stratified by community so that the same number of training examples
-were available for each community.
+were available for each community.\jp{is it the same for testing/validation? How can you maintain this split?}
 
-We used a vocabulary size of \num{40000} tokens, with a special out-of-vocabulary token.
+We used\jp{past tense is a bit awkward?} a vocabulary size of \num{40000} tokens, including a special out-of-vocabulary token.
 The vocabulary consisted of the most frequent tokens at the comment level,
 meaning that we only counted each token once per comment.
-The main reason for this was to avoid over-counting otherwise rare tokens that were spammed
+The main reason for this choice was to avoid over-counting otherwise rare tokens that were spammed
 many times in a single comment.
 
-We trained the models on a simple left-to-right language modeling task 
+We trained the models on a simple left-to-right\jp{I don't think that this applies for the transformer model} language modeling task 
 with cross entropy loss over the vocabulary 
 and AdamW \citep{Loshchilov2019} optimization, with an inital learning rate of \num{0.001}.
-We used a batch size of \num{256} and a maximum sequence length of \num{64} tokens.
+We used a batch size of \num{256} and a maximum sequence length of \num{64} tokens.\jp{What happens with longer sequences? Are sequences split at sentence boundaries?}
 During training, a dropout rate of $0.1$ was applied between encoder layers 
 and after each linear layer.
 
-All experiments used models with \num{3} sequence encoder layers, 
+All experiments used models with \num{3} sequence encoder layers,
 each with hidden (and token embedding) size of \num{256}. 
 The transformer models had \num{8} attention heads per layer.\footnote{
   This number of attention heads was chosen in part to give the LSTM and transformer
@@ -138,8 +138,8 @@ The transformer models had \num{8} attention heads per layer.\footnote{
   (\num{22171203} and \num{21779523}, respectively).}
 The conditional models were given a community embedding with \num{16} dimensions. 
 
-We trained the models until the validation loss was smaller than the smallest
-validation loss for two epochs in a row. 
+We trained the models until the validation loss stopped decreasing for two epochs in a row.
+\jp{How many epochs does that turn out to be? Is there a meaningful difference between lstm/}
 The weights from the epoch with the smallest validation loss were used for testing.
 
 \begin{table}
@@ -240,7 +240,7 @@ $P(m | c_i)$ is given by the CCLM. $P(m)$ is our normalisation factor, which can
 Knowing that $m$ \emph{actually} comes from community $c_j$, we can
 measure the the precision our classifier, as a confusion matrix $C$,
 which can be calculated as follows for a given set of posts:(TODO: what set exactly?)
-\[C_{ij} = average_{m ∈ Posts(c_j)}(P(c=c_i | m))\].
+\[C_{ij} = average_{\{m ∈ Posts(c_j)\}}(P(c=c_i | m))\].
 
 TODO: show a few relevant matrices. (eg. show only best and worst model) and commentary.
 
