@@ -65,6 +65,7 @@ from sklearn.decomposition import PCA
 
 comms = torch.load(open(os.path.join(model_dir, 'community.field'), 'rb')).vocab.itos[1:]
 comms = pd.Series(comms, name='community')
+comms_alpha = sorted(comms)
 
 # Manually assign communities to different types/subjects
 # NOTE this shouldn't really be a partition. Some communities clearly belong to multiple types,
@@ -102,3 +103,25 @@ for model in conditioned_models:
     write_pca_table(model)
 
 
+#### Community inference confusion matrix
+
+comms_alpha = sorted(list(comms))
+
+def model_comm_confusion_matrix(model_name):
+    """ C[i,j] = average_{Posts(cj)}(P(c=ci|m))"""
+    P = pd.read_pickle(os.path.join(os.path.join(model_dir, model_name), 'comm_probs.pickle'))
+    C = P.groupby('actual_comm').mean()
+    C = C.T # transpose to (prob assigned, actual comm), as in the paper
+    C = C.sort_index() # sort the rows alphabetically
+    C = C[C.index] # sort the columns alphabetically too
+    C = C.unstack().reset_index()
+    C = C.rename(columns={'level_1': 'confered_to', 0: 'avg_prob'})
+    C['actual_comm'] = C['actual_comm'].apply(comms_alpha.index)
+    C['confered_to'] = C['confered_to'].apply(comms_alpha.index)
+    return C
+
+
+
+for model_name in conditioned_models:
+    C = model_comm_confusion_matrix(model_name)
+    C.to_csv(os.path.join(floats_dir, f'{model_name}_comm_infer_confusion.csv'), sep='\t', float_format="% 5.4f", index=False)

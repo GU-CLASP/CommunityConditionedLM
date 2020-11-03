@@ -27,6 +27,7 @@
 \pgfplotsset{compat=1.16}
 
 \newcommand\jp[1]{\todo[backgroundcolor=blue!10]{JP: #1}}
+\newcommand\bn[1]{\todo[backgroundcolor=green!10]{BN: #1}}
 
 % This is not strictly necessary, and may be commented out,
 % but it will improve the layout of the manuscript,
@@ -92,7 +93,12 @@ from the archive at \href{https://pushshift.io/}{pushshift.io} \cite{Baumgartner
 
 Reddit is divided into forums called \textit{subreddits}, 
 which are typically organized around a topic of interest. 
-Our dataset includes \emph{comments}\jp{Comments/Post terminology; make sure its consistens} from \num{46} subreddits, 
+Users create \textit{posts}, which consist of a link, image, 
+or text, along with a \emph{comment} section. 
+Comments are threaded: a comment can be made directly on a post,
+or appear as a reply to another comment. 
+
+Our dataset includes comments from \num{46} subreddits, 
 randomly selected from the set of all forums 
 with at least \num{15000} comments per month for each month
 in the three years between 2015 and 2017. 
@@ -104,14 +110,14 @@ Each community corpus consist of \num{50000} randomly selected comments from the
 Comments were preprocessed as follows: 
 We excluded the content of block quotes, code blocks, and tables.
 We removed any markup (formatting) commands from the remaining text, extracting only rendered text.
-We tokenized the comments using the default English model for the SpaCy tokenizer Version 2.2.3\jp{citation?}
+We tokenized the comments using the default English model for the SpaCy tokenizer Version 2.2.3 \citep{Honnibal2017}
 and lower-cased all tokens.
 
 \subsection{Models}
 
 At the the core of the community-conditioned language model (CCLM) 
-is a standard $n$\jp{with n=3}-layer neural sequence encoder
-with token embedding (we experiment with LSTM and transformer encoders).
+is a standard $n$-layer neural sequence encoder
+with token embedding (we experiment with LSTM and transformer encoders and set $n=3$ for all models).
 To condition the model, we additionally train a \emph{community embedding} parameter.
 This parameter is concatenated with the hidden layer of the sequence encoder
 for some layer $c \leq n$ and passed through a linear layer, 
@@ -129,7 +135,7 @@ reserving 10\% for testing, 10\% for validation and the rest for training.
 Splits were stratified by community so that the same number of training examples
 were available for each community.\jp{is it the same for testing/validation? How can you maintain this split?}
 
-We used\jp{past tense is a bit awkward?} a vocabulary size of \num{40000} tokens, including a special out-of-vocabulary token.
+We use a vocabulary size of \num{40000} tokens, including a special out-of-vocabulary token.
 The vocabulary consisted of the most frequent tokens at the comment level,
 meaning that we only counted each token once per comment.
 The main reason for this choice was to avoid over-counting otherwise rare tokens that were spammed
@@ -138,7 +144,7 @@ many times in a single comment.
 We trained the models on a simple left-to-right\jp{I don't think that this applies for the transformer model} language modeling task 
 with cross entropy loss over the vocabulary 
 and AdamW \citep{Loshchilov2019} optimization, with an inital learning rate of \num{0.001}.
-We used a batch size of \num{256} and a maximum sequence length of \num{64} tokens.\jp{What happens with longer sequences? Are sequences split at sentence boundaries?}
+We used a batch size of \num{256} and a maximum sequence length of \num{64} tokens, truncating longer comments (16.8\% of comments were longer than \num{64} tokens).
 During training, a dropout rate of $0.1$ was applied between encoder layers 
 and after each linear layer.
 
@@ -150,15 +156,16 @@ The transformer models had \num{8} attention heads per layer.\footnote{
   (\num{22171203} and \num{21779523}, respectively).}
 The conditional models were given a community embedding with \num{16} dimensions. 
 
-We trained the models until the validation loss stopped decreasing for two epochs in a row.
-\jp{How many epochs does that turn out to be? Is there a meaningful difference between lstm/}
-The weights from the epoch with the smallest validation loss were used for testing.
+We trained the models until the validation loss stopped decreasing 
+for two epochs in a row,
+and used the weights from the epoch with the smallest validation loss for testing.
+In general, transformer models trained for about half as long as the LSTM models (Table~\ref{tab:best-epoch}).
 
 \begin{table}
   \centering
   \input{floats/best_epoch.tex}
-  \label{tab:best-epoch}
   \caption{Epoch with the lowest validation loss.}
+  \label{tab:best-epoch}
 \end{table}
 
 \section{Results and analysis}
@@ -178,13 +185,12 @@ incorporates the community information last,
 after all the sequence encoder layers
 (Table \ref{tab:model-ppls}).
 
-TODO: For space reasons, it might be better to put the community-level table in the appendix
-and have the table in body just show the means (and perhaps medians/stddevs?) for each architecture.
+%TODO: For space reasons, it might be better to put the community-level table in the appendix and have the table in body just show the means (and perhaps medians/stddevs?) for each architecture.}
 
 We also note that the conditioned models perform differently across different communities---\
-for some communities, the test perplexity of the conditioned models is a lot lower,\jp{Where can I see this?}
+for some communities, the test perplexity of the conditioned models is a lot lower (Table~\ref{tab:model-ppls},
 whereas for others it is the same or even slightly higher.
-(TODO: talk about this in terms of mutual information instead?)
+\bn{TODO: talk about this in terms of mutual information instead?}
 As an anecdotal observation, we note 
 that communities where conditioning has the least effect
 tend to be more organized around more ``general interest'' topics.\jp{Is there a way to quantify general interest topics? Community size in terms of number of users?}
@@ -211,7 +217,7 @@ As a qualitative assesment of the community embeddings,
 we identified several topic categories into which at least three
 of the selected communities fall. 
 We plotted the two-component PCA projection of the embeddings,
-annotated with these topic categories (Figure~\ref{comm-pca}).
+annotated with these topic categories (Figure~\ref{fig:comm-pca}).
 We see that there is some evidence of clustering according to
 the topic categories we identified,
 suggesting that the embedding space learned by the model is meaningful.
@@ -239,9 +245,9 @@ However, we are not so much interested in the ability of the CCLM to
 precisely model the language used in a community.
 
 We now turn our interest to language-model-based community classifiers
-(LMCC). Given a post $m$, and LMCC gives the probability that it
+(LMCC). Given a comment $m$, and LMCC gives the probability that it
 belongs in a community $c_i$ Using the Bayes theorem, we can turn a
-CCLM into a LMCC. Indeed, the probability that a given post $m$
+CCLM into a LMCC. Indeed, the probability that a given comment $m$
 belongs to a community $c_i$ can be calculated as follows:
 \[P(c=c_i | m) = P(m | c_i)\frac {P(m)} {P(c=c_i)}\]
 In the above,
@@ -250,21 +256,31 @@ $P(m | c_i)$ is given by the CCLM. $P(m)$ is our normalisation factor, which can
 \[\sum_i P(c=c_i | m) = 1\].
 
 Knowing that $m$ \emph{actually} comes from community $c_j$, we can
-measure the the precision our classifier, as a confusion matrix $C$,
-which can be calculated as follows for a given set of posts:(TODO: what set exactly?)
+measure the precision our classifier, as a confusion matrix $C$,
+which can be calculated as follows for a given set of comment (TODO: what set exactly?)
 \[C_{ij} = average_{\{m ∈ Posts(c_j)\}}(P(c=c_i | m))\].
 
 TODO: show a few relevant matrices. (eg. show only best and worst model) and commentary.
+
+
+\begin{figure*}
+\begin{tikzpicture}
+  \confusiongroupplot{floats/lstm-3-1_comm_infer_confusion.csv}{floats/transformer-3-3_comm_infer_confusion.csv}
+\end{tikzpicture}
+\caption{LMCC confusion matrices for the best LSTM (left, $c=1$) and transformer (right, $c=3$) models.}
+\label{fig:confusion}
+\end{figure*}
+
 
 TODO: why don't we use F scores?
 
 While the confusion matrices provide a lot of insight, they are
 somewhat \emph{too} fine-grained. For this reason, we will be
-interested in confusing the posts from community $c_j$ are to the
+interested in confusing the comments from community $c_j$ are to the
 LMCC. For this purpose, we consider the perplexity of the LMCC for a
-post coming from community $j$, defined as the exponential of the
+comment coming from community $j$, defined as the exponential of the
 entropy of the distribution \(D_j\), which is the (discrete)
-probability distribution of predicted community for a random post from
+probability distribution of predicted community for a random comment from
 $c_j$. $D_j$ is simply the $j$th row in \(C\), and so we obtain the formula:
 \[Ppl_j = e^{-\sum_i C_{ij} log(C_{ij})}\]
 
@@ -283,10 +299,10 @@ community and the perplexity of the LMCC for it. Stability is defined as TODO.
 - compute pearson correlation coefficient
 
 We see a positive correlation: this suggests that the more stable a
-community is, the more difficult it is to identify posts as coming
+community is, the more difficult it is to identify comment as coming
 from it. What this suggests is that stable communities tend to use a
 varied and standard, subset of English, while unstable communities
-resort to more formulaic posts. This may suggests that to 'fit' in an
+resort to more formulaic language. This may suggests that to 'fit' in an
 unstable community, one must use more obvious linguistic cues than in
 a stable community. In fact, it is reasonable to think that a new
 member will ostensibly use community-specifc language, but once
