@@ -1,3 +1,11 @@
+"""
+Queries the pushshift.io data on BigQuery to create author/community cooccurance counts for 2015.
+The results are saved to a Google Storange bucket and can be downloaded as follows:
+    gsutil -m cp gs://bill-gu-research/CondLM/2015_author_sub_counts-*.csv ./data/
+
+See: https://cloud.google.com/docs/authentication/getting-started#auth-cloud-implicit-python
+"""
+
 import click
 import os
 import google.auth
