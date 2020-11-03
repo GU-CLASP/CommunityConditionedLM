@@ -8,43 +8,30 @@ from collections import Counter
 from scipy.sparse import coo_matrix
 from sklearn.decomposition import TruncatedSVD
 import numpy as np
+import glob
 
-dataset, fields = data.load_data_and_fields('data/reddit2015', 'model/reddit2015', 64, 5)
-comms = fields['community'].vocab.itos
-comms = comms[1:]
+count_files = glob.glob('data/reddit2015_author_comm_counts/2015_author_sub_counts-*.csv')
 
-def iter_comments(comm):
-    for month in range(1,13):
-        filename = f'data/subreddit_comments/{comm}/2015-{month:02d}.csv'
-        with open(filename, 'r') as f:
+def iter_counts():
+    for file in count_files:
+        print(f"reading {file}")
+        with open(file, 'r') as f:
             reader = csv.DictReader(f)
-            for comment in reader:
-                yield comment
-
-authors = set()
-for c_idx,c in enumerate(comms):
-    print(f'{c_idx+1}/{len(comms)}',end='\r')
-    for comment in iter_comments(c):
-        authors.add(comment['author'])
-authors = list(authors)
-author_dict = dict(zip(authors, range(len(authors))))
-
-author_counts = Counter()
-for c_idx, c in enumerate(comms):
-    print(f'{c_idx+1}/{len(comms)}',end='\r')
-    for comment in iter_comments(c):
-        author_idx = author_dict[comment['author']]
-        author_counts[(c_idx, author_idx)] += 1
+            for item in reader:
+                yield item['author'], item['subreddit'], item['comment_count']
 
 data, row, col = [], [], []
-for (comm, author), count in author_counts.items():
+for author, comm, count in iter_counts():
     data.append(count)
     row.append(comm)
     col.append(author)
-author_comm_mat = coo_matrix((data, (row, col))).tocsr()
-np.save('model/reddit2015/comm_author_counts', author_comm_mat)
 
+print("Creating counts matrix.")
+author_comm_mat = coo_matrix((data, (row, col))).tocsr()
+np.save('model/reddit2015/comm_author_counts_full', author_comm_mat)
+
+print("Computing SVD.")
 svd = TruncatedSVD(n_components=16, n_iter=20) #, algorithm='arpack')
 comm_author_embed = svd.fit_transform(author_comm_mat)
-np.save('model/reddit2015/comm_author_embed_svd16dim', comm_author_embed)
+np.save('model/reddit2015/comm_author_embed_full_svd16dim', comm_author_embed)
 
