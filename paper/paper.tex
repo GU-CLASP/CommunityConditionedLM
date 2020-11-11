@@ -26,6 +26,7 @@
 \usepgfplotslibrary{groupplots}
 \pgfplotsset{compat=1.16}
 
+
 \newcommand\jp[1]{\todo[backgroundcolor=blue!10]{JP: #1}}
 \newcommand\bn[1]{\todo[backgroundcolor=green!10]{BN: #1}}
 
@@ -216,13 +217,13 @@ model architectures capture.
   \label{tab:model-ppls}
 \end{table*}
 
-\subsection{Analysis of community embeddings}
+\subsection{Analysis of CCLM community embeddings}
 
 As a qualitative assesment of the community embeddings, 
-we identified several topic categories into which at least three
+we manually identified topic categories into which at least three
 of the selected communities fall. 
 We plotted the two-component PCA projection of the embeddings,
-annotated with these topic categories (Figure~\ref{fig:comm-pca}).
+annotated with these categories (Figure~\ref{fig:comm-pca}).
 We see that there is some evidence of clustering according to
 the topic categories we identified,
 suggesting that the embedding space learned by the model is meaningful.
@@ -235,15 +236,58 @@ suggesting that the embedding space learned by the model is meaningful.
 \label{fig:comm-pca}
 \end{figure*}
 
-As a quantitative ....
-
-- Correlation with community embeddings based on co-occurence;
+As a quantitative assessment,
+we compare the CCLM-learned community embedding with the community embedding from \citet{Kumar2018},
+which is based on community membership. 
 
 - Description of the snap data (JP)
 
-- Insert scatterplot (select 1 model)
-  + pearson r for ``all'' models.
+We correlate the pairwise cosine similarity of the
+CCLM embeddings with the same metric on the membership embedding,
+restricted to the 46 communities chosen for our study
+(Figure~\ref{fig:pairwise-comm-sim}).
 
+\begin{figure}
+  \begin{tikzpicture}
+  \begin{axis}[]
+  \addplot[
+    scatter, only marks,
+    font=\tiny,
+    scatter src=explicit symbolic,
+    scatter/classes={
+      general-interest={mark=*, blue},
+      videogames={mark=*, red},
+      technology={mark=*, green},
+      sports={mark=*, cyan},
+      female-focused={mark=*, magenta},
+      other={mark=o, black},
+      different={mark=x}
+    },
+    %mark size=1pt,
+    %nodes near coords*={\community},
+    %visualization depends on={value \thisrow{community} \as \community}
+  ] table [x=snap, y=lstm-3-1, meta=meta] {floats/comm_sim.csv};
+  \end{axis}
+  \end{tikzpicture}
+  \caption{Pairwise cosine similarity between community vectors for 
+    the membership-based embedding (x-axis) and
+  the LSTM CCLM embedding with $c=1$ (y-axis). 
+  Pairs from the same category are colored according to Figure~\ref{fig:comm-pca}.
+  We also mark pairs from different (\texttimes) and pairs where one or both
+  communities belong to the ``Other'' category (\textbigcircle).
+  }
+  \label{fig:pairwise-comm-sim}
+\end{figure}
+
+\begin{table}
+  \centering
+  \input{floats/comm_sim.tex}
+  \caption{Pearson's r between the pairwise similarity of community vectors
+  in the CCLM models and the membership-based embedding of \citet{Kumar2018}.
+  ($p<0.001$ for all models).
+  }
+  \label{tab:pairwise-comm-sim}
+\end{table}
 
 \subsection{Latent language-model-based community classifiers}
 
