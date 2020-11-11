@@ -13,10 +13,10 @@ import glob
 import os
 
 count_files = glob.glob('data/reddit2015_author_comm_counts/2015_author_sub_counts-*.csv')
-counts_matrix_file = 'model/reddit2015/comm_author_counts_full.npz'
-authors_file = 'model/reddit2015/authors_full.txt'
-comms_file = 'model/reddit2015/comms_full.txt'
-comms_sorted_file =  'model/reddit2015/comms_full_sorted.txt'
+counts_matrix_file = 'embedding/comm_author_counts_full.npz'
+authors_file = 'embedding/authors_full.txt'
+comms_file = 'embedding/comms_full.txt'
+comms_sorted_file =  'embedding/comms_full_sorted.txt'
 
 def iter_counts():
     for file in count_files:
@@ -107,13 +107,25 @@ def pca(w, n_components):
     pca = PCA(n_components=n_components)
     return pca.fit_transform(w)
 
-def load_comm_embed(embedding_path, comms=None):
+def load_comm_embed(embedding_path, selected_comms=None):
     comms_sorted = load_list(comms_sorted_file)
-    if not comms:
-        comms = comms_sorted
+    comms = selected_comms if selected_comms else comms_sorted
     comm_idxs = [comms_sorted.index(comm) for comm in comms]
     embed = np.load(embedding_path)
     return embed[comm_idxs]
+
+def load_snap_comm_embed(selected_comms):
+    embedding_path = 'embedding/web-redditEmbeddings-subreddits.csv'
+    embedding = np.zeros((len(selected_comms), 300), float)
+    selected_comms = [c.lower() for c in selected_comms]
+    with open(embedding_path, 'r') as f:
+        reader = csv.reader(f)
+        for line in reader:
+            comm = line[0]
+            vector = np.array([float(x) for x in line[1:]])
+            if comm in selected_comms:
+                embedding[selected_comms.index(comm)] = vector
+    return embedding 
 
 if __name__ == '__main__':
 
@@ -147,7 +159,7 @@ if __name__ == '__main__':
 
 
     save_list(comms_sorted, comms_sorted_file)
-    np.save('model/reddit2015/comm_embed_explicit.npy', comm_embed_explicit)
-    np.save('model/reddit2015/comm_embed_pca.npy', comm_embed_pca)
+    np.save('embedding/comm_embed_explicit.npy', comm_embed_explicit)
+    np.save('embedding/comm_embed_pca.npy', comm_embed_pca)
 
 
