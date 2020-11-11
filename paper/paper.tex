@@ -67,20 +67,25 @@
 
 - What are linguistic communities
   - Linguistic complexity
-- Conditioned language models
-
+- Community Conditioned language models
+- Latent Community Classifier
 
 We propose to test the following hypotheses:
+
 
 \begin{hypotheses}
 \item Different communities have different levels of linguistic
   complexity
-\item Different language models are able to recognize such differences
-\item The level at which the community embedding is taken into account
-  in the language model influences this.
-\item Community embedding are correlated with extra-linguistic
-  properties of the community.
-\item Community stability is correlated with language complexity
+
+\item LCC works: the communty-specific linguistic features are recognized by CCLM.
+\item The layer at which the community embedding is taken into account
+  in CCLM influences its perplexity.
+\item The layer at which the community embedding is taken into account
+  influences the LCC.
+\item Correlation between community language complexity and recognisability. (False)
+\item Community embedding are correlated with coocurrence of users
+  between communities.
+% \item Community stability is correlated with language complexity
 \end{hypotheses}
 
 \section{Experimental setup}
