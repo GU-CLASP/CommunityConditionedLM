@@ -235,15 +235,21 @@ suggesting that the embedding space learned by the model is meaningful.
 \label{fig:comm-pca}
 \end{figure*}
 
-- Correlation with co-occurence matrix (not conclusive)
+As a quantitative ....
 
-- Analysis: probably because the model is not using dimensions
-with \emph{a priori} equal variance in all dimensions. (Both the LSTM and transformer are highly non-linear complex models)
+- Correlation with community embeddings based on co-occurence;
 
-\subsection{Implicit language-model-based community classifiers}
+- Description of the snap data (JP)
 
-(TODO: Insert a the correlation plot between two models, on the exponential scale so that it's the same as the other later plots)
-TODO: So we can't use the losses directly. Why is this so?
+- Insert scatterplot (select 1 model)
+  + pearson r for ``all'' models.
+
+
+\subsection{Latent language-model-based community classifiers}
+
+- Two different use of the model
+1. ``absolute'' perplexity
+2. latent ability to recognize a community
 
 
 However, we are not so much interested in the ability of the CCLM to
@@ -264,8 +270,6 @@ Knowing that $m$ \emph{actually} comes from community $c_j$, we can
 measure the precision our classifier, as a confusion matrix $C$,
 which can be calculated as follows for a given set of comment (TODO: what set exactly?)
 \[C_{ij} = average_{\{m ∈ Posts(c_j)\}}(P(c=c_i | m))\].
-
-TODO: show a few relevant matrices. (eg. show only best and worst model) and commentary.
 
 
 \begin{figure*}
@@ -293,25 +297,28 @@ To recap, \(Ppl_j\) is a measure of the capability (or rather
 inability) of the model to correctly identify a message as coming from
 a certain community $c_j$. 
 
+
+TODO: scatterplot/r2 between LMCC and CCLM perplexity  ---> no correlation.
+
+
 We can then analyse the correlation between \(Ppl^M_j\) for various models $M$.
 
-TODO: show a scatter plot, compute r2, analyse out-of-balance points; discuss why they stand where they do.
+TODO: show a scatter plot, compute r2 --> almost perfect correlation
 
+% Finally, we investigate the correlation between the stability of a
+% community and the perplexity of the LMCC for it. Stability is defined as TODO.
 
-Finally, we investigate the correlation between the stability of a
-community and the perplexity of the LMCC for it. Stability is defined as TODO.
+% - compute pearson correlation coefficient
 
-- compute pearson correlation coefficient
-
-We see a positive correlation: this suggests that the more stable a
-community is, the more difficult it is to identify comment as coming
-from it. What this suggests is that stable communities tend to use a
-varied and standard, subset of English, while unstable communities
-resort to more formulaic language. This may suggests that to 'fit' in an
-unstable community, one must use more obvious linguistic cues than in
-a stable community. In fact, it is reasonable to think that a new
-member will ostensibly use community-specifc language, but once
-established in a community, a member would tend not to do so.
+% We see a positive correlation: this suggests that the more stable a
+% community is, the more difficult it is to identify comment as coming
+% from it. What this suggests is that stable communities tend to use a
+% varied and standard, subset of English, while unstable communities
+% resort to more formulaic language. This may suggests that to 'fit' in an
+% unstable community, one must use more obvious linguistic cues than in
+% a stable community. In fact, it is reasonable to think that a new
+% member will ostensibly use community-specifc language, but once
+% established in a community, a member would tend not to do so.
 
 \section{Related work}
 
