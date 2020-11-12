@@ -146,13 +146,18 @@ and lower-cased all tokens.
 
 \subsection{Models}
 
-At the the core of the community-conditioned language model (CCLM) 
-is a standard $n$-layer neural sequence encoder
-with token embedding (we experiment with LSTM and transformer encoders and set $n=3$ for all models).
-To condition the model, we additionally train a \emph{community embedding} parameter.
-This parameter is concatenated with the hidden layer of the sequence encoder
-for some layer $c \leq n$ and passed through a linear layer, 
-which projects the resulting vector back down to the origial hidden size.
+We experiment with two kinds of architectures for our models: an LSTM
+and a Transformer architecture\jp{citations}.  In either case, they
+are organised as a standard $n$-layer neural sequence encoder with
+token embedding (we set $n=3$ for all models). As standard, words are predicted
+using a softmax projection layer.
+Such encoders form the
+core of the community-conditioned language models (CCLM).
+
+To condition the model, we add a \emph{community embedding} parameter to the models.
+This parameter is concatenated with the hidden layer of the sequence encoder,
+for some layer $c \leq n$, and passed through a linear layer 
+which projects the resulting vector back to the origial hidden layer size.
 For $c = n$, the output of this linear layer is passed directly to the softmax function,
 just as the final hidden layer of the sequence encoder is in other models.
 For $c=0$, the community embedding is concatenated with the token embedding.
@@ -164,11 +169,11 @@ and the size of the token to be embedding equal for all models.
 We combined the 46 community corpora and split the combined corpus,
 reserving 10\% for testing, 10\% for validation and the rest for training.
 Splits were stratified by community so that the same number of training examples
-were available for each community.\jp{is it the same for testing/validation? How can you maintain this split?}
+were available for each community.\jp{is it the same for testing/validation? How do you maintain this split?}
 
 We use a vocabulary size of \num{40000} tokens, including a special out-of-vocabulary token.
-The vocabulary consisted of the most frequent tokens at the message level,
-meaning that we only counted each token once per message.
+The vocabulary consists of the most frequent tokens at the message level,
+meaning that we only count each token once per message.
 The main reason for this choice was to avoid over-counting otherwise rare tokens that were spammed
 many times in a single message.
 
@@ -179,7 +184,7 @@ We used a batch size of \num{256} and a maximum sequence length of \num{64} toke
 During training, a dropout rate of $0.1$ was applied between encoder layers 
 and after each linear layer.
 
-All experiments used models with \num{3} sequence encoder layers,
+All experiments use models with \num{3} sequence encoder layers,
 each with hidden (and token embedding) size of \num{256}. 
 The transformer models had \num{8} attention heads per layer.\footnote{
   This number of attention heads was chosen in part to give the LSTM and transformer
