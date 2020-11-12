@@ -22,6 +22,7 @@
 \usepackage{pgfplots}
 \usepackage{todonotes}
 \usepackage{enumitem}
+\usepackage{cleveref}
 \renewcommand{\UrlFont}{\ttfamily\small}
 \usepgfplotslibrary{groupplots}
 \pgfplotsset{compat=1.16}
@@ -44,6 +45,8 @@
 % smaller than 5cm (the original size); we will check this
 % in the camera-ready version and ask you to change it back.
 
+\newcommand\Ppl{\mathsf{Ppl}}
+\newcommand\Ind{I}
 \newcommand\BibTeX{B\textsc{ib}\TeX}
 
 \newlist{hypotheses}{enumerate}{3}
@@ -89,8 +92,11 @@ Second, we want to find out how, and how much, CCLMs can be attuned to
 the specificity of communities. We test whether 1. the linguistic
 models are correlated with a model of community based only on
 co-occurence of users between communities and 2. if latent community
-classifiers based on the CCLM can accurately identify that a given message
-comes from a given community.
+classifiers based on the CCLM can accurately identify that a given
+message comes from a given community. Additionally, one may
+intuitively assume that linguistically poor communities are easier to
+recognize: the less linguistic diversity, the more specific the
+language become and the easier it is to identify.
 
 To sum up, we propose to test the following hypotheses:
 \begin{hypotheses}
@@ -102,12 +108,14 @@ To sum up, we propose to test the following hypotheses:
   latent bayesian classification.
 \item The layer at which the community embedding is taken into account
   influences CCLM and its associated latent classifier.
-  % \item There is a correlation between community language complexity and recognizability.
   % This is more of a justification for studying the latent classifier than a real "user-facing" hypothesis.
 \item The model representation of communities are correlated with
   co-ocurrence of users between communities.
 % \item Community stability is correlated with language complexity
+\item Linguistically poor communities are easier to identify than linguistically rich communities.
 \end{hypotheses}
+
+\jp{TODO: Outline of the paper.}
 
 \section{Experimental setup}
 
@@ -160,7 +168,7 @@ for some layer $c \leq n$, and passed through a linear layer
 which projects the resulting vector back to the origial hidden layer size.
 For $c = n$, the output of this linear layer is passed directly to the softmax function,
 just as the final hidden layer of the sequence encoder is in other models.
-For $c=0$, the community embedding is concatenated with the token embedding.
+For $c=0$\jp{it's unfortunate that the letter $c$ is clashing. To Fix!}, the community embedding is concatenated with the token embedding.
 For this reason, we set the hidden size of the sequence encoder 
 and the size of the token to be embedding equal for all models. 
 
@@ -209,7 +217,7 @@ In general, transformer models trained for about half as long as the LSTM models
 \subsection{Losses of CCLM}
 
 As one would expect, 
-the conditioned models have lower perplexity 
+the conditioned models have lower perplexity
 than their respective unconditioned baseline models,
 but this effect is different in magnitude
 for models with different community embedding depths .
@@ -224,17 +232,17 @@ after all the sequence encoder layers
 %TODO: For space reasons, it might be better to put the community-level table in the appendix and have the table in body just show the means (and perhaps medians/stddevs?) for each architecture.}
 
 We also note that the conditioned models perform differently across different communities---\
-for some communities, the test perplexity of the conditioned models is a lot lower (Table~\ref{tab:model-ppls},
+for some communities, the test \jp{and training?}perplexity of the conditioned models is a lot lower (Table~\ref{tab:model-ppls},
 whereas for others it is the same or even slightly higher.
 \bn{TODO: talk about this in terms of mutual information instead?}
 As an anecdotal observation, we note 
 that communities where conditioning has the least effect
 tend to be more organized around more ``general interest'' topics.\jp{Is there a way to quantify general interest topics? Community size in terms of number of users?}
 This makes sense intuitively, since communities with more niche topics
-would tend to have more specialized vocabulary and speech patterns.
+would tend to have more specialized vocabulary and speech\jp{can you say speech for written language?} patterns.
 
 The pattern of how much the perplexity falls across different communities
-is similar across architectures, but with some differences.
+is similar across architectures, but with some differences.\jp{Either say something specific here or move the whole paragraph to future work.}
 It could be interesting to further investigate these differences in future work,
 since it could reveal differences in the kind of linguistic variation the different
 model architectures capture.
@@ -251,7 +259,7 @@ model architectures capture.
 
 As a qualitative assesment of the community embeddings, 
 we manually identified topic categories into which at least three
-of the selected communities fall. 
+of the selected communities fall.
 We plotted the two-component PCA projection of the embeddings,
 annotated with these categories (Figure~\ref{fig:comm-pca}).
 We see that there is some evidence of clustering according to
@@ -266,12 +274,18 @@ suggesting that the embedding space learned by the model is meaningful.
 \label{fig:comm-pca}
 \end{figure*}
 
-As a quantitative assessment,
-we compare the CCLM-learned community embedding with the community embedding from \citet{Kumar2018},
-which is based on community membership. 
-
-- Description of the snap data (JP)
-
+As a quantitative assessment, we compare the CCLM-learned community
+embedding with the community embedding created by \citet{Kumar2018},
+who generated them from the comment-community co-occurence matrix,
+using data which spans January 2014 to April 2017. We refer the reader
+to \citet{Kumar2018}\jp{I actually cannot find in their paper what
+  they do.} for details, but the important point is that no linguistic
+information is used to create these embeddings: they only depend on
+whether and how much a given user participates in a given
+community. In sharp contrasts, CCLM community embeddings depend in no
+way on which user is the author of any given message: we only use the
+contents of messages, not authorship data. 
+%
 We correlate the pairwise cosine similarity of the
 CCLM embeddings with the same metric on the membership embedding,
 restricted to the 46 communities chosen for our study
@@ -301,30 +315,28 @@ restricted to the 46 communities chosen for our study
 
 \subsection{Latent language-model-based community classifiers}
 
-- Two different use of the model
-1. ``absolute'' perplexity
-2. latent ability to recognize a community
-
-
-However, we are not so much interested in the ability of the CCLM to
-precisely model the language used in a community.
-
-We now turn our interest to language-model-based community classifiers
-(LMCC). Given a message $m$, and LMCC gives the probability that it
-belongs in a community $c_i$ Using the Bayes theorem, we can turn a
-CCLM into a LMCC. Indeed, the probability that a given message $m$
+The perplexity of a CCLM tells is a measure of linguistic complexity,
+but it is not a measure of how linguistically \emph{specific} the
+community is. However, the CCLM induces a latent 
+a latent classifier induced by a CCLM, which we call a language-model-based community classifier
+(LMCC). Indeed, using the Bayes theorem, we can turn a
+CCLM into a LMCC: the probability that a given message $m$
 belongs to a community $c_i$ can be calculated as follows:
 \[P(c=c_i | m) = P(m | c_i)\frac {P(m)} {P(c=c_i)}\]
 In the above,
 $P(c=c_i)$ is the frequency of community $c_i$ in the dataset, and
-$P(m | c_i)$ is given by the CCLM. $P(m)$ is our normalisation factor, which can be set so that
-\[\sum_i P(c=c_i | m) = 1\].
+$P(m | c_i)$ (the probability that a message $m$
+belongs in a community $c_i$. ) is estimated by the CCLM. $P(m)$ is the absolute
+probability of a message, which can be computed as
+\[P(m) = \frac 1 {\sum_i P(c=c_i) P(m|c=c_i ) }\].
 
-Knowing that $m$ \emph{actually} comes from community $c_j$, we can
-measure the precision our classifier, as a confusion matrix $C$,
-which can be calculated as follows for a given set of messages (TODO: what set exactly?)
+We can characterise the quality the LMCC by a confusion matrix
+$C$, defined by $C_{ij} = P(c=c_i | m)$ for a random message $m$ in
+community $c_j$.  That is:
 \[C_{ij} = average_{m \in Messages(c_j)}(P(c=c_i | m))\].
+As a sanity check, we observe that the diagonal dominates the matrix: on average the LMCC picks the right community for a message.
 
+\jp{Is this test set or training set?}
 
 %\begin{figure*}
 %\begin{tikzpicture}
@@ -335,38 +347,32 @@ which can be calculated as follows for a given set of messages (TODO: what set e
 %\end{figure*}
 
 
-TODO: why don't we use F scores?
 
-While the confusion matrices provide a lot of insight, they are
-somewhat \emph{too} fine-grained. For this reason, we will be
-interested in confusing the messages from community $c_j$ are to the
-LMCC. For this purpose, we consider the perplexity of the LMCC for a
+However, we want to measure the ability of the LMCC to correctly
+recognize messages coming from a given community $c_j$. We could use
+something like an F-score, but we prefer to use the perplexity metric
+(again), which is has stronger information-theoretic grounds.
+However, this time, the perplexity corresponds to the difficulty of
+identifying a community, not predicting a word.
+Technically, we consider the average perplexity of the LMCC for a
 message coming from community $j$, defined as the exponential of the
 entropy of the distribution \(D_j\), which is the (discrete)
 probability distribution of predicted community for a random message from
-$c_j$. $D_j$ is simply the $j$th row in \(C\), and so we obtain the formula:
-\[Ppl_j = e^{-\sum_i C_{ij} log(C_{ij})}\]
+$c_j$. $D_j$ is simply the $j$th row in \(C\). In sum, we have the formula:
+\[\Ind_j = e^{-\sum_i C_{ij} log(C_{ij})}\]
 
-To recap, \(Ppl_j\) is a measure of the capability (or rather
-inability) of the model to correctly identify a message as coming from
-a certain community $c_j$. 
+We call \(\Ind_j\) the (linguistic) indiscernibility of the community
+$c_j$, and it is a measure of how unsure a model is about which
+community a message belongs to --- when the message in question is
+actually coming from a community $c_j$.
 
   %\begin{tikzpicture}
   %\pplscatter{lstm-3-1_lmcc}{lstm-3-1_cclm}
   %\end{tikzpicture}
 
-\begin{figure}
-  \pplscatter{lstm-3-1_cclm}{lstm-3-1_lmcc}
-  \caption{%
-    Mean CCLM (x-axis) and LMCC (y-axis) perplexity per community (Pearson's r = \num{0.30}, p = \num{0.0444}).
-    Shown here for the LSTM model with $c = 1$, but other models exhibit similar behavior.
-  }
-  \label{fig:cclm_lmcc_ppl}
-\end{figure}
-
-
-We can then analyse the correlation between \(Ppl^M_j\) for various models $M$.
-
+Indiscernibility is a robust measure: it is almost perfectly
+correlated for various CCLM (transformer, lstm and various $c$) $M$.
+\jp{other r's}
 \begin{figure}
   \pplscatter{lstm-3-1_lmcc}{transformer-3-3_lmcc}
   \caption{%
@@ -375,6 +381,23 @@ We can then analyse the correlation between \(Ppl^M_j\) for various models $M$.
   }
   \label{fig:lmcc_ppl}
 \end{figure}
+
+
+
+However we observe that the CCLM perplexity is only weakly correlated with the
+indiscernibility to the corresponding latent LMCC
+(\cref{fig:cclm_lmcc_ppl}).
+
+\begin{figure}
+  \pplscatter{lstm-3-1_cclm}{lstm-3-1_lmcc}
+  \caption{%
+    Mean linguistic perplexity (x-axis) and community indiscernibility
+    (y-axis) per community (Pearson's r = \num{0.30}, p =
+    \num{0.0444}).  Shown here for the LSTM model with $c = 1$, but
+    other models exhibit similar behavior.  }
+  \label{fig:cclm_lmcc_ppl}
+\end{figure}
+
 
 
 % Finally, we investigate the correlation between the stability of a
@@ -412,6 +435,8 @@ http://ceur-ws.org/Vol-2578/DARLIAP3.pdf
 
 
 \section{Discussion and Conclusion}
+
+\jp{Go through hypotheses again}
 
 - Comparison with topic modelling
 
