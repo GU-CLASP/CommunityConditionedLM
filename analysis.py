@@ -205,6 +205,9 @@ def ppl(x):
 lmcc_confusion_ppl = []
 for model in conditioned_models:
     # Why is there a single comm_probs.pickle file? Isn't it model-dependent? What is in this file?
+    #  > There is one for each model in the model directory.
+    #  > This file has a row for each comment with the columns "actual_comm" and the remaining columns
+    #  > are a probability distribution over communities (the normalisation of P(c_i | m), as below).
     
     # We should: 
     # 1. Compute P(c_i | m)
@@ -231,6 +234,45 @@ for model in conditioned_models:
     #                                                                size of the domain of m
     #      = |c_j| / |c_j|
     #      = 1
+    # 
+    # > OK, I see that you're right. The mean of discrete probability distributions 
+    # > is itself a probability distribution. I'm not sure it's right to call this
+    # > distribution accuracy, however, since I would a prediction (via argmax, for
+    # > example) to be involved.
+    # > 
+    # > It's possible I've convinced myself there's a problem where there isn't one,
+    # > but I see two problems with using the entropy of the average distribution:
+    # >
+    # > 1. This metric can be the same for communities for which the classifier has 
+    # > different accuracy.
+    # >
+    # >   comm_prob =
+    # >   m | p(c1 | m) | p(c2 | m ) | actual_comm 
+    # >   ----------------------------------------
+    # >   0 |       0.7 |       0.3  | c1
+    # >   1 |       0.8 |       0.2  | c1
+    # >   2 |       0.7 |       0.3  | c2
+    # >   3 |       0.8 |       0.2  | c2
+    # >
+    # >   comm_prob.groupby('actual_comm').mean() =
+    # >   actual_comm | p(c1 | m) | p(c2 | m ) 
+    # >   ----------------------------------------
+    # >            c1 |      0.75 |       0.25  
+    # >            c2 |      0.75 |       0.25
+    # >
+    # >   comm_prob.groupby('actual_comm').mean().apply(ppl) =
+    # >   actual_comm | ppl 
+    # >   ------------------
+    # >            c1 | 1.754    
+    # >            c2 | 1.754   
+    # >
+    # > Even though the classifier is more accurace for c1 than c2, the perplexity is
+    # > the same for both.
+    # >
+    # > 2. Why should we care about the perplexity of the mean distriubtion rather
+    # > than the mean of of the perplextity? When we consider the perplexity of the
+    # > CCLM, it is the later (via, cross entropy loss over the vocabulary).
+
     model_ppl = pd.read_pickle(os.path.join(os.path.join(model_dir, model), 'comm_probs.pickle')).groupby('actual_comm').mean().apply(ppl, axis=1)[comms]
     model_ppl.name = model
     lmcc_confusion_ppl.append(model_ppl)
@@ -282,5 +324,4 @@ for model in conditioned_models:
 r, p = pearsonr(lmcc_ppl_mean['lstm-3-1'], lmcc_ppl_mean['transformer-3-3'])
 print(f"r = {r:0.4f} p = {p:0.6f}")
 # r = 0.9922 p = 0.000000
-
 
