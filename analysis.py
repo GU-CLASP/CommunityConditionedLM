@@ -216,9 +216,11 @@ for model in conditioned_models:
     # 2. We have too many numbers, so we take the accuracy of the LMCC prediction per *actual* community
     #    P(c_i | c_j)
     #      = P(c_i|m) for a random message m in community c_j.
-    #                  (but we take every message to be equally "probable" in c_j)
+    #      = ∑_m P(c_i|m) P(m|c_j)
+    #                   but here we take every message to be equally "probable" in c_j, so P(m|c_j)=1/|c_j|
+    #                   if we take |c_j| to be the number of messages in community c_j 
     #      = ∑_m P(c_i|m) / |c_j|
-    #    Is this a probability distribution (when varying c_j?):
+    #    Is this a probability distribution (when varying c_i?):
     #    ∑_i P(c_i | c_j)
     #                                                                by def.
     #      = ∑_i (∑_m P(c_i|m) / |c_j|)
