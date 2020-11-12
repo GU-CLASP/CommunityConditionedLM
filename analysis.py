@@ -197,12 +197,38 @@ from scipy.special import entr
 def ppl(x):
     return np.exp(entr(x).sum())
 
+
 # This is what we were looking at in the notebook.
 # It gives the "perplexity" of the confusion matrix row.
 # The problem is, since this is an average over the (comment-level) CC distributions,
 # it is not itself a probability distribution.
 lmcc_confusion_ppl = []
 for model in conditioned_models:
+    # Why is there a single comm_probs.pickle file? Isn't it model-dependent? What is in this file?
+    
+    # We should: 
+    # 1. Compute P(c_i | m)
+    #   Given: P(m | c_i); ie. a probability assigned assigned to m, when setting the CCLM to c_i
+    #   (this is just the exponential of the negative loss.)
+    #   The actual community of m is given by the "actual_comm" column in the 'dataframe'.
+    # Then we can to compute P(c_i | m) by normalising the list
+    #  of P(m | c_i) (varying i but keeping j fixed) so that ∑_i P(c_i|m) = 1
+    # 2. We have too many numbers, so we take the accuracy of the LMCC prediction per *actual* community
+    #    P(c_i | c_j)
+    #      = P(c_i|m) for a random message m in community c_j.
+    #                  (but we take every message to be equally "probable" in c_j)
+    #      = ∑_m P(c_i|m) / |c_j|
+    #    Is this a probability distribution (when varying c_j?):
+    #    ∑_i P(c_i | c_j)
+    #                                                                by def.
+    #      = ∑_i (∑_m P(c_i|m) / |c_j|)
+    #                                                                by linearity of sum.
+    #      = ∑_m ∑_i P(c_i|m) / |c_j|
+    #                                                                total probability
+    #      = ∑_m 1 / |c_j|
+    #                                                                size of the domain of m
+    #      = |c_j| / |c_j|
+    #      = 1
     model_ppl = pd.read_pickle(os.path.join(os.path.join(model_dir, model), 'comm_probs.pickle')).groupby('actual_comm').mean().apply(ppl, axis=1)[comms]
     model_ppl.name = model
     lmcc_confusion_ppl.append(model_ppl)
