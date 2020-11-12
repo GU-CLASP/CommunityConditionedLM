@@ -89,8 +89,11 @@ Second, we want to find out how, and how much, CCLMs can be attuned to
 the specificity of communities. We test whether 1. the linguistic
 models are correlated with a model of community based only on
 co-occurence of users between communities and 2. if latent community
-classifiers based on the CCLM can accurately identify that a given message
-comes from a given community.
+classifiers based on the CCLM can accurately identify that a given
+message comes from a given community. Additionally, one may
+intuitively assume that linguistically poor communities are easier to
+recognize: the less linguistic diversity, the more specific the
+language become and the easier it is to identify.
 
 To sum up, we propose to test the following hypotheses:
 \begin{hypotheses}
@@ -102,12 +105,14 @@ To sum up, we propose to test the following hypotheses:
   latent bayesian classification.
 \item The layer at which the community embedding is taken into account
   influences CCLM and its associated latent classifier.
-  % \item There is a correlation between community language complexity and recognizability.
   % This is more of a justification for studying the latent classifier than a real "user-facing" hypothesis.
 \item The model representation of communities are correlated with
   co-ocurrence of users between communities.
 % \item Community stability is correlated with language complexity
+\item Linguistically poor communities are easier to identify than linguistically rich communities.
 \end{hypotheses}
+
+\jp{TODO: Outline of the paper.}
 
 \section{Experimental setup}
 
@@ -266,12 +271,18 @@ suggesting that the embedding space learned by the model is meaningful.
 \label{fig:comm-pca}
 \end{figure*}
 
-As a quantitative assessment,
-we compare the CCLM-learned community embedding with the community embedding from \citet{Kumar2018},
-which is based on community membership. 
-
-- Description of the snap data (JP)
-
+As a quantitative assessment, we compare the CCLM-learned community
+embedding with the community embedding created by \citet{Kumar2018},
+who generated them from the comment-community co-occurence matrix,
+using data which spans January 2014 to April 2017. We refer the reader
+to \citet{Kumar2018}\jp{I actually cannot find in their paper what
+  they do.} for details, but the important point is that no linguistic
+information is used to create these embeddings: they only depend on
+whether and how much a given user participates in a given
+community. In sharp contrasts, CCLM community embeddings depend in no
+way on which user is the author of any given message: we only use the
+contents of messages, not authorship data. 
+%
 We correlate the pairwise cosine similarity of the
 CCLM embeddings with the same metric on the membership embedding,
 restricted to the 46 communities chosen for our study
@@ -412,6 +423,8 @@ http://ceur-ws.org/Vol-2578/DARLIAP3.pdf
 
 
 \section{Discussion and Conclusion}
+
+\jp{Go through hypotheses again}
 
 - Comparison with topic modelling
 
