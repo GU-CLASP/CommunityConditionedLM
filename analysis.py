@@ -247,7 +247,7 @@ for model in conditioned_models:
     # > different accuracy.
     # >
     # >   comm_prob =
-    # >   m | p(c1 | m) | p(c2 | m ) | actual_comm 
+    # >   m | p(c1 | m) | p(c2 | m ) | cj (actual_comm) 
     # >   ----------------------------------------
     # >   0 |       0.7 |       0.3  | c1
     # >   1 |       0.8 |       0.2  | c1
@@ -255,16 +255,16 @@ for model in conditioned_models:
     # >   3 |       0.8 |       0.2  | c2
     # >
     # >   comm_prob.groupby('actual_comm').mean() =
-    # >   actual_comm | p(c1 | m) | p(c2 | m ) 
+    # >            cj | p(c1 | cj) | p(c2 | cj ) 
     # >   ----------------------------------------
     # >            c1 |      0.75 |       0.25  
     # >            c2 |      0.75 |       0.25
     # >
     # >   comm_prob.groupby('actual_comm').mean().apply(ppl) =
-    # >   actual_comm | ppl 
-    # >   ------------------
-    # >            c1 | 1.754    
-    # >            c2 | 1.754   
+    # >    cj  | ppl 
+    # >   ----------
+    # >     c1 | 1.754    
+    # >     c2 | 1.754   
     # >
     # > Even though the classifier is more accurace for c1 than c2, the perplexity is
     # > the same for both.
