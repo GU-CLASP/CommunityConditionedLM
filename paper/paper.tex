@@ -248,27 +248,7 @@ restricted to the 46 communities chosen for our study
 (Figure~\ref{fig:pairwise-comm-sim}).
 
 \begin{figure}
-  \begin{tikzpicture}
-  \begin{axis}[]
-  \addplot[
-    scatter, only marks,
-    font=\tiny,
-    scatter src=explicit symbolic,
-    scatter/classes={
-      general-interest={mark=*, blue},
-      videogames={mark=*, red},
-      technology={mark=*, green},
-      sports={mark=*, cyan},
-      female-focused={mark=*, magenta},
-      other={mark=o, black},
-      different={mark=x}
-    },
-    %mark size=1pt,
-    %nodes near coords*={\community},
-    %visualization depends on={value \thisrow{community} \as \community}
-  ] table [x=snap, y=lstm-3-1, meta=meta] {floats/comm_sim.csv};
-  \end{axis}
-  \end{tikzpicture}
+  \pairwisecommsim{lstm-3-1} 
   \caption{Pairwise cosine similarity between community vectors for 
     the membership-based embedding (x-axis) and
   the LSTM CCLM embedding with $c=1$ (y-axis). 
@@ -316,13 +296,13 @@ which can be calculated as follows for a given set of comment (TODO: what set ex
 \[C_{ij} = average_{\{m ∈ Posts(c_j)\}}(P(c=c_i | m))\].
 
 
-\begin{figure*}
-\begin{tikzpicture}
-  \confusiongroupplot{floats/lstm-3-1_comm_infer_confusion.csv}{floats/transformer-3-3_comm_infer_confusion.csv}
-\end{tikzpicture}
-\caption{LMCC confusion matrices for the best LSTM (left, $c=1$) and transformer (right, $c=3$) models.}
-\label{fig:confusion}
-\end{figure*}
+%\begin{figure*}
+%\begin{tikzpicture}
+  %\confusiongroupplot{floats/lstm-3-1_comm_infer_confusion.csv}{floats/transformer-3-3_comm_infer_confusion.csv}
+%\end{tikzpicture}
+%\caption{LMCC confusion matrices for the best LSTM (left, $c=1$) and transformer (right, $c=3$) models.}
+%\label{fig:confusion}
+%\end{figure*}
 
 
 TODO: why don't we use F scores?
@@ -341,13 +321,31 @@ To recap, \(Ppl_j\) is a measure of the capability (or rather
 inability) of the model to correctly identify a message as coming from
 a certain community $c_j$. 
 
+  %\begin{tikzpicture}
+  %\pplscatter{lstm-3-1_lmcc}{lstm-3-1_cclm}
+  %\end{tikzpicture}
 
-TODO: scatterplot/r2 between LMCC and CCLM perplexity  ---> no correlation.
+\begin{figure}
+  \pplscatter{lstm-3-1_cclm}{lstm-3-1_lmcc}
+  \caption{%
+    Mean CCLM (x-axis) and LMCC (y-axis) perplexity per community (Pearson's r = \num{0.30}, p = \num{0.0444}).
+    Shown here for the LSTM model with $c = 1$, but other models exhibit similar behavior.
+  }
+  \label{fig:cclm_lmcc_ppl}
+\end{figure}
 
 
 We can then analyse the correlation between \(Ppl^M_j\) for various models $M$.
 
-TODO: show a scatter plot, compute r2 --> almost perfect correlation
+\begin{figure}
+  \pplscatter{lstm-3-1_lmcc}{transformer-3-3_lmcc}
+  \caption{%
+    Mean CCLM perplexity per community for the best LSTM ($c = 1$) and transformer ($c = 3$) models
+    (Pearson's r = \num{0.99} p < \num{0.0001}).
+  }
+  \label{fig:lmcc_ppl}
+\end{figure}
+
 
 % Finally, we investigate the correlation between the stability of a
 % community and the perplexity of the LMCC for it. Stability is defined as TODO.

@@ -44,6 +44,8 @@ comms = pd.Series(comms, name='community')
 cclm_comm_embed = {model: np.load(os.path.join(model_dir, f'{model}/comm_embed.npy'))[1:]
         for model in conditioned_models}
 
+cclm_ppl = pd.read_pickle(os.path.join(model_dir, 'test_ppl.pickle'))
+
 ##### BEST EPOCH
 
 def get_best_epoch(model_name):
@@ -56,12 +58,11 @@ best_epoch.to_latex(os.path.join(floats_dir, 'best_epoch.tex'))
 
 ##### Perplexity by model
 
-ppl = pd.read_pickle(os.path.join(model_dir, 'test_ppl.pickle'))
 
-ppl_mean = ppl[models].mean()
+ppl_mean = cclm_ppl[models].mean()
 ppl_mean.index = ppl_mean.index.map(model_params_from_name)
 
-ppl_mean_comm = ppl.groupby('community').mean().sort_values('lstm-3')
+ppl_mean_comm = cclm_ppl.groupby('community').mean().sort_values('lstm-3')
 ppl_mean_comm.columns = ppl_mean_comm.columns.map(model_params_from_name)
 ppl_mean_comm.loc['Mean'] = ppl_mean_comm.mean()
 rows = ['Mean'] + [c for c in ppl_mean_comm.index if not c == 'Mean']
@@ -133,6 +134,7 @@ for model_name in conditioned_models:
     C = model_comm_confusion_matrix(model_name)
     C.to_csv(os.path.join(floats_dir, f'{model_name}_comm_infer_confusion.csv'), sep='\t', float_format="% 5.4f", index=False)
 
+
 #### Pairwise community similarity scatter
 
 from itertools import combinations
@@ -180,7 +182,46 @@ def pivot_model_table(df):
     df['arch'] = df['arch'].apply({'lstm': 'LSTM', 'transformer': 'Transformer'}.get)
     df['c'] = df['index'].apply(lambda x: x.split('-')[-1])
     df = df.drop('index', axis=1)
-    return df.pivot(index='arch', columns='c')
+    df = df.pivot(index='arch', columns='c')
+    df.index.name = None
+    return df
 
-pivot_model_table(df_r)['r'].to_latex(os.path.join(floats_dir, 'comm_sim.tex')
+pivot_model_table(df_r)['r'].to_latex(os.path.join(floats_dir, 'comm_sim.tex'),
         float_format="%.2f", multicolumn_format='c')
+
+
+##### Compare LMCC and CCLM entropy by community
+
+from scipy.special import entr
+
+cclm_entropy = cclm_ppl[models].apply(np.log)
+cclm_entropy['community'] = ppl['community']
+
+lmcc_entropy = []
+for model in conditioned_models:
+    model_entropy = pd.read_pickle(os.path.join(os.path.join(model_dir, model), 'comm_probs.pickle'))[comms].apply(lambda x: entr(x).sum(), axis=1)
+    model_entropy.name = model
+    lmcc_entropy.append(model_entropy) 
+
+lmcc_entropy = pd.concat(lmcc_entropy, axis=1)
+lmcc_entropy['community'] = cclm_entropy['community']
+
+lmcc_ppl = lmcc_entropy[conditioned_models].apply(np.exp)
+lmcc_ppl['community'] = lmcc_entropy['community']
+
+lmcc_ppl_mean = lmcc_ppl.groupby('community').mean()
+cclm_ppl_mean = cclm_ppl.groupby('community').mean()
+
+pd.DataFrame([lmcc_ppl_mean[comm] for comm in comms
+
+df = pd.merge(lmcc_ppl_mean, cclm_ppl_mean, right_index=True, left_index=True, suffixes=['_lmcc', '_cclm'])
+
+for model in conditioned_models:
+    r, p = pearsonr(lmcc_ppl_mean[model],cclm_ppl_mean[model])
+    print(f"{model:<15} r = {r:0.2f} p = {p:0.4f}")
+
+
+a = pd.read_pickle(os.path.join(os.path.join(model_dir, 'lstm-3-1'), 'comm_probs.pickle'))
+a = a.groupby('actual_comm').mean().apply(lambda x: np.exp(entr(x).sum()), axis=1)
+
+pearsonr(a, cclm_ppl['lstm-3-1'])

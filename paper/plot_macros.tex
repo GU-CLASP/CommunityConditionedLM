@@ -61,3 +61,37 @@
     \confusionplot{#2}
   \end{groupplot}
 }
+
+\newcommand{\pairwisecommsim}[1]{%
+  \begin{tikzpicture}
+  \begin{axis}[]
+  \addplot[
+    scatter, only marks,
+    font=\tiny,
+    scatter src=explicit symbolic,
+    scatter/classes={
+      general-interest={mark=*, blue},
+      videogames={mark=*, red},
+      technology={mark=*, green},
+      sports={mark=*, cyan},
+      female-focused={mark=*, magenta},
+      other={mark=o, black},
+      different={mark=x}
+    },
+  ] table [x=snap, y=#1, meta=meta] {floats/comm_sim.csv};
+  \end{axis}
+  \end{tikzpicture}
+}
+
+\newcommand{\pplscatter}[2]{%
+  \begin{tikzpicture}
+  \begin{axis}[]
+  \addplot[
+    only marks, black,
+  ] table [x=#1, y=#2] {floats/cclm_lmcc_ppl.csv};
+  \end{axis}
+  \end{tikzpicture}
+}
+
+
+
