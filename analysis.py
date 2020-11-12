@@ -190,38 +190,69 @@ pivot_model_table(df_r)['r'].to_latex(os.path.join(floats_dir, 'comm_sim.tex'),
         float_format="%.2f", multicolumn_format='c')
 
 
-##### Compare LMCC and CCLM entropy by community
+##### Compare LMCC and CCLM perplexity by community
 
 from scipy.special import entr
 
-cclm_entropy = cclm_ppl[models].apply(np.log)
-cclm_entropy['community'] = ppl['community']
+def ppl(x):
+    return np.exp(entr(x).sum())
 
-lmcc_entropy = []
+# This is what we were looking at in the notebook.
+# It gives the "perplexity" of the confusion matrix row.
+# The problem is, since this is an average over the (comment-level) CC distributions,
+# it is not itself a probability distribution.
+lmcc_confusion_ppl = []
 for model in conditioned_models:
-    model_entropy = pd.read_pickle(os.path.join(os.path.join(model_dir, model), 'comm_probs.pickle'))[comms].apply(lambda x: entr(x).sum(), axis=1)
-    model_entropy.name = model
-    lmcc_entropy.append(model_entropy) 
+    model_ppl = pd.read_pickle(os.path.join(os.path.join(model_dir, model), 'comm_probs.pickle')).groupby('actual_comm').mean().apply(ppl, axis=1)[comms]
+    model_ppl.name = model
+    lmcc_confusion_ppl.append(model_ppl)
 
-lmcc_entropy = pd.concat(lmcc_entropy, axis=1)
-lmcc_entropy['community'] = cclm_entropy['community']
+lmcc_confusion_ppl = pd.concat(lmcc_confusion_ppl, axis=1)
+lmcc_confusion_ppl.index.name = 'community'
 
-lmcc_ppl = lmcc_entropy[conditioned_models].apply(np.exp)
-lmcc_ppl['community'] = lmcc_entropy['community']
+# I think this is what we should be looking at for lmcc_ppl instead (and what is defined in the paper, if I understand correctly).
+# It computes the CC perplexity for each comment and averages it over the (actual) community.
+lmcc_ppl = []
+for model in conditioned_models:
+    model_ppl = pd.read_pickle(os.path.join(os.path.join(model_dir, model), 'comm_probs.pickle'))[comms].apply(ppl, axis=1)
+    model_ppl.name = model
+    lmcc_ppl.append(model_ppl) 
+lmcc_ppl= pd.concat(lmcc_ppl, axis=1)
+lmcc_ppl['community'] = comms 
 
 lmcc_ppl_mean = lmcc_ppl.groupby('community').mean()
 cclm_ppl_mean = cclm_ppl.groupby('community').mean()
 
-pd.DataFrame([lmcc_ppl_mean[comm] for comm in comms
-
 df = pd.merge(lmcc_ppl_mean, cclm_ppl_mean, right_index=True, left_index=True, suffixes=['_lmcc', '_cclm'])
+df.to_csv(os.path.join(floats_dir, f'cclm_lmcc_ppl.csv'), sep='\t', 
+            float_format="% 5.4f", index=True)
+
+for model in conditioned_models:
+    r, p = pearsonr(lmcc_confusion_ppl[model],cclm_ppl_mean[model])
+    print(f"{model:<15} r = {r:0.2f} p = {p:0.4f}")
+# lstm-3-0        r = -0.04 p = 0.8032
+# lstm-3-1        r = -0.02 p = 0.8900
+# lstm-3-2        r = -0.04 p = 0.8073
+# lstm-3-3        r = -0.03 p = 0.8276
+# transformer-3-0 r = -0.04 p = 0.7870
+# transformer-3-1 r = -0.05 p = 0.7267
+# transformer-3-2 r = -0.03 p = 0.8392
+# transformer-3-3 r = -0.04 p = 0.7830
 
 for model in conditioned_models:
     r, p = pearsonr(lmcc_ppl_mean[model],cclm_ppl_mean[model])
     print(f"{model:<15} r = {r:0.2f} p = {p:0.4f}")
+# lstm-3-0        r = 0.35 p = 0.0185
+# lstm-3-1        r = 0.30 p = 0.0444
+# lstm-3-2        r = 0.29 p = 0.0504
+# lstm-3-3        r = 0.25 p = 0.0878
+# transformer-3-0 r = 0.28 p = 0.0591
+# transformer-3-1 r = 0.32 p = 0.0298
+# transformer-3-2 r = 0.28 p = 0.0620
+# transformer-3-3 r = 0.30 p = 0.0456
+
+r, p = pearsonr(lmcc_ppl_mean['lstm-3-1'], lmcc_ppl_mean['transformer-3-3'])
+print(f"r = {r:0.4f} p = {p:0.6f}")
+# r = 0.9922 p = 0.000000
 
 
-a = pd.read_pickle(os.path.join(os.path.join(model_dir, 'lstm-3-1'), 'comm_probs.pickle'))
-a = a.groupby('actual_comm').mean().apply(lambda x: np.exp(entr(x).sum()), axis=1)
-
-pearsonr(a, cclm_ppl['lstm-3-1'])
