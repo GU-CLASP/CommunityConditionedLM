@@ -66,26 +66,46 @@
 
 \section{Introduction}
 
-- What are linguistic communities
-  - Linguistic complexity
-- Community Conditioned language models
-- Latent Community Classifier
 
-We propose to test the following hypotheses:
+TODO: What is a linguistic community. 
 
+Broadly construed, we want to investigate two questions.  First, we
+are interested in the variation of to what extent are various
+communities exhibiting various level of linguistic complexity.
 
+TODO: insert some anecdotes (perhaps some particularly stupid/clever
+comments from reddit here.)
+
+It is folklore that certain communities are more complex
+linguistically: here we want to quantify this phenomenon.
+
+More precisely, we investigate if this degree of complexity be
+captured in a computational model.  For this purpose define various
+Community Conditioned Language Models (CCLM for short), which can be
+modeled as an estimator $M$ what a given message $m$ is acceptable in
+a given community $c$: \(P_M(m \mid c)\).
+
+Second, we want to find out how, and how much, CCLMs can be attuned to
+the specificity of communities. We test whether 1. the linguistic
+models are correlated with a model of community based only on
+co-occurence of users between communities and 2. if latent community
+classifiers based on the CCLM can accurately identify that a given message
+comes from a given community.
+
+To sum up, we propose to test the following hypotheses:
 \begin{hypotheses}
 \item Different communities have different levels of linguistic
   complexity
-
-\item LCC works: the communty-specific linguistic features are recognized by CCLM.
 \item The layer at which the community embedding is taken into account
   in CCLM influences its perplexity.
+\item CCLM can be used to recognize communities based on
+  latent bayesian classification.
 \item The layer at which the community embedding is taken into account
-  influences the LCC.
-\item Correlation between community language complexity and recognisability. (False)
-\item Community embedding are correlated with coocurrence of users
-  between communities.
+  influences CCLM and its associated latent classifier.
+  % \item There is a correlation between community language complexity and recognizability.
+  % This is more of a justification for studying the latent classifier than a real "user-facing" hypothesis.
+\item The model representation of communities are correlated with
+  co-ocurrence of users between communities.
 % \item Community stability is correlated with language complexity
 \end{hypotheses}
 
@@ -115,7 +135,7 @@ with at least \num{15000} messages per month for each month
 in the three years between 2015 and 2017. 
 We initially selected \num{50} subreddits, 
 but excluded four of them from further analysis: 
-two which were primarily non-English and two with particularly\jp{quantify?} short average message lengths.
+two because they were primarily non-English and two with particularly\jp{quantify?} short average message lengths.
 Each community corpus consist of \num{50000} randomly selected messages from the year 2015.
 
 Messages were preprocessed as follows: 
