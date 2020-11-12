@@ -80,6 +80,21 @@
   language = {eng}
 }
 
+@article{Hochreiter1997,
+  title = {Long {{Short}}-{{Term Memory}}},
+  author = {Hochreiter, Sepp and Schmidhuber, J{\"u}rgen},
+  year = {1997},
+  month = nov,
+  volume = {9},
+  pages = {1735--1780},
+  publisher = {{MIT Press}},
+  issn = {0899-7667},
+  doi = {10.1162/neco.1997.9.8.1735},
+  abstract = {Learning to store information over extended time intervals by recurrent backpropagation takes a very long time, mostly because of insufficient, decaying error backflow. We briefly review Hochreiter's (1991) analysis of this problem, then address it by introducing a novel, efficient, gradient based method called long short-term memory (LSTM). Truncating the gradient where this does not do harm, LSTM can learn to bridge minimal time lags in excess of 1000 discrete-time steps by enforcing constant error flow through constant error carousels within special units. Multiplicative gate units learn to open and close access to the constant error flow. LSTM is local in space and time; its computational complexity per time step and weight is O. 1. Our experiments with artificial data involve local, distributed, real-valued, and noisy pattern representations. In comparisons with real-time recurrent learning, back propagation through time, recurrent cascade correlation, Elman nets, and neural sequence chunking, LSTM leads to many more successful runs, and learns much faster. LSTM also solves complex, artificial long-time-lag tasks that have never been solved by previous recurrent network algorithms.},
+  journal = {Neural Computation},
+  number = {8}
+}
+
 @misc{Honnibal2017,
   title = {{{spaCy}} 2: {{Natural}} Language Understanding with {{Bloom}} Embeddings, Convolutional Neural Networks and Incremental Parsing},
   author = {Honnibal, Matthew and Montani, Ines},
@@ -174,6 +189,22 @@
   file = {/Users/xnobwi/.zotero/storage/NTSLH44N/Stalnaker-2002-Common_Ground.pdf},
   journal = {Linguistics and Philosophy},
   number = {5-6}
+}
+
+@article{Vaswani2017,
+  title = {Attention {{Is All You Need}}},
+  author = {Vaswani, Ashish and Shazeer, Noam and Parmar, Niki and Uszkoreit, Jakob and Jones, Llion and Gomez, Aidan N. and Kaiser, Lukasz and Polosukhin, Illia},
+  year = {2017},
+  month = jun,
+  abstract = {The dominant sequence transduction models are based on complex recurrent or convolutional neural networks that include an encoder and a decoder. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely. Experiments on two machine translation tasks show these models to be superior in quality while being more parallelizable and requiring significantly less time to train. Our model achieves 28.4 BLEU on the WMT 2014 Englishto-German translation task, improving over the existing best results, including ensembles, by over 2 BLEU. On the WMT 2014 English-to-French translation task, our model establishes a new single-model state-of-the-art BLEU score of 41.8 after training for 3.5 days on eight GPUs, a small fraction of the training costs of the best models from the literature. We show that the Transformer generalizes well to other tasks by applying it successfully to English constituency parsing both with large and limited training data.},
+  archivePrefix = {arXiv},
+  eprint = {1706.03762},
+  eprinttype = {arxiv},
+  file = {/Users/xnobwi/.zotero/storage/IWEAZI3G/Vaswani et al. - 2017 - Attention Is All You Need.pdf},
+  journal = {arXiv:1706.03762 [cs]},
+  keywords = {Computer Science - Computation and Language,Computer Science - Machine Learning},
+  language = {en},
+  primaryClass = {cs}
 }
 
 
