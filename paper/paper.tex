@@ -93,30 +93,35 @@ We propose to test the following hypotheses:
 
 \subsection{Data sets}
 
-To investigate variation across communities, we use comments collected 
-from the social media website Reddit.\footnote{Comments were obtained 
-from the archive at \href{https://pushshift.io/}{pushshift.io} \cite{Baumgartner2020}.}
+To investigate variation across communities, we use comments collected
+from the social media website Reddit.\footnote{Comments were obtained
+  from the archive at \href{https://pushshift.io/}{pushshift.io}
+  \cite{Baumgartner2020}.} 
 
 Reddit is divided into forums called \textit{subreddits}, 
 which are typically organized around a topic of interest. 
 Users create \textit{posts}, which consist of a link, image, 
 or text, along with a \emph{comment} section. 
 Comments are threaded: a comment can be made directly on a post,
-or appear as a reply to another comment. 
+or appear as a reply to another comment.
+%
+Hereafter we refer to such comments as ``messages'', to match our
+convention in mathematical formulas: the letter $c$ stands for a
+community, and $m$ stands for a message.
 
-Our dataset includes comments from \num{46} subreddits, 
+Our dataset includes messages from \num{46} subreddits, 
 randomly selected from the set of all forums 
-with at least \num{15000} comments per month for each month
+with at least \num{15000} messages per month for each month
 in the three years between 2015 and 2017. 
 We initially selected \num{50} subreddits, 
 but excluded four of them from further analysis: 
-two which were primarily non-English and two with particularly\jp{quantify?} short average comment lengths.
-Each community corpus consist of \num{50000} randomly selected comments from the year 2015.
+two which were primarily non-English and two with particularly\jp{quantify?} short average message lengths.
+Each community corpus consist of \num{50000} randomly selected messages from the year 2015.
 
-Comments were preprocessed as follows: 
+Messages were preprocessed as follows: 
 We excluded the content of block quotes, code blocks, and tables.
 We removed any markup (formatting) commands from the remaining text, extracting only rendered text.
-We tokenized the comments using the default English model for the SpaCy tokenizer Version 2.2.3 \citep{Honnibal2017}
+We tokenized the messages using the default English model for the SpaCy tokenizer Version 2.2.3 \citep{Honnibal2017}
 and lower-cased all tokens.
 
 \subsection{Models}
@@ -142,15 +147,15 @@ Splits were stratified by community so that the same number of training examples
 were available for each community.\jp{is it the same for testing/validation? How can you maintain this split?}
 
 We use a vocabulary size of \num{40000} tokens, including a special out-of-vocabulary token.
-The vocabulary consisted of the most frequent tokens at the comment level,
-meaning that we only counted each token once per comment.
+The vocabulary consisted of the most frequent tokens at the message level,
+meaning that we only counted each token once per message.
 The main reason for this choice was to avoid over-counting otherwise rare tokens that were spammed
-many times in a single comment.
+many times in a single message.
 
 We trained the models on a simple left-to-right\jp{I don't think that this applies for the transformer model} language modeling task 
 with cross entropy loss over the vocabulary 
 and AdamW \citep{Loshchilov2019} optimization, with an inital learning rate of \num{0.001}.
-We used a batch size of \num{256} and a maximum sequence length of \num{64} tokens, truncating longer comments (16.8\% of comments were longer than \num{64} tokens).
+We used a batch size of \num{256} and a maximum sequence length of \num{64} tokens, truncating longer messages (16.8\% of messages were longer than \num{64} tokens).
 During training, a dropout rate of $0.1$ was applied between encoder layers 
 and after each linear layer.
 
@@ -280,9 +285,9 @@ However, we are not so much interested in the ability of the CCLM to
 precisely model the language used in a community.
 
 We now turn our interest to language-model-based community classifiers
-(LMCC). Given a comment $m$, and LMCC gives the probability that it
+(LMCC). Given a message $m$, and LMCC gives the probability that it
 belongs in a community $c_i$ Using the Bayes theorem, we can turn a
-CCLM into a LMCC. Indeed, the probability that a given comment $m$
+CCLM into a LMCC. Indeed, the probability that a given message $m$
 belongs to a community $c_i$ can be calculated as follows:
 \[P(c=c_i | m) = P(m | c_i)\frac {P(m)} {P(c=c_i)}\]
 In the above,
@@ -292,8 +297,8 @@ $P(m | c_i)$ is given by the CCLM. $P(m)$ is our normalisation factor, which can
 
 Knowing that $m$ \emph{actually} comes from community $c_j$, we can
 measure the precision our classifier, as a confusion matrix $C$,
-which can be calculated as follows for a given set of comment (TODO: what set exactly?)
-\[C_{ij} = average_{m \in Posts(c_j)}(P(c=c_i | m))\].
+which can be calculated as follows for a given set of messages (TODO: what set exactly?)
+\[C_{ij} = average_{m \in Messages(c_j)}(P(c=c_i | m))\].
 
 
 %\begin{figure*}
@@ -309,11 +314,11 @@ TODO: why don't we use F scores?
 
 While the confusion matrices provide a lot of insight, they are
 somewhat \emph{too} fine-grained. For this reason, we will be
-interested in confusing the comments from community $c_j$ are to the
+interested in confusing the messages from community $c_j$ are to the
 LMCC. For this purpose, we consider the perplexity of the LMCC for a
-comment coming from community $j$, defined as the exponential of the
+message coming from community $j$, defined as the exponential of the
 entropy of the distribution \(D_j\), which is the (discrete)
-probability distribution of predicted community for a random comment from
+probability distribution of predicted community for a random message from
 $c_j$. $D_j$ is simply the $j$th row in \(C\), and so we obtain the formula:
 \[Ppl_j = e^{-\sum_i C_{ij} log(C_{ij})}\]
 
@@ -353,7 +358,7 @@ We can then analyse the correlation between \(Ppl^M_j\) for various models $M$.
 % - compute pearson correlation coefficient
 
 % We see a positive correlation: this suggests that the more stable a
-% community is, the more difficult it is to identify comment as coming
+% community is, the more difficult it is to identify message as coming
 % from it. What this suggests is that stable communities tend to use a
 % varied and standard, subset of English, while unstable communities
 % resort to more formulaic language. This may suggests that to 'fit' in an
