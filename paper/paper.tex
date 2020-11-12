@@ -317,25 +317,25 @@ restricted to the 46 communities chosen for our study
 2. latent ability to recognize a community
 
 
-However, we are not so much interested in the ability of the CCLM to
-precisely model the language used in a community.
+% However, we are not so much interested in the ability of the CCLM to precisely model the language used in a community.
 
-We now turn our interest to language-model-based community classifiers
-(LMCC). Given a message $m$, and LMCC gives the probability that it
-belongs in a community $c_i$ Using the Bayes theorem, we can turn a
-CCLM into a LMCC. Indeed, the probability that a given message $m$
+We now turn our interest to the Bayesian classifier induced by a CCLM, which we call a language-model-based community classifier
+(LMCC). Indeed, the purpose of an LMCC is to estimate the probability $P(m|c_i)$ that a message $m$
+belong in a community $c_i$. Using the Bayes theorem, we can turn a
+CCLM into a LMCC: the probability that a given message $m$
 belongs to a community $c_i$ can be calculated as follows:
 \[P(c=c_i | m) = P(m | c_i)\frac {P(m)} {P(c=c_i)}\]
 In the above,
 $P(c=c_i)$ is the frequency of community $c_i$ in the dataset, and
-$P(m | c_i)$ is given by the CCLM. $P(m)$ is our normalisation factor, which can be set so that
-\[\sum_i P(c=c_i | m) = 1\].
+$P(m | c_i)$ is given by the CCLM. $P(m)$ is the absolute
+probability of a message, which can be computed as
+\[P(m) = \frac 1 {\sum_i P(c=c_i) P(m|c=c_i ) }\].
 
-Knowing that $m$ \emph{actually} comes from community $c_j$, we can
-measure the precision our classifier, as a confusion matrix $C$,
-which can be calculated as follows for a given set of messages (TODO: what set exactly?)
+We can characterise the quality the LMCC by a confusion matrix
+$C$, defined by $C_{ij} = P(c=c_i | m)$ for a random message $m$ in
+community $c_j$.  That is:
 \[C_{ij} = average_{m \in Messages(c_j)}(P(c=c_i | m))\].
-
+\jp{Is this test set or training set?}
 
 %\begin{figure*}
 %\begin{tikzpicture}
