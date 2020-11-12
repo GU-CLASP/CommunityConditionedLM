@@ -350,21 +350,18 @@ As a sanity check, we observe that the diagonal dominates the matrix: on average
 
 However, we want to measure the ability of the LMCC to correctly
 recognize messages coming from a given community $c_j$. We could use
-something like an F-score, but we prefer to use the perplexity metric
-(again), which is has stronger information-theoretic grounds.
-However, this time, the perplexity corresponds to the difficulty of
-identifying a community, not predicting a word.
-Technically, we consider the average perplexity of the LMCC for a
-message coming from community $j$, defined as the exponential of the
+something like an F-score, but we prefer to use the entropy metric
+which is has stronger information-theoretic grounds, and is a measure
+of the difficulty of identifying a community, as estimated by the
+model. We call this measure the (linguistic) indiscernibility of the
+community $c_j$, and use \(\Ind_j\) to stand for it in formulas.
+
+Technically, it is defined as the exponential of the
 entropy of the distribution \(D_j\), which is the (discrete)
 probability distribution of predicted community for a random message from
 $c_j$. $D_j$ is simply the $j$th row in \(C\). In sum, we have the formula:
 \[\Ind_j = e^{-\sum_i C_{ij} log(C_{ij})}\]
 
-We call \(\Ind_j\) the (linguistic) indiscernibility of the community
-$c_j$, and it is a measure of how unsure a model is about which
-community a message belongs to --- when the message in question is
-actually coming from a community $c_j$.
 
   %\begin{tikzpicture}
   %\pplscatter{lstm-3-1_lmcc}{lstm-3-1_cclm}
@@ -399,7 +396,7 @@ indiscernibility to the corresponding latent LMCC
 \end{figure}
 
 
-\jp{We could also compute the perplexity for Cij = snap cosine similarity w/ softmax.}
+\jp{We could also compute the entropy of rows of Cij = snap cosine similarity w/ softmax.}
 
 % Finally, we investigate the correlation between the stability of a
 % community and the perplexity of the LMCC for it. Stability is defined as TODO.
