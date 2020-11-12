@@ -69,8 +69,17 @@
 
 \section{Introduction}
 
+The \emph{speech community} is an important concept 
+in the study of linguistic variation.
+Any social group exhibiting some degree of linguistic idiosyncrasy
+may be considered a speech community \citep{Gumperz1972}.
+Linguistic communication requires that participants share 
+\emph{common ground} \citep{Stalnaker2002} knowledge of certain norms, 
+including the meaning of words, syntactic structure, and patterns of interaction.
+Speakers often assume that these norms are common ground based on joint membership
+in some community \cite{Clark1996}.
 
-TODO: What is a linguistic community. 
+This basis allows for variation in linguistic convention accross communities.
 
 Broadly construed, we want to investigate two questions.  First, we
 are interested in the variation of to what extent are various
@@ -276,7 +285,7 @@ suggesting that the embedding space learned by the model is meaningful.
 
 As a quantitative assessment, we compare the CCLM-learned community
 embedding with the community embedding created by \citet{Kumar2018},
-who generated them from the comment-community co-occurence matrix,
+who generated them from the message-community co-occurence matrix,
 using data which spans January 2014 to April 2017. We refer the reader
 to \citet{Kumar2018}\jp{I actually cannot find in their paper what
   they do.} for details, but the important point is that no linguistic
@@ -380,7 +389,6 @@ correlated for various CCLM (transformer, lstm and various $c$) $M$.
 \end{figure}
 
 
-
 However we observe that the CCLM perplexity is only weakly correlated with the
 indiscernibility to the corresponding latent LMCC
 (\cref{fig:cclm_lmcc_ppl}).
@@ -394,7 +402,6 @@ indiscernibility to the corresponding latent LMCC
     other models exhibit similar behavior.  }
   \label{fig:cclm_lmcc_ppl}
 \end{figure}
-
 
 \jp{We could also compute the entropy of rows of Cij = snap cosine similarity w/ softmax.}
 
