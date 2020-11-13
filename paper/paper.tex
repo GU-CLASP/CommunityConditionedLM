@@ -23,10 +23,11 @@
 \usepackage{todonotes}
 \usepackage{enumitem}
 \usepackage{cleveref}
-\renewcommand{\UrlFont}{\ttfamily\small}
+
 \usepgfplotslibrary{groupplots}
 \pgfplotsset{compat=1.16}
 
+\renewcommand{\UrlFont}{\ttfamily\small}
 
 \newcommand\jp[1]{\todo[backgroundcolor=blue!10]{JP: #1}}
 \newcommand\bn[1]{\todo[backgroundcolor=green!10]{BN: #1}}
@@ -244,27 +245,20 @@ after all the sequence encoder layers
 
 %TODO: For space reasons, it might be better to put the community-level table in the appendix and have the table in body just show the means (and perhaps medians/stddevs?) for each architecture.}
 
-We also note that the conditioned models perform differently across different communities---\
-for some communities, perplexity of the conditioned models is a lot lower (Table~\ref{tab:model-ppls},\bn{is this ok took ``test'' out but made clear in the caption that it's the test set}%\jp{and training?}
-whereas for others it is the same or even slightly higher.
-\bn{TODO: talk about this in terms of mutual information instead?}
-As an anecdotal observation, we note 
-that communities where conditioning has the least effect
+We also note that the conditioned models perform differently across different communities---%
+for some communities, perplexity of the conditioned models is a lot lower,\bn{is this ok? took ``test'' out but made clear in the caption that it's the test set}%\jp{and training?}
+whereas for others it is the same or even slightly higher (Table~\ref{tab:model-ppls}).\bn{talk about this in terms of mutual information instead?}
+As an informal observation, we note 
+that across all the models we tested, 
+communities where conditioning has the least effect
 tend to be more organized around more ``general interest'' topics,
 such as /r/relationships, where the subject matter is relevant to a broad
-range of people. \bn{I really mean this as a quality of the topic, rather than the community itself.}% \jp{Is there a way to quantify general interest topics? Community size in terms of number of users?}
+range of people. \bn{I really mean this as a quality of the topic, rather than the community itself, although the two are probably correlated}% \jp{Is there a way to quantify general interest topics? Community size in terms of number of users?}
 Conditioning the model on community has the most benefit
 for narrower special-interest subreddits such as those organized
 around a certain videogame, sports team, or subculture.
-
 This makes sense intuitively, since communities with more niche topics
 would tend to have more specialized vocabulary and speech patterns.\bn{i think it's ok---i've seen this broader sense used in academic papers}%\jp{can you say speech for written language?} 
-
-The pattern of how much the perplexity falls across different communities
-is similar across architectures, but with some differences.\jp{Either say something specific here or move the whole paragraph to future work.}
-It could be interesting to further investigate these differences in future work,
-since it could reveal differences in the kind of linguistic variation the different
-model architectures capture.
 
 \begin{table*}
   \footnotesize
@@ -334,13 +328,13 @@ restricted to the 46 communities chosen for our study
 
 \subsection{Latent language-model-based community classifiers}
 
-The perplexity of a CCLM tells is a measure of linguistic complexity,
+The perplexity of a CCLM gives us a measure of linguistic complexity,
 but it is not a measure of how linguistically \emph{specific} the
-community is. However, the CCLM induces a latent 
-a latent classifier induced by a CCLM, which we call a language-model-based community classifier
-(LMCC). Indeed, using the Bayes theorem, we can turn a
+community is. However, the CCLM induces a latent classifier,
+which we call a language model-based community classifier
+(LMCC). Using the Bayes theorem, we can turn a
 CCLM into a LMCC: the probability that a given message $m$
-belongs to a community $c_i$ can be calculated as follows:
+belongs to a community $c_i$ is calculated as follows:
 \[P(c=c_i | m) = P(m | c_i)\frac {P(m)} {P(c=c_i)}\]
 In the above,
 $P(c=c_i)$ is the frequency of community $c_i$ in the dataset, and
@@ -350,22 +344,18 @@ probability of a message, which can be computed as
 \[P(m) = \frac 1 {\sum_i P(c=c_i) P(m|c=c_i ) }\].
 
 We can characterise the quality the LMCC by a confusion matrix
-$C$, defined by $C_{ij} = P(c=c_i | m)$ for a random message $m$ in
-community $c_j$.  That is:
+$C$, defined by $C_{ij} = P(c=c_i | m)$ for a given message $m$ 
+from the community $c_j$ portion of the test set.  That is:
 \[C_{ij} = average_{m \in Messages(c_j)}(P(c=c_i | m))\].
 As a sanity check, we observe that the diagonal dominates the matrix: on average the LMCC picks the right community for a message.
 
-\jp{Is this test set or training set?}
-
-%\begin{figure*}
-%\begin{tikzpicture}
-  %\confusiongroupplot{floats/lstm-3-1_comm_infer_confusion.csv}{floats/transformer-3-3_comm_infer_confusion.csv}
-%\end{tikzpicture}
-%\caption{LMCC confusion matrices for the best LSTM (left, $c=1$) and transformer (right, $c=3$) models.}
-%\label{fig:confusion}
-%\end{figure*}
-
-
+\begin{figure*}
+\begin{tikzpicture}
+  \confusiongroupplot{floats/lstm-3-1_comm_infer_confusion.csv}{floats/transformer-3-3_comm_infer_confusion.csv}
+\end{tikzpicture}
+\caption{LMCC confusion matrices for the best LSTM (left, $c=1$) and transformer (right, $c=3$) models.}
+\label{fig:confusion}
+\end{figure*}
 
 However, we want to measure the ability of the LMCC to correctly
 recognize messages coming from a given community $c_j$. We could use
@@ -381,10 +371,6 @@ probability distribution of predicted community for a random message from
 $c_j$. $D_j$ is simply the $j$th row in \(C\). In sum, we have the formula:
 \[\Ind_j = e^{-\sum_i C_{ij} log(C_{ij})}\]
 
-
-  %\begin{tikzpicture}
-  %\pplscatter{lstm-3-1_lmcc}{lstm-3-1_cclm}
-  %\end{tikzpicture}
 
 Indiscernibility is a robust measure: it is almost perfectly
 correlated for various CCLM (transformer, lstm and various $c$) $M$.
@@ -454,6 +440,13 @@ http://ceur-ws.org/Vol-2578/DARLIAP3.pdf
 \jp{Go through hypotheses again}
 
 - Comparison with topic modelling
+
+% future work
+The pattern of how much the perplexity falls across different communities
+is similar across architectures, but with some differences.\jp{Either say something specific here or move the whole paragraph to future work.}
+It could be interesting to further investigate these differences in future work,
+since it could reveal differences in the kind of linguistic variation the different
+model architectures capture.
 
 \bibliography{paper}
 \bibliographystyle{acl_natbib}
