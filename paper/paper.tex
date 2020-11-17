@@ -218,7 +218,7 @@ We experimented with every possible value for $l_c$ in a three-layer model ($l_c
 We trained the models until the validation loss stopped decreasing 
 for two epochs in a row,
 and used the weights from the epoch with the smallest validation loss for testing.
-In general, transformer models trained for about half as long as the LSTM models (Table~\ref{tab:best-epoch}).
+In general, transformer models trained for about half as long as the LSTM models (\cref{tab:best-epoch}).
 
 \begin{table}
   \centering
@@ -242,13 +242,13 @@ with two more LSTM layers after that.
 The best transformer model ($l_c=3$), on the other hand,
 incorporates the community information last,
 after all the sequence encoder layers
-(Table \ref{tab:model-ppls}).
+(\cref{tab:model-ppls}).
 
 %TODO: For space reasons, it might be better to put the community-level table in the appendix and have the table in body just show the means (and perhaps medians/stddevs?) for each architecture.}
 
 We also note that the conditioned models perform differently across different communities---%
 for some communities, perplexity of the conditioned models is a lot lower,\bn{is this ok? took ``test'' out but made clear in the caption that it's the test set}%\jp{and training?}
-whereas for others it is the same or even slightly higher (Table~\ref{tab:model-ppls}).\bn{talk about this in terms of mutual information instead?}
+whereas for others it is the same or even slightly higher (\cref{tab:model-ppls}).\bn{talk about this in terms of mutual information instead?}
 As an informal observation, we note 
 that across all the models we tested, 
 communities where conditioning has the least effect
@@ -275,7 +275,7 @@ As a qualitative assesment of the community embeddings,
 we manually identified topic categories into which at least three
 of the selected communities fall.
 We plotted the two-component PCA projection of the embeddings,
-annotated with these categories (Figure~\ref{fig:comm-pca}).
+annotated with these categories (\cref{fig:comm-pca}).
 We see that there is some evidence of clustering according to
 the topic categories we identified,
 suggesting that the embedding space learned by the model is meaningful.
@@ -303,14 +303,14 @@ contents of messages, not authorship data.
 We correlate the pairwise cosine similarity of the
 CCLM embeddings with the same metric on the membership embedding,
 restricted to the 46 communities chosen for our study
-(Figure~\ref{fig:pairwise-comm-sim}).
+(\cref{fig:pairwise-comm-sim}).
 
 \begin{figure}
   \pairwisecommsim{lstm-3-1} 
   \caption{Pairwise cosine similarity between community vectors for 
     the membership-based embedding (x-axis) and
   the LSTM CCLM embedding with $c=1$ (y-axis). 
-  Pairs from the same category are colored according to Figure~\ref{fig:comm-pca}.
+  Pairs from the same category are colored according to \cref{fig:comm-pca}.
   We also mark pairs from different (\texttimes) and pairs where one or both
   communities belong to the ``Other'' category (\textbigcircle).
   }
@@ -385,10 +385,9 @@ correlated for various CCLM (transformer, lstm and various $c$) $M$.
   \label{fig:lmcc_ppl}
 \end{figure}
 
-
 However we observe that the CCLM perplexity is only weakly correlated with the
-indiscernibility to the corresponding latent LMCC
-(\cref{fig:cclm_lmcc_ppl}).
+indiscernibility of the corresponding latent LMCC(\cref{fig:cclm_lmcc_ppl}).
+
 \jp{actually, if we had many more communities, then the lines could be ``more blurred'' between various communities, and we may have a stronger correlation here.}
 \begin{figure}
   \pplscatter{lstm-3-1_cclm}{lstm-3-1_lmcc}
