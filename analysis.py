@@ -108,34 +108,73 @@ def write_pca_table(model_name):
 for model in conditioned_models:
     write_pca_table(model)
 
-
-#### Community inference confusion matrix
+#### LMCC confusion matrix
 
 from comm_author_embed import load_snap_comm_embed
+from itertools import combinations
 
 comms_alpha = sorted(list(comms))
 
 def model_comm_confusion_matrix(model_name):
     """ C[i,j] = average_{Posts(cj)}(P(c=ci|m))"""
-    P = pd.read_pickle(os.path.join(os.path.join(model_dir, model_name), 'comm_probs.pickle'))
+    P = pd.read_pickle(os.path.join(model_dir, model_name), 'comm_probs.pickle')
     C = P.groupby('actual_comm').mean()
     C = C.T # transpose to (prob assigned, actual comm), as in the paper
     C = C.sort_index() # sort the rows alphabetically
     C = C[C.index] # sort the columns alphabetically too
-    C = C.unstack().reset_index()
-    C = C.rename(columns={'level_1': 'confered_to', 0: 'avg_prob'})
-    C['actual_comm'] = C['actual_comm'].apply(comms_alpha.index)
-    C['confered_to'] = C['confered_to'].apply(comms_alpha.index)
     return C
 
-for model_name in conditioned_models:
-    C = model_comm_confusion_matrix(model_name)
-    C.to_csv(os.path.join(floats_dir, f'{model_name}_comm_infer_confusion.csv'), sep='\t', float_format="% 5.4f", index=False)
+C = {model_name: model_comm_confusion_matrix(model_name) for model_name in conditioned_models}
 
+for model_name in conditioned_models:
+    Cm = C[model_name]
+    Cm = Cm.unstack().reset_index()
+    Cm = Cm.rename(columns={'level_1': 'confered_to', 0: 'avg_prob'})
+    Cm['actual_comm'] = Cm['actual_comm'].apply(comms_alpha.index)
+    Cm['confered_to'] = Cm['confered_to'].apply(comms_alpha.index)
+    Cm.to_csv(os.path.join(floats_dir, f'{model_name}_comm_infer_confusion.csv'), sep='\t', float_format="% 5.4f", index=False)
+
+I = [] # Linguistic indiscernibility
+for model_name in conditioned_models:
+    Im = C[model_name].apply(ppl)
+    Im.name = model_name
+    I.append(Im)
+I = pd.concat(I, axis=1)
+
+for m1, m2 in combinations(conditioned_models, 2):
+    r, p = pearsonr(I[m1], I[m2])
+    print(f"{m1:<15} {m2:<15} {r:0.3f} {p:0.5f}")
+
+# lstm-3-0        lstm-3-1        0.997 0.00000
+# lstm-3-0        lstm-3-2        0.995 0.00000
+# lstm-3-0        lstm-3-3        0.990 0.00000
+# lstm-3-0        transformer-3-0 0.988 0.00000
+# lstm-3-0        transformer-3-1 0.995 0.00000
+# lstm-3-0        transformer-3-2 0.994 0.00000
+# lstm-3-0        transformer-3-3 0.994 0.00000
+# lstm-3-1        lstm-3-2        0.998 0.00000
+# lstm-3-1        lstm-3-3        0.994 0.00000
+# lstm-3-1        transformer-3-0 0.988 0.00000
+# lstm-3-1        transformer-3-1 0.991 0.00000
+# lstm-3-1        transformer-3-2 0.992 0.00000
+# lstm-3-1        transformer-3-3 0.994 0.00000
+# lstm-3-2        lstm-3-3        0.995 0.00000
+# lstm-3-2        transformer-3-0 0.987 0.00000
+# lstm-3-2        transformer-3-1 0.990 0.00000
+# lstm-3-2        transformer-3-2 0.992 0.00000
+# lstm-3-2        transformer-3-3 0.995 0.00000
+# lstm-3-3        transformer-3-0 0.990 0.00000
+# lstm-3-3        transformer-3-1 0.988 0.00000
+# lstm-3-3        transformer-3-2 0.984 0.00000
+# lstm-3-3        transformer-3-3 0.997 0.00000
+# transformer-3-0 transformer-3-1 0.990 0.00000
+# transformer-3-0 transformer-3-2 0.985 0.00000
+# transformer-3-0 transformer-3-3 0.989 0.00000
+# transformer-3-1 transformer-3-2 0.989 0.00000
+# transformer-3-1 transformer-3-3 0.991 0.00000
+# transformer-3-2 transformer-3-3 0.990 0.00000
 
 #### Pairwise community similarity scatter
-
-from itertools import combinations
 
 def cos_sim(v1, v2):
     return (v1 * v2).sum(axis=0) / (np.linalg.norm(v1, axis=0) * np.linalg.norm(v2, axis=0))
@@ -196,36 +235,48 @@ def entropy(x):
     return entr(x).sum()
 
 def ppl(x):
-    return np.exp(etropy(x))
+    return np.exp(entropy(x))
 
-lmcc_mean_entr = []
-for model in conditioned_models:
-    model_entr = pd.read_pickle(os.path.join(os.path.join(model_dir, model), 'comm_probs.pickle')).groupby('actual_comm').mean().apply(entropy, axis=1)[comms]
-    model_entr.name = model
-    lmcc_mean_entr.append(model_entr)
-
-lmcc_mean_entr = pd.concat(lmcc_mean_entr, axis=1)
-lmcc_mean_entr.index.name = 'community'
-
+lmcc_ppl_mean = I
 cclm_ppl_mean = cclm_ppl.groupby('community').mean()
 
-df = pd.merge(lmcc_mean_entr, cclm_ppl_mean, right_index=True, left_index=True, suffixes=['_lmcc', '_cclm'])
+df = pd.merge(cclm_ppl_mean, lmcc_ppl_mean, right_index=True, left_index=True, suffixes=['_cclm', '_lmcc'])
 df.to_csv(os.path.join(floats_dir, f'cclm_lmcc_ppl.csv'), sep='\t', 
             float_format="% 5.4f", index=True)
 
+cclm_lmcc_ppl_r = {}
 for model in conditioned_models:
-    r, p = pearsonr(lmcc_mean_entr[model],cclm_ppl_mean[model])
+    r, p = pearsonr(cclm_ppl_mean[model], lmcc_ppl_mean[model])
     print(f"{model:<15} r = {r:0.2f} p = {p:0.4f}")
-# lstm-3-0        r = -0.04 p = 0.8032
-# lstm-3-1        r = -0.02 p = 0.8900
-# lstm-3-2        r = -0.04 p = 0.8073
-# lstm-3-3        r = -0.03 p = 0.8276
-# transformer-3-0 r = -0.04 p = 0.7870
-# transformer-3-1 r = -0.05 p = 0.7267
-# transformer-3-2 r = -0.03 p = 0.8392
-# transformer-3-3 r = -0.04 p = 0.7830
+    cclm_lmcc_ppl_r[model] = ({'r': r,'p': p})
+
+cclm_lmcc_ppl_r = pd.DataFrame(cclm_lmcc_ppl_r)
+cclm_lmcc_ppl_r = cclm_lmcc_ppl_r.T
+cclm_lmcc_ppl_r.index = pd.MultiIndex.from_tuples(pd.Series(cclm_lmcc_ppl_r.index).apply(model_params_from_name))
+cclm_lmcc_ppl_r.index = cclm_lmcc_ppl_r.index.set_names('c', level=1)
+
+cclm_lmcc_ppl_r.to_latex(os.path.join(floats_dir, 'cclm_lmcc_ppl.tex'), 
+        formatters=["{:0.2f}".format, "{:0.4f}".format])
+
+# lstm-3-0        r = 0.21 p = 0.1546
+# lstm-3-1        r = 0.16 p = 0.2991
+# lstm-3-2        r = 0.15 p = 0.3245
+# lstm-3-3        r = 0.09 p = 0.5430
+# transformer-3-0 r = 0.14 p = 0.3434
+# transformer-3-1 r = 0.20 p = 0.1808
+# transformer-3-2 r = 0.22 p = 0.1411
+# transformer-3-3 r = 0.17 p = 0.2555
 
 r, p = pearsonr(lmcc_mean_entr['lstm-3-1'], lmcc_mean_entr['transformer-3-3'])
 print(f"r = {r:0.4f} p = {p:0.6f}")
 # r = 0.9935 p = 0.000000 
+
+##### Looking for examples 
+
+lmcc = pd.read_pickle(os.path.join(model_dir, 'lstm-3-1', 'comm_probs.pickle'))
+lmcc['pred'] =  lmcc[comms].idxmax(axis=1)
+lmcc['prob'] =  lmcc[comms].max(axis=1)
+lmcc['comment'] = cclm_ppl['comment']
+lmcc = lmcc.drop(comms, axis=1)
+
 

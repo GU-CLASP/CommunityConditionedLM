@@ -344,11 +344,11 @@ belongs in a community $c_i$. ) is estimated by the CCLM. $P(m)$ is the absolute
 probability of a message, which can be computed as
 \[P(m) = \frac 1 {\sum_i P(c=c_i) P(m|c=c_i ) }\].
 
-We can characterise the quality the LMCC by a confusion matrix
-$C$, defined by $C_{ij} = P(c=c_i | m)$ for a given message $m$ 
-from the community $c_j$ portion of the test set.  That is:
-\[C_{ij} = average_{m \in Messages(c_j)}(P(c=c_i | m))\].
-As a sanity check, we observe that the diagonal dominates the matrix: on average the LMCC picks the right community for a message.
+We can characterise the quality the LMCC with a confusion matrix
+$C$, defined by $C_{ij} = P(c=c_i | m)$ for a given (test set) message $m$ 
+from community $c_j$. 
+That is: \[C_{ij} = average_{m \in Messages(c_j)}(P(c=c_i | m))\].
+As a sanity check, we observe that the diagonal dominates the matrix: on average the LMCC picks the right community for a message (\cref{fig:confusion}).
 
 \begin{figure*}
 \begin{tikzpicture}
@@ -360,44 +360,57 @@ As a sanity check, we observe that the diagonal dominates the matrix: on average
 
 However, we want to measure the ability of the LMCC to correctly
 recognize messages coming from a given community $c_j$. We could use
-something like an F-score, but we prefer to use the entropy metric
+something like an F-score, but we prefer to use the entropy metric,
 which is has stronger information-theoretic grounds, and is a measure
-of the difficulty of identifying a community, as estimated by the
-model. We call this measure the (linguistic) indiscernibility of the
-community $c_j$, and use \(\Ind_j\) to stand for it in formulas.
-
-Technically, it is defined as the exponential of the
-entropy of the distribution \(D_j\), which is the (discrete)
-probability distribution of predicted community for a random message from
-$c_j$. $D_j$ is simply the $j$th row in \(C\). In sum, we have the formula:
+of the uncertainty of the LMCC, given messages from a particular 
+community. 
+Technically, the linguistic indiscernibility of community $c_j$ is defined 
+as the exponential of the entropy of the $j$ row in \(C\),
+which is a probability distribution 
+of predicted community for a random message from $c_j$.
+In sum, we have the formula: \bn{Took out $D$. is it needed elsewhere?}
 \[\Ind_j = e^{-\sum_i C_{ij} log(C_{ij})}\]
 
-
 Indiscernibility is a robust measure: it is almost perfectly
-correlated for various CCLM (transformer, lstm and various $c$) $M$.
-\jp{other r's}
+correlated for various CCLM (transformer, LSTM and various $c$) $M$.
+In fact, we observe a correlation between the indiscernibility 
+measures by every pair of models with Pearson's r $\geq 0.98$ 
+and $p < 0.0001$ (see, for example, \cref{fig:lmcc_ppl}).
+
 \begin{figure}
   \pplscatter{lstm-3-1_lmcc}{transformer-3-3_lmcc}
   \caption{%
     Correlation between indiscernibility for the best LSTM ($c = 1$) and transformer ($c = 3$) models
-    (Pearson's r = \num{0.99} p < \num{0.0001}).
+    (Pearson's $r = 0.99$, $p < 0.0001$).
   }
   \label{fig:lmcc_ppl}
 \end{figure}
 
-However we observe that the CCLM perplexity is only weakly correlated with the
-indiscernibility of the corresponding latent LMCC(\cref{fig:cclm_lmcc_ppl}).
+However, we observe that community-wise CCLM perplexity is only weakly (if at all) \bn{Changed the indiscernability (y-axis) from entropy to Ppl and the p-values all shot up above 0.1. However the r is still very weakly positive for every model.}
+correlated with community indiscernibility under the corresponding latent 
+LMCC (see \cref{fig:cclm_lmcc_ppl} and \cref{tab:cclm_lmcc_ppl}).
+In other words, the linguistic complexity of a given community
+is a poor predictor of how distinct its language is.
 
 \jp{actually, if we had many more communities, then the lines could be ``more blurred'' between various communities, and we may have a stronger correlation here.}
 \begin{figure}
   \pplscatter{lstm-3-1_cclm}{lstm-3-1_lmcc}
   \caption{%
-    Mean linguistic perplexity (x-axis) and community indiscernibility
-    (y-axis) per community (Pearson's r = \num{0.30}, p =
-    \num{0.0444}).  Shown here for the LSTM model with $c = 1$, but
-    other models exhibit similar behavior.  }
+    Mean community-wise linguistic perplexity (x-axis) 
+    and indiscernibility (y-axis) 
+    (Pearson's r = \num{0.16}; p = \num{0.2991}).  
+    Shown here for the LSTM with $c = 1$.}
   \label{fig:cclm_lmcc_ppl}
 \end{figure}
+
+\begin{table}
+  \centering
+  \input{floats/cclm_lmcc_ppl.tex}
+  \caption{
+  Pearson's r correlation between community-wise linguistic perplexity and indescernibility for each model.
+  }
+  \label{tab:cclm_lmcc_ppl}
+\end{table}
 
 \jp{We could also compute the entropy of rows of Cij = snap cosine similarity w/ softmax.}
 
@@ -441,7 +454,6 @@ http://ceur-ws.org/Vol-2578/DARLIAP3.pdf
 
 - Comparison with topic modelling
 
-% future work
 The pattern of how much the perplexity falls across different communities
 is similar across architectures, but with some differences.\jp{Either say something specific here or move the whole paragraph to future work.}
 It could be interesting to further investigate these differences in future work,
