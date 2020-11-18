@@ -81,15 +81,30 @@ to the very large, like speakers of English.
 Because it is the source of linguistic convention, the \emph{speech community} 
 is an important concept in the study of linguistic variation \citep{Gumperz1972}.
 
-In this work, we investigate linguistic variation across online communities.
+In the present work, we investigate linguistic variation across online communities.
 Broadly construed, we want to investigate two questions.  First, we
 are interested in variation in the level of linguistic complexity
 exhibited by different communities.
 
-TODO: insert some anecdotes (perhaps some particularly stupid/clever
-comments from reddit here.)
+\jp{
+  Some examples (perhaps include if there is space):
+  
+  (CFB)
+  It was against SMU in the 47-48 Cotton bowl. They had cancelled a
+  game the year before against Miami for the same reason. There's
+  debate on if that's really the origin for the phrase but the story
+  itself is true.
 
-It is folklore that certain communities are more linguistically complex than others.
+  (Videos)
+  Reminds me of Y2K computer bug. A lot of work went into
+  pre-emptively fixing it, and a lot of bugs were found and fixed,
+  some of which would have been catastrophic. Unfortunately, because
+  the work was successful, a lot of people now describe it as a waste
+  of time/money and a big deal made out of nothing.  }
+
+
+
+It is folklore that certain communities exhibit more linguistic complexity than others.
 Here we want to quantify this phenomenon.
 More precisely, we investigate if the degree of complexity can be
 captured in a computational model.  For this purpose define various
@@ -99,7 +114,7 @@ is acceptable in a given community $c$: \(P_M(m \mid c)\).
 
 Second, we want to find out how, and how much, CCLMs can be attuned to
 the specificity of communities. We test whether 1. the linguistic
-models are correlated with a model of community based only on
+models are correlated with a model of communities based only on
 co-occurence of users between communities and 2. if latent community
 classifiers based on the CCLM can accurately identify that a given
 message comes from a given community. Additionally, one may
@@ -109,32 +124,34 @@ language become and the easier it is to identify.
 
 To sum up, we propose to test the following hypotheses:
 \begin{hypotheses}
-\item Different communities have different levels of linguistic
+\item \label{hyp:varying-complexity} Different communities have different levels of linguistic
   complexity
-\item The layer at which the community embedding is taken into account
-  in CCLM influences its perplexity.
-\item CCLM can be used to recognize communities based on
+\item \label{hyp:layer-effect} The layer at which the community embedding is taken into account
+  in a CCLM influences its perplexity.
+\item \label{hyp:LMCC-works} CCLM can be used to recognize communities based on
   latent bayesian classification.
-\item The layer at which the community embedding is taken into account
-  influences CCLM and its associated latent classifier.
+% \item \label{hyp:LMCC-works} The layer at which the community embedding is taken into account
+%   influences CCLM and its associated latent classifier.
   % This is more of a justification for studying the latent classifier than a real "user-facing" hypothesis.
-\item The model representation of communities are correlated with
+\item \label{hyp:extra-linguistic-correlation} The CCLM representation of communities are correlated with
   co-ocurrence of users between communities.
 % \item Community stability is correlated with language complexity
-\item Linguistically poor communities are easier to identify than linguistically rich communities.
+\item \label{hyp:rich-harder-to-identify} Linguistically poor communities are easier to identify than
+  linguistically rich communities.
 \end{hypotheses}
 
-\jp{TODO: Outline of the paper.}
+\jp{Perhaps: Outline of the paper.}
 
 \section{Experimental setup}
 
 \subsection{Data sets}
 
-To investigate variation across communities, we use comments collected
-from the social media website Reddit.\footnote{Comments were obtained
-  from the archive at \url{https://pushshift.io/}.
-  \cite{Baumgartner2020}.} 
 
+We investigate linguistic variation across various communities present
+on the social media website Reddit.\footnote{Comments were obtained
+  from the archive at \url{https://pushshift.io/}.
+  \cite{Baumgartner2020}.}
+%
 Reddit is divided into forums called \textit{subreddits}, 
 which are typically organized around a topic of interest. 
 Users create \textit{posts}, which consist of a link, image, 
@@ -164,7 +181,7 @@ and lower-cased all tokens.
 
 \subsection{Models}
 
-We experiment with two kinds of model architecture: LSTM \citep{Hochreiter1997}
+We experiment with two kinds of model architecture: LSTM \citep{Hochreiter1997}\jp{Is it really a simple or a bi-lstm? Even If it's simple it may be worth specifying due to the prevalence of bilstm everywhere.}
 and Transformer \citep{Vaswani2017}.  In either case, the model
 is organised as a standard $n$-layer neural sequence encoder with
 token embedding (we set $n=3$ for all models). As is standard, words are predicted
@@ -191,16 +208,16 @@ for testing, \num{5000} for evaluation, and \num{40000} for training.
 We use a vocabulary size of \num{40000} tokens, including a special out-of-vocabulary token.
 The vocabulary consists of the most frequent tokens at the message level (across all communities),
 meaning that we only count each token once per message.
-The main reason for this is to avoid over-counting otherwise rare tokens that were spammed
+The main reason for this choice is to avoid over-counting otherwise rare tokens that were spammed
 many times in a single message.
 
-We trained the models on a simple left-to-right language modeling task
+For the LSTM, we trained the models on a simple left-to-right language modeling task
 with cross entropy loss over the vocabulary. 
-Since the transformer operates on all tokens in the sequence at once,
-this was achieved by masking and incrementally un-masking input tokens
-in a left-to-right fashion. \bn{does this address it?} %\jp{I don't think that this applies for the transformer model} 
+Because the transformer operates on all tokens in the sequence at once,
+the language modeling was achieved by masking and incrementally un-masking input tokens
+in a left-to-right fashion, following \citet{BERT}\jp{Or some other standard paper}.  
 We used the AdamW \citep{Loshchilov2019} optimization algorithm, 
-with an initial learning rate of \num{0.001}.
+with an initial learning rate of \num{0.001}.\jp{Also for the transformer? No simulated annealing?}
 We used a batch size of \num{256} and a maximum sequence length of \num{64} tokens, 
 truncating longer messages (16.8\% of messages were longer than \num{64} tokens).
 During training, a dropout rate of $0.1$ was applied between encoder layers 
@@ -235,7 +252,7 @@ As one would expect,
 the conditioned models have lower perplexity
 than their respective unconditioned baseline models,
 but this effect is different in magnitude
-for models with different community embedding depths .
+for models with different community embedding depths.
 For the LSTM encoder, 
 the best model ($l_c=1$) concatenates the community embedding after the first encoder layer,
 with two more LSTM layers after that.
@@ -474,7 +491,52 @@ http://ceur-ws.org/Vol-2578/DARLIAP3.pdf
 
 \section{Discussion and Conclusion}
 
-\jp{Go through hypotheses again}
+
+We find that various communities exhibit widely varying levels of
+linguistic complexity (\cref{hyp:varying-complexity}), with perplexity
+per-word ranging from less than 53 to 104 for the best model
+architecture.
+
+With indiscernibility values of 1.5 to 3.5 (out of a maximum of 46),
+we find that CCLMs can be used to recognize communities based on
+latent bayesian classification (\cref{hyp:LMCC-works}). Even the most
+generic communities appear to exhibit fairly specific linguistic
+patterns. Furthermore, these patterns are just as recognizable by LSTM
+or Transformer models, when properly configured and trained.
+
+We find a weak correlation (TODO; r , p) between the perplexity of the
+CCLM and the indiscernibility of the corresponding community
+(\cref{hyp:rich-harder-to-identify}). Because we have relatively few,
+and only large communities in our test set, it is difficult to
+provide a conclusive answer, but this kind of correlation would suggest that
+community-specific complexity can be partially attributed to using
+more varied patterns. However, even the most complex communities
+(perplexity per word above 100) have an indiscernibility of about 3
+(out of a maximum of 46), so they retain fairly specific patterns:
+they are not simply an even mixture of the kind of comments found in
+other communities.
+
+
+
+We find that the layer at which the community embedding is taken into
+account in a CCLM influences its perplexity (\cref{hyp:layer-effect}),
+albeit weakly. For LSTM models, the perplexity per word, averaged over
+all communities, varies between 78.64 and 80.70. It is steadily
+increasing when $l_c$ decreases.  For transformer models, it varies
+between 89.38 and 122.56. Here perplexity per-word is not a monotonous
+function of $l_c$: the maximum is reached at $l_c=2$. We did not
+expect non-mononicity, and leave studying this effect to future work.
+
+The representation of communities built by CCLM is exhibiting a clear
+correlation with user-coocurrence patterns
+(\cref{hyp:extra-linguistic-correlation}, TODO; r , p). A natural
+question that may arise is how much this correlation can be explain by
+user-specifc linguistic patterns. We plan to control for this variable
+in future work, for example by building author-conditioned language
+models and testing if community vector embeddings can be determined by
+the set of the vector embeddings of its members.
+
+
 
 - Comparison with topic modelling
 
