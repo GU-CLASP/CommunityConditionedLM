@@ -1,18 +1,18 @@
 \newcommand{\commpcaplot}[1]{%
   \addplot[
-    scatter, only marks,
-    font=\tiny,
-    scatter src=explicit symbolic,
-    scatter/classes={
-      general-interest={mark=*, blue},
-      videogames={mark=*, red},
-      technology={mark=*, green},
-      sports={mark=*, cyan},
-      female-focused={mark=*, magenta},
-      other={mark=o, black}%
-    },
-    nodes near coords*={\community},
-    visualization depends on={value \thisrow{community} \as \community}
+  scatter, only marks,
+  font=\tiny,
+  scatter src=explicit symbolic,
+  scatter/classes={
+    general-interest={mark=*, blue},
+    videogames={mark=*, red},
+    technology={mark=*, green},
+    sports={mark=*, cyan},
+    female-focused={mark=*, magenta},
+    other={mark=o, black}%
+  },
+  nodes near coords*={\community},
+  visualization depends on={value \thisrow{community} \as \community}
   ] table [x=pca1, y=pca2, meta=category] {#1};
 }
 
@@ -32,28 +32,28 @@
 }
 
 \newcommand{\confusionplot}[1]{%
-    \addplot[
-        matrix plot*,
-        shader=faceted,
-        mesh/cols=46,
-        point meta=explicit,
-] table [x=actual_comm, y=confered_to, meta=avg_prob] {#1};
+  \addplot[
+  matrix plot*,
+  shader=faceted,
+  mesh/cols=46,
+  point meta=explicit,
+  ] table [x=actual_comm, y=confered_to, meta=avg_prob] {#1};
 }
 
 \newcommand{\confusiongroupplot}[2]{%
   \begin{groupplot}[
-  group style={group size=2 by 1}, 
-  enlargelimits=false,
-  axis line style={draw=none},
-  %axis equal,
-  xmin=-1, xmax=46,
-  ymin=-1, ymax=46,
-  width=8cm,
-  xticklabels={Advice,AskWomen,BabyBumps,CFB,Drugs,EDH,EarthPorn,Fantasy,GameDeals,GlobalOffensive,Jokes,Kappa,KerbalSpaceProgram,KotakuInAction,LifeProTips,MLS,MMA,MaddenUltimateTeam,TwoXChromosomes,Warframe,airsoft,bodybuilding,breakingmom,cars,cringe,eu4,exjw,explainlikeimfive,femalefashionadvice,food,heroesofthestorm,jailbreak,justneckbeardthings,oculus,pcmasterrace,photography,reddevils,relationships,rupaulsdragrace,stopdrinking,streetwear,techsupport,todayilearned,toronto,videos,xxfitness},
-  yticklabels=none,
-  xticklabel style={font=\sffamily\tiny, rotate=90},
-  xtick=data,
-  legend style={font=\sffamily\small},
+    group style={group size=2 by 1}, 
+    enlargelimits=false,
+    axis line style={draw=none},
+    %axis equal,
+    xmin=-1, xmax=46,
+    ymin=-1, ymax=46,
+    width=8cm,
+    xticklabels={Advice,AskWomen,BabyBumps,CFB,Drugs,EDH,EarthPorn,Fantasy,GameDeals,GlobalOffensive,Jokes,Kappa,KerbalSpaceProgram,KotakuInAction,LifeProTips,MLS,MMA,MaddenUltimateTeam,TwoXChromosomes,Warframe,airsoft,bodybuilding,breakingmom,cars,cringe,eu4,exjw,explainlikeimfive,femalefashionadvice,food,heroesofthestorm,jailbreak,justneckbeardthings,oculus,pcmasterrace,photography,reddevils,relationships,rupaulsdragrace,stopdrinking,streetwear,techsupport,todayilearned,toronto,videos,xxfitness},
+    yticklabels=none,
+    xticklabel style={font=\sffamily\tiny, rotate=90},
+    xtick=data,
+    legend style={font=\sffamily\small},
     ]
     \nextgroupplot
     \confusionplot{#1}
@@ -64,22 +64,22 @@
 
 \newcommand{\pairwisecommsim}[1]{%
   \begin{tikzpicture}
-  \begin{axis}[]
-  \addplot[
-    scatter, only marks,
-    font=\tiny,
-    scatter src=explicit symbolic,
-    scatter/classes={
-      general-interest={mark=*, blue},
-      videogames={mark=*, red},
-      technology={mark=*, green},
-      sports={mark=*, cyan},
-      female-focused={mark=*, magenta},
-      other={mark=o, black},
-      different={mark=x}
-    },
-  ] table [x=snap, y=#1, meta=meta] {floats/comm_sim.csv};
-  \end{axis}
+    \begin{axis}[]
+      \addplot[
+        scatter, only marks,
+        font=\tiny,
+        scatter src=explicit symbolic,
+        scatter/classes={
+          general-interest={mark=*, blue},
+          videogames={mark=*, red},
+          technology={mark=*, green},
+          sports={mark=*, cyan},
+          female-focused={mark=*, magenta},
+          other={mark=o, black},
+          different={mark=x}
+        },
+        ] table [x=snap, y=#1, meta=meta] {floats/comm_sim.csv};
+    \end{axis}
   \end{tikzpicture}
 }
 

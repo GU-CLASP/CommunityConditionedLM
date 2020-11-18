@@ -414,6 +414,30 @@ is a poor predictor of how distinct its language is.
 
 \jp{We could also compute the entropy of rows of Cij = snap cosine similarity w/ softmax.}
 
+On the other hand, when we consider the \emph{information gain}\bn{define earlier}
+of the CCLM over the corresponding (same encoder architecture)
+un-conditioned 
+
+\begin{figure}
+  \pplscatter{lstm-3-1_gain}{lstm-3-1_lmcc}
+  \caption{%
+    Mean community-wise information gain (x-axis) 
+    and indiscernibility (y-axis) 
+    %(Pearson's r = \num{0.16}; p = \num{0.2991}).  
+    Shown here for the LSTM with $c = 1$.}
+  \label{fig:cclm_lmcc_ppl}
+\end{figure}
+
+\begin{table}
+  \centering
+  \input{floats/lmcc_gain.tex}
+  \caption{
+    Pearson's r correlation between community-wise information gain (of the CCLM over the un-conditioned model) and indescernibility.
+  }
+  \label{tab:lmcc_gain}
+\end{table}
+
+
 % Finally, we investigate the correlation between the stability of a
 % community and the perplexity of the LMCC for it. Stability is defined as TODO.
 

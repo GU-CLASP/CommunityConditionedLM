@@ -3,6 +3,7 @@ import os
 import numpy as np
 import torch
 from scipy.stats import pearsonr
+from scipy.special import entr
 
 model_dir = 'model/reddit2015'
 floats_dir = 'paper/floats'
@@ -10,6 +11,12 @@ floats_dir = 'paper/floats'
 lcs = [None, 0, 1, 2, 3]
 architectures = ['LSTM', 'Transformer']
 lcs_str = [str(i) for i in lcs]
+
+def entropy(x):
+    return entr(x).sum()
+
+def ppl(x):
+    return np.exp(entropy(x))
 
 def model_params_to_name(encoder_arch, lc):
     if encoder_arch == "Transformer":
@@ -117,7 +124,7 @@ comms_alpha = sorted(list(comms))
 
 def model_comm_confusion_matrix(model_name):
     """ C[i,j] = average_{Posts(cj)}(P(c=ci|m))"""
-    P = pd.read_pickle(os.path.join(model_dir, model_name), 'comm_probs.pickle')
+    P = pd.read_pickle(os.path.join(model_dir, model_name, 'comm_probs.pickle'))
     C = P.groupby('actual_comm').mean()
     C = C.T # transpose to (prob assigned, actual comm), as in the paper
     C = C.sort_index() # sort the rows alphabetically
@@ -139,6 +146,7 @@ for model_name in conditioned_models:
     Im = C[model_name].apply(ppl)
     Im.name = model_name
     I.append(Im)
+
 I = pd.concat(I, axis=1)
 
 for m1, m2 in combinations(conditioned_models, 2):
@@ -181,6 +189,8 @@ def cos_sim(v1, v2):
 
 def pairwise_sims(embedding, pairs):
     return pd.Series([cos_sim(*map(lambda x: embedding[list(comms).index(x)], pair)) for pair in pairs], index=pairs)
+
+pairs = list(combinations(comms, 2))
     
 df = pd.DataFrame([], index=pairs)
 for model in conditioned_models:
@@ -229,20 +239,8 @@ pivot_model_table(df_r)['r'].to_latex(os.path.join(floats_dir, 'comm_sim.tex'),
 
 ##### Compare LMCC and CCLM perplexity by community
 
-from scipy.special import entr
-
-def entropy(x):
-    return entr(x).sum()
-
-def ppl(x):
-    return np.exp(entropy(x))
-
 lmcc_ppl_mean = I
 cclm_ppl_mean = cclm_ppl.groupby('community').mean()
-
-df = pd.merge(cclm_ppl_mean, lmcc_ppl_mean, right_index=True, left_index=True, suffixes=['_cclm', '_lmcc'])
-df.to_csv(os.path.join(floats_dir, f'cclm_lmcc_ppl.csv'), sep='\t', 
-            float_format="% 5.4f", index=True)
 
 cclm_lmcc_ppl_r = {}
 for model in conditioned_models:
@@ -270,6 +268,38 @@ cclm_lmcc_ppl_r.to_latex(os.path.join(floats_dir, 'cclm_lmcc_ppl.tex'),
 r, p = pearsonr(lmcc_mean_entr['lstm-3-1'], lmcc_mean_entr['transformer-3-3'])
 print(f"r = {r:0.4f} p = {p:0.6f}")
 # r = 0.9935 p = 0.000000 
+
+#### Info gain (aka MA - mutual information)
+
+cond_lstms = [model_params_to_name('LSTM', lc) for lc in range(4)]
+cond_trnsf = [model_params_to_name('Transformer', lc) for lc in range(4)]
+    cclm_ppl[cond_lstms].apply(lambda x: cclm_ppl['lstm-3'] / x, axis=0),
+    cclm_ppl[cond_trnsf].apply(lambda x: cclm_ppl['transformer-3'] / x, axis=0)
+    ], axis=1)
+MI['community'] = cclm_ppl['community']
+MI_mean = MI.groupby('community').mean()
+
+MI_lmcc_r = {} 
+for model in conditioned_models:
+    r, p = pearsonr(I[model], MI_mean[model])
+    print(f"{model:<15} r = {r:0.2f} p = {p:0.4f}")
+    MI_lmcc_r[model] = ({'r': r,'p': p})
+
+MI_lmcc_r = pd.DataFrame(MI_lmcc_r)
+MI_lmcc_r = MI_lmcc_r.T
+MI_lmcc_r.index = pd.MultiIndex.from_tuples(pd.Series(MI_lmcc_r.index).apply(model_params_from_name))
+MI_lmcc_r.index = MI_lmcc_r.index.set_names('c', level=1)
+
+MI_lmcc_r.to_latex(os.path.join(floats_dir, 'lmcc_gain.tex'), 
+        formatters=["{:0.2f}".format, "{:0.4f}".format])
+
+
+# (actual) community-keyed dataframe
+
+df = pd.merge(cclm_ppl_mean, lmcc_ppl_mean, right_index=True, left_index=True, suffixes=['_cclm', '_lmcc'])
+df = pd.merge(df, MI_mean, left_index=True, right_index=True, suffixes=['', '_gain'])
+df.to_csv(os.path.join(floats_dir, f'cclm_lmcc_ppl.csv'), sep='\t', 
+            float_format="% 5.4f", index=True)
 
 ##### Looking for examples 
 
