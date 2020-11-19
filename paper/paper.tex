@@ -90,6 +90,8 @@ to the very large, like speakers of English.
 Because it is the source of linguistic convention, the \emph{speech community} 
 is an important concept in the study of linguistic variation \citep{Gumperz1972}.
 
+\jp{We want to identify a niche that we want to fill. A quick summary of the state of the art + what is missing.}
+
 In the present work, we investigate linguistic variation across online communities.
 Broadly construed, we want to investigate two questions.  First, we
 are interested in variation in the level of linguistic complexity
@@ -121,7 +123,7 @@ Community Conditioned Language Models (CCLM for short), which can be
 modeled as an estimator $M$ of the degree to which a given message $m$ 
 is acceptable in a given community $c$: \(P_M(m \mid c)\).
 
-Second, we want to find out how, and how much, CCLMs can be attuned to
+Second, we want to find out how, and how much, CCLMs are attuned to
 the specificity of communities. We test whether 1. the linguistic
 models are correlated with a model of communities based only on
 co-occurence of users between communities and 2. if latent community
@@ -131,7 +133,7 @@ intuitively assume that linguistically poor communities are easier to
 recognize: the less linguistic diversity, the more specific the
 language become and the easier it is to identify.
 
-To sum up, we propose to test the following hypotheses:
+To sum up we aim at testing the following hypotheses:
 \begin{hypotheses}
 \item \label{hyp:varying-complexity} Different communities have different levels of linguistic
   complexity
@@ -190,12 +192,17 @@ and lower-cased all tokens.
 
 \subsection{Models}
 
-We experiment with two kinds of model architecture: LSTM \citep{Hochreiter1997}\jp{Is it really a simple or a bi-lstm? Even If it's simple it may be worth specifying due to the prevalence of bilstm everywhere.}
-and Transformer \citep{Vaswani2017}.  In either case, the model
-is organised as a standard $n$-layer neural sequence encoder with
-token embedding (we set $n=3$ for all models). As is standard, words are predicted
-using a softmax projection layer over a pre-determined vocabulary.
-These encoders form the core of the community-conditioned language models (CCLM).
+We experiment with two kinds of model architecture: LSTM
+\citep{Hochreiter1997}\jp{Is it really a simple or a bi-lstm? Even If
+  it's simple it may be worth specifying due to the prevalence of
+  bilstm everywhere.}  and Transformer \citep{Vaswani2017}.  In either
+case, the model is organised as a standard $n$-layer neural sequence
+encoder (we set $n=3$ for all models). As is standard, word tokens are
+first converted to vectors using a trainable embedding layer. At the
+other end, word tokens are predicted using a softmax projection layer. The set of word tokens is a
+pre-determined vocabulary.  These encoders form the core of the
+community-conditioned language models (CCLM), and we call them
+unconditioned models.
 
 To condition the model, we add a \emph{community embedding} parameter to the models.
 This parameter is concatenated with the hidden layer of the sequence encoder,
@@ -205,7 +212,8 @@ For $l_c = n$, the output of this linear layer is passed directly to the softmax
 just as the final hidden layer of the sequence encoder is in other models.
 For $l_c=0$, the community embedding is concatenated with the token embedding.
 For this reason, we set the hidden size of the sequence encoder 
-and the size of the token to be embedding equal for all models. 
+and the size of the token to be embedding equal for all models.
+
 
 \subsection{Training scheme}
 
@@ -287,19 +295,19 @@ after all the sequence encoder layers
 %TODO: For space reasons, it might be better to put the community-level table in the appendix and have the table in body just show the means (and perhaps medians/stddevs?) for each architecture.}
 
 We also note that the conditioned models perform differently across different communities---%
-for some communities, perplexity of the conditioned models is a lot lower,\bn{is this ok? took ``test'' out but made clear in the caption that it's the test set}%\jp{and training?}
-whereas for others it is the same or even slightly higher (\cref{tab:model-ppls}).\bn{talk about this in terms of mutual information instead?}
+for some communities, perplexity of the conditioned models is a lot lower than the unconditioned models,
+whereas for others it is the same or even slightly higher (\cref{tab:model-ppls}).\bn{talk about this in terms of mutual information instead?}\jp{What is that?}
 As an informal observation, we note 
 that across all the models we tested, 
 communities where conditioning has the least effect
-tend to be more organized around more ``general interest'' topics,
-such as /r/relationships, where the subject matter is relevant to a broad
-range of people. \bn{I really mean this as a quality of the topic, rather than the community itself, although the two are probably correlated}% \jp{Is there a way to quantify general interest topics? Community size in terms of number of users?}
+tend to be more organized around more general interest topics,
+such as the \emph{relationships} subreddit, where the subject matter is relevant to a broad
+range of people.
 Conditioning the model on community has the most benefit
 for narrower special-interest subreddits such as those organized
 around a certain videogame, sports team, or subculture.
 This makes sense intuitively, since communities with more niche topics
-would tend to have more specialized vocabulary and speech patterns.\bn{i think it's ok---i've seen this broader sense used in academic papers}%\jp{can you say speech for written language?} 
+would tend to have more specialized vocabulary and other linguistic patterns.
 
 \begin{table*}
   \footnotesize
@@ -565,7 +573,7 @@ other communities.
 We find that the layer at which the community embedding is taken into
 account in a CCLM influences its perplexity (\cref{hyp:layer-effect}),
 albeit weakly. For LSTM models, the perplexity per word, averaged over
-all communities, varies between 76.80 and 78.64. \bn{80.70 is the baseline model} 
+all communities, varies between 76.80 and 78.64. (with 80.70 for the unconditioned model)
 The perplexity per word is slightly higher for $l_c=0$, and has very
 little difference between the other models, with $l_c=1$ being the best.
 For transformer models, it varies
@@ -577,7 +585,7 @@ The pattern of information gain by community is similar across architectures.
 Communities that bennifit most from the conditioned model behave that way for 
 both the LSTM and transformer.
 However, there are some differences.
-For example, /r/relationships has an information gain of \num{1.018} for
+For example, the subreddit \emph{relationships} has an information gain of \num{1.018} for
 the best CCLM LSTM but only \num{0.998} for the best transformer model. \bn{todo: community-wise CCLM info gain}
 Why was the LSTM able to take advantage of the community information for
 this community, where the transformer wasn't?
