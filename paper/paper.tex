@@ -547,20 +547,20 @@ http://ceur-ws.org/Vol-2578/DARLIAP3.pdf
 
 
 We find that various communities exhibit widely varying levels of
-linguistic complexity \cref{hyp:varying-complexity}, with perplexity
+linguistic complexity \ref{hyp:varying-complexity}, with perplexity
 per-word ranging from less than 53 to 104 for the best model
 architecture.
 
 With indiscernibility values of 1.5 to 3.5 (out of a maximum of 46),
 we find that CCLMs can be used to recognize communities based on
-latent bayesian classification (\cref{hyp:LMCC-works}). Even the most
+latent bayesian classification \ref{hyp:LMCC-works}. Even the most
 generic communities appear to exhibit fairly specific linguistic
 patterns. Furthermore, these patterns are just as recognizable by LSTM
 or Transformer models, when properly configured and trained.
 
-We find a weak correlation \cref{tab:cclm_lmcc_ppl} between the perplexity of the \bn{I'm not sure if we can make this claim or not with the Ppl-Ppl correlations. However, given that *all* of them have positive correlation, even though the p-values are somewhat higher than .1 maybe we can?}
+We find a weak correlation (\cref{tab:cclm_lmcc_ppl}) between the perplexity of the \bn{I'm not sure if we can make this claim or not with the Ppl-Ppl correlations. However, given that *all* of them have positive correlation, even though the p-values are somewhat higher than .1 maybe we can?}
 CCLM and the indiscernibility of the corresponding community
-(\cref{hyp:rich-harder-to-identify}). Because we have relatively few,
+\ref{hyp:rich-harder-to-identify}. Because we have relatively few,
 and only large communities in our test set, it is difficult to
 provide a conclusive answer, but this kind of correlation would suggest that
 community-specific complexity can be partially attributed to using
@@ -571,7 +571,7 @@ they are not simply an even mixture of the kind of comments found in
 other communities.
 
 We find that the layer at which the community embedding is taken into
-account in a CCLM influences its perplexity (\cref{hyp:layer-effect}),
+account in a CCLM influences its perplexity \ref{hyp:layer-effect},
 albeit weakly. For LSTM models, the perplexity per word, averaged over
 all communities, varies between 76.80 and 78.64. (with 80.70 for the unconditioned model)
 The perplexity per word is slightly higher for $l_c=0$, and has very
@@ -586,7 +586,7 @@ Communities that bennifit most from the conditioned model behave that way for
 both the LSTM and transformer.
 However, there are some differences.
 For example, the subreddit \emph{relationships} has an information gain of \num{1.018} for
-the best CCLM LSTM but only \num{0.998} for the best transformer model. \bn{todo: community-wise CCLM info gain}
+the best CCLM LSTM but only \num{0.998} for the best transformer model.
 Why was the LSTM able to take advantage of the community information for
 this community, where the transformer wasn't?
 It would be interesting to investigate these differences in future work,
@@ -595,7 +595,7 @@ model architectures capture.
 
 The representation of communities built by CCLM exhibits a clear
 correlation with user-coocurrence patterns
-(\cref{hyp:extra-linguistic-correlation}). A natural
+(\ref{hyp:extra-linguistic-correlation}). A natural
 question that may arise is how much this correlation can be explain by
 user-specifc linguistic patterns. We plan to control for this variable
 in future work, for example by building author-conditioned language
