@@ -20,12 +20,21 @@
 \usepackage{siunitx}
 \usepackage{booktabs}
 \usepackage{pgfplots}
+\usepackage{pgfplotstable}
 \usepackage{todonotes}
 \usepackage{enumitem}
+\usepackage{array}
 \usepackage{cleveref}
 
 \usepgfplotslibrary{groupplots}
 \pgfplotsset{compat=1.16}
+\pgfplotstableset{
+  column type=r,
+  fixed zerofill,
+  clear infinite,
+  %dec sep align,
+  %empty cells with={\ensuremath{-}},
+}
 
 \renewcommand{\UrlFont}{\ttfamily\small}
 
@@ -244,6 +253,16 @@ In general, transformer models trained for about half as long as the LSTM models
   \label{tab:best-epoch}
 \end{table}
 
+%\pgfplotstabletypeset[
+  %columns={best_epoch,lm_ppl,gain},
+  %columns/model/.style={string type,column type=l},
+  %columns/best_epoch/.style={column name={Epochs}, int detect},
+  %columns/lm_ppl/.style={column name={Ppl}},
+  %columns/gain/.style={column name={IG},precision=3,empty cells with={\ensuremath{-}}},
+  %every nth row={5}{before row=\midrule},
+  %]{floats/model.csv}
+
+
 \section{Results and analysis}
 
 \subsection{Losses of CCLM}
@@ -369,7 +388,7 @@ As a sanity check, we observe that the diagonal dominates the matrix: on average
 
 \begin{figure*}
 \begin{tikzpicture}
-  \confusiongroupplot{floats/lstm-3-1_comm_infer_confusion.csv}{floats/transformer-3-3_comm_infer_confusion.csv}
+  \confusiongroupplot{lstm-3-1}{transformer-3-3}
 \end{tikzpicture}
 \caption{LMCC confusion matrices for the best LSTM (left, $c=1$) and transformer (right, $c=3$) models.}
 \label{fig:confusion}

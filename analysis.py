@@ -4,13 +4,22 @@ import numpy as np
 import torch
 from scipy.stats import pearsonr
 from scipy.special import entr
+from itertools import combinations
+from sklearn.decomposition import PCA
 
 model_dir = 'model/reddit2015'
 floats_dir = 'paper/floats'
 
-lcs = [None, 0, 1, 2, 3]
-architectures = ['LSTM', 'Transformer']
-lcs_str = [str(i) for i in lcs]
+def add_columns(df, new, suffix=''):
+    new = new.rename(lambda x: str(x) + suffix, axis=1)
+    index_name = df.index.name
+    for col in df.columns: # make the operation idempotent
+        if col in new.columns:
+            df = df.drop(col, axis=1)
+    df = pd.merge(df, new, how='outer', left_index=True, right_index=True, 
+            validate='one_to_one', sort=True)
+    df.index.name = index_name
+    return df
 
 def entropy(x):
     return entr(x).sum()
@@ -18,71 +27,19 @@ def entropy(x):
 def ppl(x):
     return np.exp(entropy(x))
 
-def model_params_to_name(encoder_arch, lc):
-    if encoder_arch == "Transformer":
-        prefix = 'transformer'
-    elif encoder_arch == "LSTM":
-        prefix = 'lstm'
-    if lc is None:
-        return f"{prefix}-3"
-    else:
-        return f"{prefix}-3-{lc}"
+def cos_sim(v1, v2):
+    return (v1 * v2).sum(axis=0) / (np.linalg.norm(v1, axis=0) * np.linalg.norm(v2, axis=0))
 
-def model_params_from_name(model_name):
-    if model_name.startswith('transformer'):
-        encoder_arch = 'Transformer' 
-    elif model_name.startswith('lstm'):
-        encoder_arch = 'LSTM'
-    layers_str = model_name[len(encoder_arch):]
-    if layers_str == '-3':
-        lc = 'None'
-    else:
-        lc = layers_str[-1]
-    return encoder_arch, lc 
 
-models = [model_params_to_name(arch, lc) for arch in architectures for lc in lcs] 
-conditioned_models = [model_params_to_name(arch, lc) for arch in architectures for lc in lcs if lc is not None]
+##### Create community dataframe (with communities as rows)
 
 comms = torch.load(open(os.path.join(model_dir, 'community.field'), 'rb')).vocab.itos[1:]
-comms = pd.Series(comms, name='community')
 
-cclm_comm_embed = {model: np.load(os.path.join(model_dir, f'{model}/comm_embed.npy'))[1:]
-        for model in conditioned_models}
-
-cclm_ppl = pd.read_pickle(os.path.join(model_dir, 'test_ppl.pickle'))
-
-##### BEST EPOCH
-
-def get_best_epoch(model_name):
-    return int(open(f'{model_dir}/{model_name}/saved-epoch.txt').read())
-
-best_epoch = pd.DataFrame([{str(lc): get_best_epoch(model_params_to_name(arch, lc))
-    for lc in lcs} for arch in architectures], index=architectures)
-best_epoch.to_latex(os.path.join(floats_dir, 'best_epoch.tex'))
-
-
-##### Perplexity by model
-
-
-ppl_mean = cclm_ppl[models].mean()
-ppl_mean.index = ppl_mean.index.map(model_params_from_name)
-
-ppl_mean_comm = cclm_ppl.groupby('community').mean().sort_values('lstm-3')
-ppl_mean_comm.columns = ppl_mean_comm.columns.map(model_params_from_name)
-ppl_mean_comm.loc['Mean'] = ppl_mean_comm.mean()
-rows = ['Mean'] + [c for c in ppl_mean_comm.index if not c == 'Mean']
-ppl_mean_comm = ppl_mean_comm.reindex(rows)
-ppl_mean_comm.to_latex(os.path.join(floats_dir, 'model_ppls.tex'), 
-        float_format="%.2f", multicolumn_format='c')
-
-
-##### Community embedding PCA
-
-from sklearn.decomposition import PCA
+df_c = pd.DataFrame([], index=pd.Index(comms, name='community'))
+df_cc = pd.DataFrame([],index=pd.MultiIndex.from_tuples(combinations(comms, 2), names=['community1', 'community2']))
 
 # Manually assign communities to different types/subjects
-# NOTE this shouldn't really be a partition. Some communities clearly belong to multiple types,
-# but we need a more sophisticated viz for that.
+# NOTE this shouldn't really be a partition. Some communities clearly belong to multiple types, but we need a more sophisticated viz for that.
 comm_cats = {
     'videogames': ['Warframe', 'eu4', 'GlobalOffensive', 'MaddenUltimateTeam', 'heroesofthestorm', 'EDH', 'KerbalSpaceProgram'],
     'female-focused': ['xxfitness', 'femalefashionadvice', 'TwoXChromosomes', 'AskWomen', 'breakingmom', 'BabyBumps'],
@@ -98,108 +55,9 @@ comm_cats = {
 }
 comm_cats = {c:t for t in comm_cats for c in comm_cats[t]} # assumes one type/community
 comm_cats = pd.Series([comm_cats.get(c, 'other') for c in comms], index=comms)
+df_c['category'] = comm_cats
 
-def pca(w):
-    pca = PCA(n_components=2)
-    return pca.fit_transform(w)
-
-def write_pca_table(model_name):
-    comm_embed = cclm_comm_embed[model_name]
-    comm = pd.DataFrame(pca(comm_embed), index=comms, columns=['pca1', 'pca2'])
-    comm['category'] = comm_cats
-    comm = comm.reset_index()[['pca1', 'pca2', 'community', 'category']]
-    comm.to_csv(os.path.join(floats_dir, f'{model_name}_pca.csv'), sep='\t', 
-            float_format="% 5.4f", index=False)
-    return comm
-
-for model in conditioned_models:
-    write_pca_table(model)
-
-#### LMCC confusion matrix
-
-from comm_author_embed import load_snap_comm_embed
-from itertools import combinations
-
-comms_alpha = sorted(list(comms))
-
-def model_comm_confusion_matrix(model_name):
-    """ C[i,j] = average_{Posts(cj)}(P(c=ci|m))"""
-    P = pd.read_pickle(os.path.join(model_dir, model_name, 'comm_probs.pickle'))
-    C = P.groupby('actual_comm').mean()
-    C = C.T # transpose to (prob assigned, actual comm), as in the paper
-    C = C.sort_index() # sort the rows alphabetically
-    C = C[C.index] # sort the columns alphabetically too
-    return C
-
-C = {model_name: model_comm_confusion_matrix(model_name) for model_name in conditioned_models}
-
-for model_name in conditioned_models:
-    Cm = C[model_name]
-    Cm = Cm.unstack().reset_index()
-    Cm = Cm.rename(columns={'level_1': 'confered_to', 0: 'avg_prob'})
-    Cm['actual_comm'] = Cm['actual_comm'].apply(comms_alpha.index)
-    Cm['confered_to'] = Cm['confered_to'].apply(comms_alpha.index)
-    Cm.to_csv(os.path.join(floats_dir, f'{model_name}_comm_infer_confusion.csv'), sep='\t', float_format="% 5.4f", index=False)
-
-I = [] # Linguistic indiscernibility
-for model_name in conditioned_models:
-    Im = C[model_name].apply(ppl)
-    Im.name = model_name
-    I.append(Im)
-
-I = pd.concat(I, axis=1)
-
-for m1, m2 in combinations(conditioned_models, 2):
-    r, p = pearsonr(I[m1], I[m2])
-    print(f"{m1:<15} {m2:<15} {r:0.3f} {p:0.5f}")
-
-# lstm-3-0        lstm-3-1        0.997 0.00000
-# lstm-3-0        lstm-3-2        0.995 0.00000
-# lstm-3-0        lstm-3-3        0.990 0.00000
-# lstm-3-0        transformer-3-0 0.988 0.00000
-# lstm-3-0        transformer-3-1 0.995 0.00000
-# lstm-3-0        transformer-3-2 0.994 0.00000
-# lstm-3-0        transformer-3-3 0.994 0.00000
-# lstm-3-1        lstm-3-2        0.998 0.00000
-# lstm-3-1        lstm-3-3        0.994 0.00000
-# lstm-3-1        transformer-3-0 0.988 0.00000
-# lstm-3-1        transformer-3-1 0.991 0.00000
-# lstm-3-1        transformer-3-2 0.992 0.00000
-# lstm-3-1        transformer-3-3 0.994 0.00000
-# lstm-3-2        lstm-3-3        0.995 0.00000
-# lstm-3-2        transformer-3-0 0.987 0.00000
-# lstm-3-2        transformer-3-1 0.990 0.00000
-# lstm-3-2        transformer-3-2 0.992 0.00000
-# lstm-3-2        transformer-3-3 0.995 0.00000
-# lstm-3-3        transformer-3-0 0.990 0.00000
-# lstm-3-3        transformer-3-1 0.988 0.00000
-# lstm-3-3        transformer-3-2 0.984 0.00000
-# lstm-3-3        transformer-3-3 0.997 0.00000
-# transformer-3-0 transformer-3-1 0.990 0.00000
-# transformer-3-0 transformer-3-2 0.985 0.00000
-# transformer-3-0 transformer-3-3 0.989 0.00000
-# transformer-3-1 transformer-3-2 0.989 0.00000
-# transformer-3-1 transformer-3-3 0.991 0.00000
-# transformer-3-2 transformer-3-3 0.990 0.00000
-
-#### Pairwise community similarity scatter
-
-def cos_sim(v1, v2):
-    return (v1 * v2).sum(axis=0) / (np.linalg.norm(v1, axis=0) * np.linalg.norm(v2, axis=0))
-
-def pairwise_sims(embedding, pairs):
-    return pd.Series([cos_sim(*map(lambda x: embedding[list(comms).index(x)], pair)) for pair in pairs], index=pairs)
-
-pairs = list(combinations(comms, 2))
-    
-df = pd.DataFrame([], index=pairs)
-for model in conditioned_models:
-    df[model] = pairwise_sims(cclm_comm_embed[model], pairs)
-
-snap_comm_embed = load_snap_comm_embed(comms)
-
-df['snap'] = pairwise_sims(snap_comm_embed, pairs)
-
+# Take note if both communites are the same, different, or if one or both are 'other'
 def pair_cats(pair):
     cat1, cat2 = map(dict(comm_cats).get, pair)
     if cat1 == 'other' or cat2 == 'other':
@@ -209,104 +67,160 @@ def pair_cats(pair):
     else:
         return 'different'
 
-df['meta'] = pd.Series(map(pair_cats, pairs), index=pairs)
+df_cc['category'] =  pd.Series(map(pair_cats, df_cc.index), index=df_cc.index)
 
 
-pairs_str = pd.Series(df.index).apply(lambda x: f'{x[0]}/{x[1]}')
-pairs_str.index=pairs
-df['pair'] = pairs_str
+##### Create model dataframe (indexed by model architecture)
 
-df.to_csv(os.path.join(floats_dir, f'comm_sim.csv'), sep='\t', 
-            float_format="% 5.4f", index=False)
+cond_lstms = [f'lstm-3-{lc}' for lc in range(4)]
+cond_transformers = [f'transformer-3-{lc}' for lc in range(4)]
+cond_models = cond_lstms + cond_transformers
+models = cond_models + ['lstm-3', 'transformer-3']
 
-df_r = pd.DataFrame([pearsonr(df[model], df['snap']) 
-    for model in conditioned_models], index=conditioned_models,
-    columns = ['r', 'p'])
+df_m = pd.DataFrame([], index=pd.Index(models, name='model'))
+df_mm = pd.DataFrame([],index=pd.MultiIndex.from_tuples(combinations(cond_models, 2), names=['model1', 'model2']))
 
-def pivot_model_table(df):
-    df = df.reset_index()
-    df['arch'] = df['index'].apply(lambda x: x.split('-')[0])
-    df['arch'] = df['arch'].apply({'lstm': 'LSTM', 'transformer': 'Transformer'}.get)
-    df['c'] = df['index'].apply(lambda x: x.split('-')[-1])
-    df = df.drop('index', axis=1)
-    df = df.pivot(index='arch', columns='c')
-    df.index.name = None
-    return df
+# Best model validation epoch (used for testing)
+best_epoch = pd.DataFrame([
+    int(open(f'{model_dir}/{model}/saved-epoch.txt').read())
+    for model in models], index=models, columns=['best_epoch'])
 
-pivot_model_table(df_r)['r'].to_latex(os.path.join(floats_dir, 'comm_sim.tex'),
-        float_format="%.2f", multicolumn_format='c')
+
+##### Language model perplexity (CCLM & baseline)
+
+## Model perplexity on test examples
+lm_ppl = pd.read_pickle(os.path.join(model_dir, 'test_ppl.pickle'))
+
+## Mean language model perplexity
+df_m['lm_ppl'] = lm_ppl[models].mean()
+
+## Mean language model perplexity by community
+df_c = add_columns(df_c, lm_ppl.groupby('community').mean(), suffix='_lm_ppl')
+
+df_m = add_columns(df_m, best_epoch)
+
+
+#### Community embeddings
+
+comm_w = {model: np.load(os.path.join(model_dir, f'{model}/comm_embed.npy'))[1:] 
+        for model in cond_models}
+
+# PCA plots
+for model in cond_models:
+    pca = PCA(n_components=2)
+    embedding_pca = pca.fit_transform(comm_w[model])
+    columns = [f'{model}_pca1', f'{model}_pca2']
+    pca = pd.DataFrame(embedding_pca, index=comms, columns=columns)
+    df_c = add_columns(df_c, pca)
+
+## Pairwise community similarity
+
+def comm_sim(w, comm_pair):
+    comm1, comm2 = map(comms.index, comm_pair)
+    return cos_sim(w[comm1], w[comm2])
+
+for model in cond_models:
+    df_cc[f'{model}_cos_sim'] = [comm_sim(comm_w[model], comm_pair) for comm_pair in df_cc.index]
+
+from comm_author_embed import load_snap_comm_embed
+snap_comm_embed = load_snap_comm_embed(comms)
+
+df_cc['snap_cos_sim'] = [comm_sim(snap_comm_embed, comm_pair) for comm_pair in df_cc.index]
+
+## Model embedding community pair similarity correlation with snap
+corr = pd.DataFrame([pearsonr(df_cc[f'{model}_cos_sim'], df_cc['snap_cos_sim'])  
+    for model in cond_models], 
+    index=cond_models, 
+    columns=['snap_cos_sim_corr_r', 'snap_cos_sim_corr_p'])
+df_m = add_columns(df_m, corr)
+
+
+#### LMCC 
+
+## Confusion matrix
+
+def model_comm_confusion_matrix(model):
+    """ C[i,j] = average_{Posts(cj)}(P(c=ci|m))"""
+    P = pd.read_pickle(os.path.join(model_dir, model, 'comm_probs.pickle'))
+    C = P.groupby('actual_comm').mean()
+    C = C.T # transpose to (pred_comm, actual_comm), as in the paper
+    C.index.name = 'pred_comm'
+    C = C.sort_index() # sort the rows alphabetically
+    C = C[C.index] # sort the columns alphabetically too
+    return C
+
+def confusion_plot_format(C):
+    """ Format the matrix with comm1, comm2 index for pgfplots matrix plot """
+    comms_alpha = {c: i for i,c in enumerate(C.index)}
+    C = C.unstack()
+    C = C.reset_index()
+    C['actual_comm'] = C['actual_comm'].apply(comms_alpha.get)
+    C['pred_comm'] = C['pred_comm'].apply(comms_alpha.get)
+    C = C.set_index(['actual_comm', 'pred_comm'])
+    return C
+
+C = {model: model_comm_confusion_matrix(model) for model in cond_models}
+for model in cond_models:
+    C[model].name = model
+
+df_confusion = pd.concat([confusion_plot_format(C[model]) 
+    for model in cond_models], axis=1)
+df_confusion.columns = cond_models
+
+## Linguistic indiscernibility 
+for model in cond_models:
+    df_c[f'{model}_lmcc_ppl'] = C[model].apply(ppl)
+
+## Pearson correlation of community-wise LMCC perplexity between pairs of models
+df_mm['lmcc_ppl_corr_r'], df_mm['lmcc_ppl_corr_p'] = zip(*[pearsonr(df_c[f'{m1}_lmcc_ppl'], df_c[f'{m2}_lmcc_ppl']) for m1, m2 in df_mm.index])
 
 
 ##### Compare LMCC and CCLM perplexity by community
 
-lmcc_ppl_mean = I
-cclm_ppl_mean = cclm_ppl.groupby('community').mean()
+corr = pd.DataFrame([pearsonr(df_c[f'{model}_lmcc_ppl'], df_c[f'{model}_lm_ppl']) 
+    for model in cond_models],
+    index=cond_models,
+    columns=['lmcc_cclm_corr_r', 'lmcc_cclm_corr_p'])
+df_m = add_columns(df_m, corr)
 
-cclm_lmcc_ppl_r = {}
-for model in conditioned_models:
-    r, p = pearsonr(cclm_ppl_mean[model], lmcc_ppl_mean[model])
-    print(f"{model:<15} r = {r:0.2f} p = {p:0.4f}")
-    cclm_lmcc_ppl_r[model] = ({'r': r,'p': p})
-
-cclm_lmcc_ppl_r = pd.DataFrame(cclm_lmcc_ppl_r)
-cclm_lmcc_ppl_r = cclm_lmcc_ppl_r.T
-cclm_lmcc_ppl_r.index = pd.MultiIndex.from_tuples(pd.Series(cclm_lmcc_ppl_r.index).apply(model_params_from_name))
-cclm_lmcc_ppl_r.index = cclm_lmcc_ppl_r.index.set_names('c', level=1)
-
-cclm_lmcc_ppl_r.to_latex(os.path.join(floats_dir, 'cclm_lmcc_ppl.tex'), 
-        formatters=["{:0.2f}".format, "{:0.4f}".format])
-
-# lstm-3-0        r = 0.21 p = 0.1546
-# lstm-3-1        r = 0.16 p = 0.2991
-# lstm-3-2        r = 0.15 p = 0.3245
-# lstm-3-3        r = 0.09 p = 0.5430
-# transformer-3-0 r = 0.14 p = 0.3434
-# transformer-3-1 r = 0.20 p = 0.1808
-# transformer-3-2 r = 0.22 p = 0.1411
-# transformer-3-3 r = 0.17 p = 0.2555
-
-r, p = pearsonr(lmcc_mean_entr['lstm-3-1'], lmcc_mean_entr['transformer-3-3'])
+## Commuinty indiscrenibility correlation between two example models
+r, p = pearsonr(df_c['lstm-3-1_lmcc_ppl'], df_c['transformer-3-3_lmcc_ppl'])
 print(f"r = {r:0.4f} p = {p:0.6f}")
 # r = 0.9935 p = 0.000000 
 
-#### Info gain (aka MA - mutual information)
 
-cond_lstms = [model_params_to_name('LSTM', lc) for lc in range(4)]
-cond_trnsf = [model_params_to_name('Transformer', lc) for lc in range(4)]
-    cclm_ppl[cond_lstms].apply(lambda x: cclm_ppl['lstm-3'] / x, axis=0),
-    cclm_ppl[cond_trnsf].apply(lambda x: cclm_ppl['transformer-3'] / x, axis=0)
-    ], axis=1)
-MI['community'] = cclm_ppl['community']
-MI_mean = MI.groupby('community').mean()
+##### Information gain (AKA mutual information)
 
-MI_lmcc_r = {} 
-for model in conditioned_models:
-    r, p = pearsonr(I[model], MI_mean[model])
-    print(f"{model:<15} r = {r:0.2f} p = {p:0.4f}")
-    MI_lmcc_r[model] = ({'r': r,'p': p})
+df_ig = pd.DataFrame([], index=lm_ppl.index)
+df_ig['community'] = lm_ppl['community']
+df_ig[cond_lstms] = lm_ppl[cond_lstms].apply(lambda x: lm_ppl['lstm-3']/x)
+df_ig[cond_transformers] = lm_ppl[cond_transformers].apply(lambda x: lm_ppl['transformer-3']/x)
 
-MI_lmcc_r = pd.DataFrame(MI_lmcc_r)
-MI_lmcc_r = MI_lmcc_r.T
-MI_lmcc_r.index = pd.MultiIndex.from_tuples(pd.Series(MI_lmcc_r.index).apply(model_params_from_name))
-MI_lmcc_r.index = MI_lmcc_r.index.set_names('c', level=1)
+# Mean information gain (over all training examples)
+df_m['gain'] = df_ig.mean()
 
-MI_lmcc_r.to_latex(os.path.join(floats_dir, 'lmcc_gain.tex'), 
-        formatters=["{:0.2f}".format, "{:0.4f}".format])
+# Mean information gain by community
+df_c[[f'{model}_gain' for model in cond_models]] = df_ig.groupby('community').mean()[cond_models]
 
 
-# (actual) community-keyed dataframe
+##### Write CSVs
 
-df = pd.merge(cclm_ppl_mean, lmcc_ppl_mean, right_index=True, left_index=True, suffixes=['_cclm', '_lmcc'])
-df = pd.merge(df, MI_mean, left_index=True, right_index=True, suffixes=['', '_gain'])
-df.to_csv(os.path.join(floats_dir, f'cclm_lmcc_ppl.csv'), sep='\t', 
-            float_format="% 5.4f", index=True)
+model_args = list(map(lambda x: x.split('-'), df_m.index))
+model_arch = map(lambda x: {'lstm': 'LSTM', 'transformer': 'Transformer'}[x[0]], model_args)
+model_lc = [args[-1] if len(args) == 3 else None for args in model_args]
+model_args = pd.MultiIndex.from_tuples(zip(model_arch, model_lc), names=['model', 'lc'])
+df_m.index = model_args
+
+df_m.to_csv(os.path.join(floats_dir, 'model.csv'), sep='\t', na_rep='nan')
+df_mm.to_csv(os.path.join(floats_dir, 'model_model.csv'), sep='\t', na_rep='nan')
+df_c.to_csv(os.path.join(floats_dir, 'comm.csv'), sep='\t', na_rep='nan')
+df_cc.to_csv(os.path.join(floats_dir, 'comm_comm.csv'), sep='\t', na_rep='nan')
+df_confusion.to_csv(os.path.join(floats_dir, 'confusion.csv'), sep='\t', na_rep='nan')
 
 ##### Looking for examples 
 
-lmcc = pd.read_pickle(os.path.join(model_dir, 'lstm-3-1', 'comm_probs.pickle'))
-lmcc['pred'] =  lmcc[comms].idxmax(axis=1)
-lmcc['prob'] =  lmcc[comms].max(axis=1)
-lmcc['comment'] = cclm_ppl['comment']
-lmcc = lmcc.drop(comms, axis=1)
-
-
+# lmcc = pd.read_pickle(os.path.join(model_dir, 'lstm-3-1', 'comm_probs.pickle'))
+# lmcc['pred'] =  lmcc[comms].idxmax(axis=1)
+# lmcc['prob'] =  lmcc[comms].max(axis=1)
+# lmcc['comment'] = cclm_ppl['comment']
+# lmcc = lmcc.drop(comms, axis=1)
