@@ -221,7 +221,7 @@ The main reason for this choice is to avoid over-counting otherwise rare tokens 
 many times in a single message.
 
 For the LSTM, we trained the models on a simple left-to-right language modeling task
-with cross entropy loss over the vocabulary. 
+with cross-entropy loss over the vocabulary. 
 Because the transformer operates on all tokens in the sequence at once,
 the language modeling was achieved by masking and incrementally un-masking input tokens
 in a left-to-right fashion, following \citet{BERT}\jp{Or some other standard paper}.  
@@ -267,6 +267,10 @@ In general, transformer models trained for about half as long as the LSTM models
 
 \subsection{Losses of CCLM}
 
+We measure the perplexity of each example in the test set. 
+For this, we use the negative exponential of the mean cross-entropy loss 
+for the sequence.
+
 As one would expect, 
 the conditioned models have lower perplexity
 than their respective unconditioned baseline models,
@@ -304,6 +308,27 @@ would tend to have more specialized vocabulary and speech patterns.\bn{i think i
   \caption{Mean model perplexity for messages in the test set, broken down by community.}
   \label{tab:model-ppls}
 \end{table*}
+
+\subsection{Information gain of the CCLM}
+
+We consider the average information gain of each CCLM over its baseline
+un-conditioned counterpart with the same sequence encoder architecture.
+For a given message, the information gain is defined as the ratio of the
+perplexity of the baseline model to that of the CCLM:
+\[
+  IG_{CCLM}(m) = \frac{Ppl_{LM}(m)}{Ppl_{CCLM}(m)}
+\]
+
+\begin{table*}
+  \centering
+  \input{floats/info_gain.tex}
+  \caption{Mean information gain of the CCLM over the baseline model, for messages in the test set.}
+  \label{tab:model-info-gain}
+\end{table*}
+
+While the absolute performance of the LSTM models is better,
+we find the the transformer CCLMs have higher information gain 
+\cref{tab:model-info-gain}.
 
 \subsection{Analysis of CCLM community embeddings}
 
@@ -450,9 +475,11 @@ is a poor predictor of how distinct its language is.
 
 \jp{We could also compute the entropy of rows of Cij = snap cosine similarity w/ softmax.}
 
-On the other hand, when we consider the \emph{information gain}\bn{define earlier}
-of the CCLM over the corresponding (same encoder architecture)
-un-conditioned 
+On the other hand, community indiscernibility is correlated with
+the average information gain of the CCLM over the baseline model,
+for messages in its test set \cref{fig:comm-pca}.
+Communities for which the language model bennifits most from 
+the conditioned model are generally easier for the LMCC to classify.
 
 \begin{figure}
   \pplscatter{lstm-3-1_gain}{lstm-3-1_lmcc}
@@ -512,7 +539,7 @@ http://ceur-ws.org/Vol-2578/DARLIAP3.pdf
 
 
 We find that various communities exhibit widely varying levels of
-linguistic complexity (\cref{hyp:varying-complexity}), with perplexity
+linguistic complexity \cref{hyp:varying-complexity}, with perplexity
 per-word ranging from less than 53 to 104 for the best model
 architecture.
 
@@ -523,7 +550,7 @@ generic communities appear to exhibit fairly specific linguistic
 patterns. Furthermore, these patterns are just as recognizable by LSTM
 or Transformer models, when properly configured and trained.
 
-We find a weak correlation (TODO; r , p) between the perplexity of the
+We find a weak correlation \cref{tab:cclm_lmcc_ppl} between the perplexity of the \bn{I'm not sure if we can make this claim or not with the Ppl-Ppl correlations. However, given that *all* of them have positive correlation, even though the p-values are somewhat higher than .1 maybe we can?}
 CCLM and the indiscernibility of the corresponding community
 (\cref{hyp:rich-harder-to-identify}). Because we have relatively few,
 and only large communities in our test set, it is difficult to
@@ -535,35 +562,37 @@ more varied patterns. However, even the most complex communities
 they are not simply an even mixture of the kind of comments found in
 other communities.
 
-
-
 We find that the layer at which the community embedding is taken into
 account in a CCLM influences its perplexity (\cref{hyp:layer-effect}),
 albeit weakly. For LSTM models, the perplexity per word, averaged over
-all communities, varies between 78.64 and 80.70. It is steadily
-increasing when $l_c$ decreases.  For transformer models, it varies
-between 89.38 and 122.56. Here perplexity per-word is not a monotonous
+all communities, varies between 76.80 and 78.64. \bn{80.70 is the baseline model} 
+The perplexity per word is slightly higher for $l_c=0$, and has very
+little difference between the other models, with $l_c=1$ being the best.
+For transformer models, it varies
+between 89.38 and 122.56. Here perplexity per-word is clearly not a monotonous
 function of $l_c$: the maximum is reached at $l_c=2$. We did not
 expect non-mononicity, and leave studying this effect to future work.
 
-The representation of communities built by CCLM is exhibiting a clear
+The pattern of information gain by community is similar across architectures.
+Communities that bennifit most from the conditioned model behave that way for 
+both the LSTM and transformer.
+However, there are some differences.
+For example, /r/relationships has an information gain of \num{1.018} for
+the best CCLM LSTM but only \num{0.998} for the best transformer model. \bn{todo: community-wise CCLM info gain}
+Why was the LSTM able to take advantage of the community information for
+this community, where the transformer wasn't?
+It would be interesting to investigate these differences in future work,
+since it could reveal differences in the kind of linguistic variation the different
+model architectures capture.
+
+The representation of communities built by CCLM exhibits a clear
 correlation with user-coocurrence patterns
-(\cref{hyp:extra-linguistic-correlation}, TODO; r , p). A natural
+(\cref{hyp:extra-linguistic-correlation}). A natural
 question that may arise is how much this correlation can be explain by
 user-specifc linguistic patterns. We plan to control for this variable
 in future work, for example by building author-conditioned language
 models and testing if community vector embeddings can be determined by
 the set of the vector embeddings of its members.
-
-
-
-- Comparison with topic modelling
-
-The pattern of how much the perplexity falls across different communities
-is similar across architectures, but with some differences.\jp{Either say something specific here or move the whole paragraph to future work.}
-It could be interesting to further investigate these differences in future work,
-since it could reveal differences in the kind of linguistic variation the different
-model architectures capture.
 
 \bibliography{paper}
 \bibliographystyle{acl_natbib}
