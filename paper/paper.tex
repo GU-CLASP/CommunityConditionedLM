@@ -367,17 +367,17 @@ suggesting that the embedding space learned by the model is meaningful.
 
 As a quantitative assessment, we compare the CCLM-learned community
 embedding with the community embedding created by \citet{Kumar2018},
-who generated them from the message-community co-occurence matrix,
-using data which spans January 2014 to April 2017. We refer the reader
+who generated them using using a negative-sampling optimization
+algorithm and the message-community co-occurence matrix as ground
+truth, using data which spans January 2014 to April 2017.
+We refer the reader
 to \citet{Kumar2018}
-\jp{What they say they do (sec 6.2) More formally, we train user and community embeddings basedon the bipartite multigraph between users and communities, whereone user-community edge,(ui,cj), exists in the graph for each timea user,ui, posts on community,cj. Adapting the approach used ina number of recent successful works [27,53,62], we learn user andcommunity embeddings,ui∈Rd,cj∈Rd, from this graph using anegative-sampling optimization algorithm
-}
 for details, but the important point is that no linguistic
 information is used to create these embeddings: they only depend on
-whether and how much a given user participates in a given
+whether a given user participates in a given
 community. In sharp contrasts, CCLM community embeddings depend in no
 way on which user is the author of any given message: we only use the
-contents of messages, not authorship data. 
+contents of messages, not authorship data.
 %
 We correlate the pairwise cosine similarity of the
 CCLM embeddings with the same metric on the membership embedding,
@@ -581,12 +581,14 @@ linguistic complexity \ref{hyp:varying-complexity}, with perplexity
 per-word ranging from less than 53 to 104 for the best model
 architecture.
 
-With indiscernibility values of 1.5 to 3.5 (out of a maximum of 46)\jp{Inconsistent with data; to revisit},
-we find that CCLMs can be used to recognize communities based on
-latent bayesian classification \ref{hyp:LMCC-works}. Even the most
-generic communities appear to exhibit fairly specific linguistic
-patterns. Furthermore, these patterns are just as recognizable by LSTM
-or Transformer models, when properly configured and trained.
+With indiscernibility values evenly ranging over the whole possible
+range (0 to 1), we find that CCLMs can be used to recognize certain
+communities based on latent bayesian classification
+\ref{hyp:LMCC-works}, but not all.  If generic communities exhibit
+distinctive linguistic patterns, none of our model is able to discern
+them. In contrast, the distinctive patterns of narrow-topic
+communities are just as recognizable by all our LSTM and Transformer
+models.
 
 We cannot exclude a correlation (\cref{tab:cclm_lmcc_ppl}) between the perplexity of the
 % \bn{I'm not sure if we can make this claim or not with the Ppl-Ppl correlations. However, given that *all* of them have positive correlation, even though the p-values are somewhat higher than .1 maybe we can?}
@@ -597,7 +599,7 @@ provide a conclusive answer, but this kind of correlation would suggest that
 community-specific complexity can be partially attributed to using
 more varied patterns. However, even the most complex communities
 (perplexity per word above 100) have an indiscernibility of about 3
-(out of a maximum of 46), so they retain fairly specific patterns:
+(out of a maximum of 46)\jp{make consistent with data}, so they retain fairly specific patterns:
 they are not simply an even mixture of the kind of comments found in
 other communities.
 
