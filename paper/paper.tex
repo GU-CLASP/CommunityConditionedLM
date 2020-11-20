@@ -296,7 +296,7 @@ after all the sequence encoder layers
 
 We also note that the conditioned models perform differently across different communities---%
 for some communities, perplexity of the conditioned models is a lot lower than the unconditioned models,
-whereas for others it is the same or even slightly higher (\cref{tab:model-ppls}).\bn{talk about this in terms of mutual information instead?}\jp{What is that?}
+whereas for others it is the same or even slightly higher (\cref{tab:model-ppls}).\bn{talk about this in terms of mutual information instead?}\jp{This should make no difference (but I'm not sure on how you are taking averages; see other comment.)}
 As an informal observation, we note 
 that across all the models we tested, 
 communities where conditioning has the least effect
@@ -326,7 +326,12 @@ perplexity of the baseline model to that of the CCLM:
 \[
   IG_{CCLM}(m) = \frac{Ppl_{LM}(m)}{Ppl_{CCLM}(m)}
 \]
-
+\jp{What we had before: average entropy gain is $H(m)-H_0(m)$, and
+  then taking the average over all messages:
+  $avg(H(m)-H_0(m)) = avg(H(m))-avg(H_0(m))$. Taking the exponential
+  gives a ratio of perplexity.  Here it seems that you have commuted
+  exponential and average. It is rather weird to do average in the
+  exponential space without normalising to a probability.}
 \begin{table*}
   \centering
   % \input{floats/info_gain.tex}
@@ -361,8 +366,8 @@ As a quantitative assessment, we compare the CCLM-learned community
 embedding with the community embedding created by \citet{Kumar2018},
 who generated them from the message-community co-occurence matrix,
 using data which spans January 2014 to April 2017. We refer the reader
-to \citet{Kumar2018}\jp{I actually cannot find in their paper what
-  they do.} for details, but the important point is that no linguistic
+to \citet{Kumar2018} % JP: I actually cannot find in their paper what they do.
+for details, but the important point is that no linguistic
 information is used to create these embeddings: they only depend on
 whether and how much a given user participates in a given
 community. In sharp contrasts, CCLM community embeddings depend in no
@@ -411,12 +416,12 @@ $P(c=c_i)$ is the frequency of community $c_i$ in the dataset, and
 $P(m | c_i)$ (the probability that a message $m$
 belongs in a community $c_i$. ) is estimated by the CCLM. $P(m)$ is the absolute
 probability of a message, which can be computed as
-\[P(m) = \frac 1 {\sum_i P(c=c_i) P(m|c=c_i ) }\].
+\[P(m) = \frac 1 {\sum_i P(c=c_i) P(m|c=c_i ) }\]
 
 We can characterise the quality the LMCC with a confusion matrix
 $C$, defined by $C_{ij} = P(c=c_i | m)$ for a given (test set) message $m$ 
-from community $c_j$. 
-That is: \[C_{ij} = average_{m \in Messages(c_j)}(P(c=c_i | m))\].
+from community $c_j$.
+\[C_{ij} = average_{m \in Messages(c_j)}(P(c=c_i | m))\]
 As a sanity check, we observe that the diagonal dominates the matrix: on average the LMCC picks the right community for a message (\cref{fig:confusion}).
 
 \begin{figure*}
@@ -455,7 +460,7 @@ Pearson's $r \geq 0.98$ and $p < 0.0001$ (see, for example,
   \label{fig:lmcc_ppl}
 \end{figure}
 
-However, we observe that community-wise CCLM perplexity is only weakly (if at all) \bn{Changed the indiscernability (y-axis) from entropy to Ppl and the p-values all shot up above 0.1. However the r is still very weakly positive for every model.}
+However, we observe that community-wise CCLM perplexity is only weakly (if at all) \bn{Changed the indiscernability (y-axis) from entropy to Ppl and the p-values all shot up above 0.1. However the r is still very weakly positive for every model.}\jp{Are indiscernability values correct? Seems inconsistent with the confusion matrix.}
 correlated with community indiscernibility under the corresponding latent 
 LMCC (see \cref{fig:cclm_lmcc_ppl} and \cref{tab:cclm_lmcc_ppl}).
 In other words, the linguistic complexity of a given community
@@ -476,7 +481,7 @@ is a poor predictor of how distinct its language is.
   \centering
   \input{floats/cclm_lmcc_ppl.tex}
   \caption{
-  Pearson's r correlation between community-wise linguistic perplexity and indescernibility for each model.
+  Pearson's $r$ correlation coefficient between community-wise linguistic perplexity and indescernibility for each model.
   }
   \label{tab:cclm_lmcc_ppl}
 \end{table}
@@ -501,9 +506,9 @@ the conditioned model are generally easier for the LMCC to classify.
 
 \begin{table}
   \centering
-  % \input{floats/lmcc_gain.tex}
+  \input{floats/lmcc_gain.tex}
   \caption{
-    Pearson's r correlation between community-wise information gain (of the CCLM over the un-conditioned model) and indescernibility.
+    Pearson's \(r\) correlation coefficient between community-wise information gain (of the CCLM over the un-conditioned model) and indescernibility.
   }
   \label{tab:lmcc_gain}
 \end{table}
@@ -571,7 +576,7 @@ linguistic complexity \ref{hyp:varying-complexity}, with perplexity
 per-word ranging from less than 53 to 104 for the best model
 architecture.
 
-With indiscernibility values of 1.5 to 3.5 (out of a maximum of 46),
+With indiscernibility values of 1.5 to 3.5 (out of a maximum of 46)\jp{Inconsistent with data; to revisit},
 we find that CCLMs can be used to recognize communities based on
 latent bayesian classification \ref{hyp:LMCC-works}. Even the most
 generic communities appear to exhibit fairly specific linguistic
@@ -615,7 +620,7 @@ model architectures capture.
 
 The representation of communities built by CCLM exhibits a clear
 correlation with user-coocurrence patterns
-(\ref{hyp:extra-linguistic-correlation}). A natural
+\ref{hyp:extra-linguistic-correlation}. A natural
 question that may arise is how much this correlation can be explain by
 user-specifc linguistic patterns. We plan to control for this variable
 in future work, for example by building author-conditioned language
