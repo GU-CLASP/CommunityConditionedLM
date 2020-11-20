@@ -429,22 +429,22 @@ As a sanity check, we observe that the diagonal dominates the matrix: on average
 
 However, we want to measure the ability of the LMCC to correctly
 recognize messages coming from a given community $c_j$. We could use
-something like an F-score, but we prefer to use the entropy metric,
-which is has stronger information-theoretic grounds, and is a measure
-of the uncertainty of the LMCC, given messages from a particular 
-community. 
-Technically, the linguistic indiscernibility of community $c_j$ is defined 
-as the exponential of the entropy of the $j$ row in \(C\),
-which is a probability distribution 
-of predicted community for a random message from $c_j$.
-In sum, we have the formula: \bn{Took out $D$. is it needed elsewhere?}
+something like an F-score, but we prefer to use a perplexity-like metric,
+which is has stronger information-theoretic grounds.
+We define the linguistic indiscernibility of community $c_j$, noted $\Ind_j$, 
+as the exponential of the entropy of the $j$th row in \(C\),
+(which is a probability distribution
+of predicted community for a random message from $c_j$):
 \[\Ind_j = e^{-\sum_i C_{ij} log(C_{ij})}\]
+Intuititely, $\Ind_j$ is a measure of the uncertainty of the LMCC,
+given messages from a community $c_j$.
 
-Indiscernibility is a robust measure: it is almost perfectly
-correlated for various CCLM (transformer, LSTM and various $c$) $M$.
-In fact, we observe a correlation between the indiscernibility 
-measures by every pair of models with Pearson's r $\geq 0.98$ 
-and $p < 0.0001$ (see, for example, \cref{fig:lmcc_ppl}).
+Indiscernibility of a given community is a robust measure: it is
+almost perfectly correlated across CCLMs (such as transformers, LSTM
+and various values of $l_c$).  In fact, we observe a correlation
+between the indiscernibility measures by every pair of models with
+Pearson's $r \geq 0.98$ and $p < 0.0001$ (see, for example,
+\cref{fig:lmcc_ppl}).
 
 \begin{figure}
   \pplscatter{lstm-3-1_lmcc}{transformer-3-3_lmcc}
@@ -481,7 +481,7 @@ is a poor predictor of how distinct its language is.
   \label{tab:cclm_lmcc_ppl}
 \end{table}
 
-\jp{We could also compute the entropy of rows of Cij = snap cosine similarity w/ softmax.}
+% We could also check if communities are well-separated in the SNAP community encodings
 
 On the other hand, community indiscernibility is correlated with
 the average information gain of the CCLM over the baseline model,
