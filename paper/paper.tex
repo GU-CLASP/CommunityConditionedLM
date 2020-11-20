@@ -192,10 +192,8 @@ and lower-cased all tokens.
 
 \subsection{Models}
 
-We experiment with two kinds of model architecture: LSTM
-\citep{Hochreiter1997}\jp{Is it really a simple or a bi-lstm? Even If
-  it's simple it may be worth specifying due to the prevalence of
-  bilstm everywhere.}  and Transformer \citep{Vaswani2017}.  In either
+We experiment with two kinds of model architecture: a simple unidirectional LSTM
+\citep{Hochreiter1997} and a Transformer \citep{Vaswani2017}.  In either
 case, the model is organised as a standard $n$-layer neural sequence
 encoder (we set $n=3$ for all models). As is standard, word tokens are
 first converted to vectors using a trainable embedding layer. At the
@@ -232,9 +230,9 @@ For the LSTM, we trained the models on a simple left-to-right language modeling 
 with cross-entropy loss over the vocabulary. 
 Because the transformer operates on all tokens in the sequence at once,
 the language modeling was achieved by masking and incrementally un-masking input tokens
-in a left-to-right fashion, following \citet{BERT}\jp{Or some other standard paper}.  
-We used the AdamW \citep{Loshchilov2019} optimization algorithm, 
-with an initial learning rate of \num{0.001}.\jp{Also for the transformer? No simulated annealing?}
+in a left-to-right fashion (so we have an auto-regressive\jp{check} model).
+We used the AdamW \citep{Loshchilov2019} optimization algorithm,
+with an initial learning rate of \num{0.001}, without any extra control on the decay of learning rate.
 We used a batch size of \num{256} and a maximum sequence length of \num{64} tokens, 
 truncating longer messages (16.8\% of messages were longer than \num{64} tokens).
 During training, a dropout rate of $0.1$ was applied between encoder layers 
@@ -296,7 +294,8 @@ after all the sequence encoder layers
 
 We also note that the conditioned models perform differently across different communities---%
 for some communities, perplexity of the conditioned models is a lot lower than the unconditioned models,
-whereas for others it is the same or even slightly higher (\cref{tab:model-ppls}).\bn{talk about this in terms of mutual information instead?}\jp{This should make no difference (but I'm not sure on how you are taking averages; see other comment.)}
+whereas for others it is the same or even slightly higher (\cref{tab:model-ppls}).
+\bn{talk about this in terms of mutual information instead!}
 As an informal observation, we note 
 that across all the models we tested, 
 communities where conditioning has the least effect
@@ -328,10 +327,14 @@ perplexity of the baseline model to that of the CCLM:
 \]
 \jp{What we had before: average entropy gain is $H(m)-H_0(m)$, and
   then taking the average over all messages:
-  $avg(H(m)-H_0(m)) = avg(H(m))-avg(H_0(m))$. Taking the exponential
+  $avg(H(m)-H_0(m)) = avg(H(m))-avg(H_0(m)) = H - H₀$. Taking the exponential
   gives a ratio of perplexity.  Here it seems that you have commuted
   exponential and average. It is rather weird to do average in the
-  exponential space without normalising to a probability.}
+  exponential space without normalising to a probability.
+
+  Compare: $e^{avg(H(m))} / e^{avg(H_0(m))}$ with $avg \frac{e^{H(m)}}{e^{H₀(m)}}$.
+
+}
 \begin{table*}
   \centering
   % \input{floats/info_gain.tex}
@@ -366,7 +369,9 @@ As a quantitative assessment, we compare the CCLM-learned community
 embedding with the community embedding created by \citet{Kumar2018},
 who generated them from the message-community co-occurence matrix,
 using data which spans January 2014 to April 2017. We refer the reader
-to \citet{Kumar2018} % JP: I actually cannot find in their paper what they do.
+to \citet{Kumar2018}
+\jp{What they say they do (sec 6.2) More formally, we train user and community embeddings basedon the bipartite multigraph between users and communities, whereone user-community edge,(ui,cj), exists in the graph for each timea user,ui, posts on community,cj. Adapting the approach used ina number of recent successful works [27,53,62], we learn user andcommunity embeddings,ui∈Rd,cj∈Rd, from this graph using anegative-sampling optimization algorithm
+}
 for details, but the important point is that no linguistic
 information is used to create these embeddings: they only depend on
 whether and how much a given user participates in a given
@@ -583,7 +588,8 @@ generic communities appear to exhibit fairly specific linguistic
 patterns. Furthermore, these patterns are just as recognizable by LSTM
 or Transformer models, when properly configured and trained.
 
-We find a weak correlation (\cref{tab:cclm_lmcc_ppl}) between the perplexity of the \bn{I'm not sure if we can make this claim or not with the Ppl-Ppl correlations. However, given that *all* of them have positive correlation, even though the p-values are somewhat higher than .1 maybe we can?}
+We cannot exclude a correlation (\cref{tab:cclm_lmcc_ppl}) between the perplexity of the
+% \bn{I'm not sure if we can make this claim or not with the Ppl-Ppl correlations. However, given that *all* of them have positive correlation, even though the p-values are somewhat higher than .1 maybe we can?}
 CCLM and the indiscernibility of the corresponding community
 \ref{hyp:rich-harder-to-identify}. Because we have relatively few,
 and only large communities in our test set, it is difficult to
