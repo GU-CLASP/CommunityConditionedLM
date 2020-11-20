@@ -532,28 +532,36 @@ The architecture of these models concatenates a vector representation
 of the conditioned variable to the input of the sequence model.
 This approach has been applied in various conditioned text generation domains such as 
 image captioning \citep{Vinyals2015}, machine translation \citep{Kalchbrenner2013},
-but it has not, to our knowledeg, been used extensively to study linguistic variation.
+but it has not, to our knowledge, been used extensively to study linguistic variation.
 There are, however some related methods that have been used to study variation,
 and related applications of conditional neural language models.
 
-In the later category, conditoinal nerual language models have been used to study linguistic change.
+In the later category, conditional neural language models have been
+used to study linguistic change.
 
-\paragraph{Vector representations of online communities encode semantic relationships}
-https://www.aclweb.org/anthology/W17-2904.pdf
 
-\paragraph{Reddit Mining to Understand Gendered Movements}
-http://ceur-ws.org/Vol-2578/DARLIAP3.pdf
 
 \paragraph{Language models for sociolinguistic variation}
 \cite{DelTredici2017}
 
-\paragraph{Topic modelling}
-- Discovering Discrete Latent Topics with Neural Variational Inference https://arxiv.org/pdf/1706.00359.pdf
-- JeyHan Lau's work
+\cite{khan2020reddit}
+
 
 \paragraph{Pre-trained language models}
-- Unsupervised Domain Clusters in Pretrained Language Models https://www.aclweb.org/anthology/2020.acl-main.692/
+- Unsupervised Domain Clusters in Pretrained Language Models https://www.aclweb.org/anthology/2020.acl-main.692/ % 404?
 
+\paragraph{Topic modelling}
+Modelling communities is not unlike the classic task of \emph{topic
+  modelling}. In topic modelling, one most often want to
+\emph{discover} topics. In constrast, we take as a given that a given
+message belongs to a given community. However, deep-learning topic
+modelling is often built around the idea of a conditioned language
+model \citep{Lau2017a}, with a separate topic-discovery module.
+
+% - Discovering Discrete Latent Topics with Neural Variational Inference https://arxiv.org/pdf/1706.00359.pdf
+
+% \paragraph{Vector representations of online communities encode semantic relationships}
+% https://www.aclweb.org/anthology/W17-2904.pdf
 
 \section{Discussion and Conclusion}
 
