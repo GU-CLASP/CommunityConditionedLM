@@ -81,9 +81,11 @@ df_m = pd.DataFrame([], index=pd.Index(models, name='model'))
 df_mm = pd.DataFrame([],index=pd.MultiIndex.from_tuples(combinations(cond_models, 2), names=['model1', 'model2']))
 
 # Best model validation epoch (used for testing)
-best_epoch = pd.DataFrame([
+best_epoch = pd.Series([
     int(open(f'{model_dir}/{model}/saved-epoch.txt').read())
-    for model in models], index=models, columns=['best_epoch'])
+    for model in models], index=models)
+
+df_m['best_epoch'] = best_epoch
 
 
 ##### Language model perplexity (CCLM & baseline)
@@ -96,8 +98,6 @@ df_m['lm_ppl'] = lm_ppl[models].mean()
 
 ## Mean language model perplexity by community
 df_c = add_columns(df_c, lm_ppl.groupby('community').mean(), suffix='_lm_ppl')
-
-df_m = add_columns(df_m, best_epoch)
 
 
 #### Community embeddings
@@ -132,6 +132,7 @@ corr = pd.DataFrame([pearsonr(df_cc[f'{model}_cos_sim'], df_cc['snap_cos_sim'])
     for model in cond_models], 
     index=cond_models, 
     columns=['snap_cos_sim_corr_r', 'snap_cos_sim_corr_p'])
+
 df_m = add_columns(df_m, corr)
 
 
@@ -181,6 +182,7 @@ corr = pd.DataFrame([pearsonr(df_c[f'{model}_lmcc_ppl'], df_c[f'{model}_lm_ppl']
     for model in cond_models],
     index=cond_models,
     columns=['lmcc_cclm_corr_r', 'lmcc_cclm_corr_p'])
+
 df_m = add_columns(df_m, corr)
 
 ## Commuinty indiscrenibility correlation between two example models
@@ -191,31 +193,59 @@ print(f"r = {r:0.4f} p = {p:0.6f}")
 
 ##### Information gain (AKA mutual information)
 
-df_ig = pd.DataFrame([], index=lm_ppl.index)
-df_ig['community'] = lm_ppl['community']
-df_ig[cond_lstms] = lm_ppl[cond_lstms].apply(lambda x: lm_ppl['lstm-3']/x)
-df_ig[cond_transformers] = lm_ppl[cond_transformers].apply(lambda x: lm_ppl['transformer-3']/x)
+## Model entropy on test examples
+lm_entropy = lm_ppl[models].apply(np.log)
+lm_entropy['community'] = lm_ppl['community']
 
-# Mean information gain (over all training examples)
-df_m['gain'] = df_ig.mean()
+lstm_baseline_ppl = np.exp(lm_entropy['lstm-3'].mean())
+lstm_cond_ppl = lm_entropy[cond_lstms].mean().apply(np.exp) 
+lstm_info_gain = lstm_cond_ppl.apply(lambda x: lstm_baseline_ppl / x)
+transformer_baseline_ppl = np.exp(lm_entropy['transformer-3'].mean())
+transformer_cond_ppl = lm_entropy[cond_transformers].mean().apply(np.exp) 
+transformer_info_gain = transformer_cond_ppl.apply(lambda x: transformer_baseline_ppl / x)
+info_gain = pd.concat([lstm_info_gain, transformer_info_gain], axis=0)
+
+df_m['info_gain'] = info_gain
 
 # Mean information gain by community
-df_c[[f'{model}_gain' for model in cond_models]] = df_ig.groupby('community').mean()[cond_models]
+lm_entropy_comm = lm_entropy.groupby('community').mean()
+lstm_baseline_ppl = np.exp(lm_entropy_comm['lstm-3'])
+lstm_cond_ppl = lm_entropy_comm[cond_lstms].apply(np.exp) 
+lstm_info_gain = lstm_cond_ppl.apply(lambda x: lstm_baseline_ppl / x)
+lm_entropy_comm = lm_entropy.groupby('community').mean()
+transformer_baseline_ppl = np.exp(lm_entropy_comm['transformer-3'])
+transformer_cond_ppl = lm_entropy_comm[cond_transformers].apply(np.exp) 
+transformer_info_gain = transformer_cond_ppl.apply(lambda x: transformer_baseline_ppl / x)
+info_gain_comm = pd.concat([lstm_info_gain, transformer_info_gain], axis=1)
+df_c = add_columns(df_c, info_gain_comm, suffix='_info_gain')
 
+##### Write tabels and CSVs for plots
 
-##### Write CSVs
+df_m[['best_epoch', 'lm_ppl', 'info_gain']].to_latex(os.path.join(floats_dir, 'model_results.tex'),
+        formatters={
+            'lm_ppl': "{:0.2f}".format,
+            'info_gain': "{:0.4f}".format
+            },
+        na_rep='-'
+        )
 
-model_args = list(map(lambda x: x.split('-'), df_m.index))
-model_arch = map(lambda x: {'lstm': 'LSTM', 'transformer': 'Transformer'}[x[0]], model_args)
-model_lc = [args[-1] if len(args) == 3 else None for args in model_args]
-model_args = pd.MultiIndex.from_tuples(zip(model_arch, model_lc), names=['model', 'lc'])
-df_m.index = model_args
+df_c[
+        ['lstm-3_lm_ppl'] + [f'lstm-3-{i}_info_gain' for i in range(4)] +
+        ['transformer-3_lm_ppl'] + [f'transformer-3-{i}_info_gain' for i in range(4)] 
+    ].to_latex(os.path.join(floats_dir, 'community_results.tex'),
+        float_format="{:0.2f}".format)
 
-df_m.to_csv(os.path.join(floats_dir, 'model.csv'), sep='\t', na_rep='nan')
-df_mm.to_csv(os.path.join(floats_dir, 'model_model.csv'), sep='\t', na_rep='nan')
-df_c.to_csv(os.path.join(floats_dir, 'comm.csv'), sep='\t', na_rep='nan')
-df_cc.to_csv(os.path.join(floats_dir, 'comm_comm.csv'), sep='\t', na_rep='nan')
-df_confusion.to_csv(os.path.join(floats_dir, 'confusion.csv'), sep='\t', na_rep='nan')
+# model_args = list(map(lambda x: x.split('-'), df_m.index))
+# model_arch = map(lambda x: {'lstm': 'LSTM', 'transformer': 'Transformer'}[x[0]], model_args)
+# model_lc = [args[-1] if len(args) == 3 else None for args in model_args]
+# model_args = pd.MultiIndex.from_tuples(zip(model_arch, model_lc), names=['model', 'lc'])
+# df_m.index = model_args
+
+# df_m.to_csv(os.path.join(floats_dir, 'model.csv'), sep='\t', na_rep='nan')
+# df_mm.to_csv(os.path.join(floats_dir, 'model_model.csv'), sep='\t', na_rep='nan')
+# df_c.to_csv(os.path.join(floats_dir, 'comm.csv'), sep='\t', na_rep='nan')
+# df_cc.to_csv(os.path.join(floats_dir, 'comm_comm.csv'), sep='\t', na_rep='nan')
+# df_confusion.to_csv(os.path.join(floats_dir, 'confusion.csv'), sep='\t', na_rep='nan')
 
 ##### Looking for examples 
 

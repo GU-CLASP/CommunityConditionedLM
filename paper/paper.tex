@@ -17,24 +17,20 @@
 \usepackage[T1]{fontenc}
 \usepackage{times}
 \usepackage{latexsym}
+\usepackage{amsmath}
+\usepackage{amssymb}
 \usepackage{siunitx}
 \usepackage{booktabs}
 \usepackage{pgfplots}
-\usepackage{pgfplotstable}
 \usepackage{todonotes}
 \usepackage{enumitem}
-\usepackage{array}
 \usepackage{cleveref}
+\usepackage{array}
+\usepackage{makecell}
+\usepackage{multirow}
 
 \usepgfplotslibrary{groupplots}
 \pgfplotsset{compat=1.16}
-\pgfplotstableset{
-  column type=r,
-  fixed zerofill,
-  clear infinite,
-  %dec sep align,
-  %empty cells with={\ensuremath{-}},
-}
 
 \renewcommand{\UrlFont}{\ttfamily\small}
 
@@ -56,7 +52,9 @@
 % in the camera-ready version and ask you to change it back.
 
 \newcommand\Ppl{\mathsf{Ppl}}
+\newcommand\IG{\mathsf{IG}}
 \newcommand\Ind{I}
+\DeclareMathOperator*{\avg}{avg}
 \newcommand\BibTeX{B\textsc{ib}\TeX}
 
 \newlist{hypotheses}{enumerate}{3}
@@ -157,7 +155,6 @@ To sum up we aim at testing the following hypotheses:
 
 \subsection{Data sets}
 
-
 We investigate linguistic variation across various communities present
 on the social media website Reddit.\footnote{Comments were obtained
   from the archive at \url{https://pushshift.io/}.
@@ -250,24 +247,7 @@ We experimented with every possible value for $l_c$ in a three-layer model ($l_c
 We trained the models until the validation loss stopped decreasing 
 for two epochs in a row,
 and used the weights from the epoch with the smallest validation loss for testing.
-In general, transformer models trained for about half as long as the LSTM models (\cref{tab:best-epoch}).
-
-\begin{table}
-  \centering
-  \input{floats/best_epoch.tex}
-  \caption{Epoch with the lowest validation loss.}
-  \label{tab:best-epoch}
-\end{table}
-
-%\pgfplotstabletypeset[
-  %columns={best_epoch,lm_ppl,gain},
-  %columns/model/.style={string type,column type=l},
-  %columns/best_epoch/.style={column name={Epochs}, int detect},
-  %columns/lm_ppl/.style={column name={Ppl}},
-  %columns/gain/.style={column name={IG},precision=3,empty cells with={\ensuremath{-}}},
-  %every nth row={5}{before row=\midrule},
-  %]{floats/model.csv}
-
+In general, transformer models trained for about half as long as the LSTM models (test epoch, \cref{tab:model-results}).
 
 \section{Results and analysis}
 
@@ -275,80 +255,96 @@ In general, transformer models trained for about half as long as the LSTM models
 
 We measure the perplexity of each example in the test set. 
 For this, we use the negative exponential of the mean cross-entropy loss 
-for the sequence.
-
+of the language model for a given message and average over a set of messages, $M$.
+\[\Ppl_M = \avg_{m\in M}(-e^{H(m)})\] \bn{Following the logic from IG, should we change Ppl to the exponential of the average cross entropy, rather than using the average of the message-level perplexity?} 
 As one would expect, 
 the conditioned models have lower perplexity
-than their respective unconditioned baseline models,
+than their respective unconditioned baseline models (\cref{tab:model-results}),
 but this effect is different in magnitude
 for models with different community embedding depths.
 For the LSTM encoder, 
 the best model ($l_c=1$) concatenates the community embedding after the first encoder layer,
-with two more LSTM layers after that.
+with two subsequent LSTM layers. 
 The best transformer model ($l_c=3$), on the other hand,
 incorporates the community information last,
-after all the sequence encoder layers
-(\cref{tab:model-ppls}).
+after all the sequence encoder layers.
 
-%TODO: For space reasons, it might be better to put the community-level table in the appendix and have the table in body just show the means (and perhaps medians/stddevs?) for each architecture.}
+\begin{table}
+  \footnotesize
+  \centering
+  \input{floats/model_results.tex}
+  \caption{
+    Performance of baseline (first row for each encoder architecture) and CCLM models. 
+    Perplexity and information gain are shown for the entire test set 
+    (\num{5000} messages for each community).}
+  \label{tab:model-results}
+\end{table}
 
-We also note that the conditioned models perform differently across different communities---%
-for some communities, perplexity of the conditioned models is a lot lower than the unconditioned models,
-whereas for others it is the same or even slightly higher (\cref{tab:model-ppls}).
-\bn{talk about this in terms of mutual information instead!}
+We also consider model performance stratified by community;
+that is, $\Ppl_{M_j}$, where $M_j$ is the test-set messages from community $c_j$.
+We observe a great deal of variation in baseline perplexity across communities,
+with $\Ppl_{M_j}$ ranging from \num{53.07} to \num{115.29} for the LSTM model
+(\cref{tab:community-results}). 
+
+\subsection{Information gain of the CCLM}
+
+Next, we consider the \emph{information gain} of each CCLM over its baseline
+un-conditioned counterpart with the same sequence encoder architecture.
+For a given message, information gain is defined as the difference
+between the cross-entropy of the unconditioned model and the conditioned model:
+\[H_{LM}(m) - H_{CCLM}(m)\]
+For a set of messages, $M$, we consider the average information gain
+in exponential space (as a ratio of perplexities):
+\[\IG_M = \frac{e^{\avg_M(H_{LM}(m))}}{e^{\avg_M(H_{CCLM}(m))}}\]
+%\jp{What we had before: average entropy gain is $H(m)-H_0(m)$, and
+  %then taking the average over all messages:
+  %$avg(H(m)-H_0(m)) = avg(H(m))-avg(H_0(m)) = H - H₀$. Taking the exponential
+  %gives a ratio of perplexity.  Here it seems that you have commuted
+  %exponential and average. It is rather weird to do average in the
+  %exponential space without normalising to a probability.
+
+  %Compare: $e^{avg(H(m))} / e^{avg(H_0(m))}$ with $avg \frac{e^{H(m)}}{e^{H₀(m)}}$.
+%}
+
+While the absolute performance of the LSTM models is better,
+we find that the best transformer CCLM has higher information gain 
+than the best LSTM (\cref{tab:model-results}).
+
+The conditioned models also perform differently across different communities---%
+for some communities, $\IG_{M_j}$ around \num{1}, or even slightly lower,
+meaning that the CCLM has no advantage over the unconditioned baseline for that community.
+For others communities it is higher, meaning that the CCLM performs better than 
+the baseline for those communities (\cref{tab:community-results}).
+
+\begin{table*}
+  \normalsize
+  \centering
+  \input{floats/community_results.tex}
+  \caption{
+    Model performance by community. We show the absolute perplexity 
+    of the baseline models and the information gain of the CCLMs.
+    Note that the rows are sorted by the perplexity of the baseline
+    LSTM model.
+}
+  \label{tab:community-results}
+\end{table*}
+
+
 As an informal observation, we note 
 that across all the models we tested, 
 communities where conditioning has the least effect
 tend to be more organized around more general interest topics,
-such as the \emph{relationships} subreddit, where the subject matter is relevant to a broad
+such as the \emph{relationships} and \emph{advice} subreddits, where the subject matter is relevant to a broad
 range of people.
 Conditioning the model on community has the most benefit
-for narrower special-interest subreddits such as those organized
+for narrower special-interest subreddits, such as those organized
 around a certain videogame, sports team, or subculture.
 This makes sense intuitively, since communities with more niche topics
 would tend to have more specialized vocabulary and other linguistic patterns.
 
-\begin{table*}
-  \footnotesize
-  \centering
-  \input{floats/model_ppls.tex}
-  \caption{Mean model perplexity for messages in the test set, broken down by community.}
-  \label{tab:model-ppls}
-\end{table*}
-
-\subsection{Information gain of the CCLM}
-
-We consider the average information gain of each CCLM over its baseline
-un-conditioned counterpart with the same sequence encoder architecture.
-For a given message, the information gain is defined as the ratio of the
-perplexity of the baseline model to that of the CCLM:
-\[
-  IG_{CCLM}(m) = \frac{Ppl_{LM}(m)}{Ppl_{CCLM}(m)}
-\]
-\jp{What we had before: average entropy gain is $H(m)-H_0(m)$, and
-  then taking the average over all messages:
-  $avg(H(m)-H_0(m)) = avg(H(m))-avg(H_0(m)) = H - H₀$. Taking the exponential
-  gives a ratio of perplexity.  Here it seems that you have commuted
-  exponential and average. It is rather weird to do average in the
-  exponential space without normalising to a probability.
-
-  Compare: $e^{avg(H(m))} / e^{avg(H_0(m))}$ with $avg \frac{e^{H(m)}}{e^{H₀(m)}}$.
-
-}
-\begin{table*}
-  \centering
-  % \input{floats/info_gain.tex}
-  \caption{Mean information gain of the CCLM over the baseline model, for messages in the test set.}
-  \label{tab:model-info-gain}
-\end{table*}
-
-While the absolute performance of the LSTM models is better,
-we find the the transformer CCLMs have higher information gain 
-\cref{tab:model-info-gain}.
-
 \subsection{Analysis of CCLM community embeddings}
 
-As a qualitative assesment of the community embeddings, 
+As a qualitative assessment of the community embeddings, 
 we manually identified topic categories into which at least three
 of the selected communities fall.
 We plotted the two-component PCA projection of the embeddings,
@@ -430,9 +426,9 @@ from community $c_j$.
 As a sanity check, we observe that the diagonal dominates the matrix: on average the LMCC picks the right community for a message (\cref{fig:confusion}).
 
 \begin{figure*}
-\begin{tikzpicture}
-  \confusiongroupplot{lstm-3-1}{transformer-3-3}
-\end{tikzpicture}
+%\begin{tikzpicture}
+  %\confusiongroupplot{lstm-3-1}{transformer-3-3}
+%\end{tikzpicture}
 \caption{LMCC confusion matrices for the best LSTM (left, $c=1$) and transformer (right, $c=3$) models.}
 \label{fig:confusion}
 \end{figure*}
