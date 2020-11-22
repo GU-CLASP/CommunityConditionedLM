@@ -1,4 +1,4 @@
-\newcommand{\commpcaplot}[1]{%
+\newcommand{\commscatter}[3][\community]{%
   \addplot[
   scatter, only marks,
   font=\tiny,
@@ -11,25 +11,13 @@
     female-focused={mark=*, magenta},
     other={mark=o, black}%
   },
-  nodes near coords*={\community},
+  nodes near coords*={#1},
+  nodes near coords align={vertical},
+  every node near coord/.append style={font=\sffamily\tiny},
   visualization depends on={value \thisrow{community} \as \community}
-  ] table [x=pca1, y=pca2, meta=category] {#1};
+  ] table [x={#2}, y={#3}, meta=category] {floats/comm.csv};
 }
 
-\newcommand{\commpcagroupplot}[2]{%
-  \begin{groupplot}[
-    group style={group size=2 by 1}, 
-    yticklabels={,,}, xticklabels={,,},
-    legend style={anchor=north, legend columns=1, font=\tiny},
-    every node near coord/.append style={font=\sffamily\tiny}%
-    ]
-    \nextgroupplot
-    \commpcaplot{#1}
-    \nextgroupplot
-    \commpcaplot{#2}
-    \legend{General interest,Videogames,Technology,Sports,Female-focused,Other}
-  \end{groupplot}
-}
 
 \newcommand{\confusionplot}[1]{%
   \addplot[
@@ -51,7 +39,7 @@
     width=8cm,
     xticklabels={Advice,AskWomen,BabyBumps,CFB,Drugs,EDH,EarthPorn,Fantasy,GameDeals,GlobalOffensive,Jokes,Kappa,KerbalSpaceProgram,KotakuInAction,LifeProTips,MLS,MMA,MaddenUltimateTeam,TwoXChromosomes,Warframe,airsoft,bodybuilding,breakingmom,cars,cringe,eu4,exjw,explainlikeimfive,femalefashionadvice,food,heroesofthestorm,jailbreak,justneckbeardthings,oculus,pcmasterrace,photography,reddevils,relationships,rupaulsdragrace,stopdrinking,streetwear,techsupport,todayilearned,toronto,videos,xxfitness},
     yticklabels=none,
-    xticklabel style={font=\sffamily\tiny, rotate=90},
+    x tick label style={font=\sffamily\tiny,rotate=45,anchor=east},
     xtick=data,
     legend style={font=\sffamily\small},
     ]
@@ -82,16 +70,4 @@
     \end{axis}
   \end{tikzpicture}
 }
-
-\newcommand{\pplscatter}[2]{%
-  \begin{tikzpicture}
-  \begin{axis}[]
-  \addplot[
-    only marks, black,
-  ] table [x=#1, y=#2] {floats/cclm_lmcc_ppl.csv};
-  \end{axis}
-  \end{tikzpicture}
-}
-
-
 

@@ -1,4 +1,5 @@
 %
+
 % File acl2020.tex
 %
 %% Based on the style files for ACL 2020, which were
@@ -320,7 +321,7 @@ For others communities it is higher, meaning that the CCLM performs better than
 the baseline for those communities (\cref{tab:community-results}).
 
 \begin{table*}
-  \normalsize
+  \small
   \centering
   \input{floats/community_results.tex}
   \caption{
@@ -358,7 +359,14 @@ suggesting that the embedding space learned by the model is meaningful.
 
 \begin{figure*}
 \begin{tikzpicture}
-  \commpcagroupplot{floats/lstm-3-1_pca.csv}{floats/transformer-3-3_pca.csv}
+  \begin{groupplot}[
+    group style={group size=2 by 1}
+  ]
+    \nextgroupplot
+    \commscatter{lstm-3-1_pca1}{lstm-3-1_pca2}
+    \nextgroupplot
+    \commscatter{transformer-3-3_pca1}{transformer-3-3_pca2}
+  \end{groupplot}
 \end{tikzpicture}
 \caption{Community embedding PCA of the best LSTM (left, $c=1$) and transformer (right, $c=3$) models.}
 \label{fig:comm-pca}
@@ -389,7 +397,7 @@ restricted to the 46 communities chosen for our study
     the membership-based embedding (x-axis) and
   the LSTM CCLM embedding with $c=1$ (y-axis). 
   Pairs from the same category are colored according to \cref{fig:comm-pca}.
-  We also mark pairs from different (\texttimes) and pairs where one or both
+  We also mark pairs from different categories (\texttimes) and pairs where one or both
   communities belong to the ``Other'' category (\textbigcircle).
   }
   \label{fig:pairwise-comm-sim}
@@ -433,9 +441,9 @@ from community $c_j$.
 As a sanity check, we observe that the diagonal dominates the matrix: on average the LMCC picks the right community for a message (\cref{fig:confusion}).
 
 \begin{figure*}
-%\begin{tikzpicture}
-  %\confusiongroupplot{lstm-3-1}{transformer-3-3}
-%\end{tikzpicture}
+\begin{tikzpicture}
+  \confusiongroupplot{lstm-3-1}{transformer-3-3}
+\end{tikzpicture}
 \caption{LMCC confusion matrices for the best LSTM (left, $c=1$) and transformer (right, $c=3$) models.}
 \label{fig:confusion}
 \end{figure*}
@@ -466,9 +474,14 @@ Pearson's $r \geq 0.98$ and $p < 0.0001$ (see, for example,
 \cref{fig:lmcc_ppl}).
 
 \begin{figure}
-  \pplscatter{lstm-3-1_lmcc}{transformer-3-3_lmcc}
+  \begin{tikzpicture}
+    \begin{axis}
+    \commscatter{lstm-3-1_indisc}{transformer-3-3_indisc}
+    \end{axis}
+  \end{tikzpicture}
   \caption{%
-    Correlation between indiscernibility for the best LSTM ($c = 1$) and transformer ($c = 3$) models
+    Correlation between indiscernibility for 
+    the best LSTM ($c = 1$) and transformer ($c = 3$) models
     (Pearson's $r = 0.99$, $p < 0.0001$).
   }
   \label{fig:lmcc_ppl}
@@ -491,15 +504,32 @@ is a poor predictor of how distinct its language is.
   \label{tab:ind-corrs}
 \end{table}
 
-\begin{figure}
-  \pplscatter{lstm-3-1_cclm}{lstm-3-1_lmcc}
+
+\begin{figure*}
+  \begin{tikzpicture}
+  \begin{groupplot}[
+    group style={group size=2 by 1},
+    yticklabels={,,}, xticklabels={,,},
+    legend style={anchor=north, legend columns=1, font=\tiny},
+    every node near coord/.append style={font=\sffamily\tiny}%
+  ]
+    \nextgroupplot
+    \commscatter[]{lstm-3-1_lm_ppl}{lstm-3-1_indisc}
+    \nextgroupplot
+    \commscatter[]{lstm-3-1_info_gain}{lstm-3-1_indisc}
+    \legend{General interest,Videogames,Technology,Sports,Female-focused,Other}
+  \end{groupplot}
+  \end{tikzpicture}
   \caption{%
-    Mean community-wise linguistic perplexity (x-axis) 
-    and indiscernibility (y-axis) 
-    (Pearson's r = \num{0.16}; p = \num{0.2991}).  
-    Shown here for the LSTM with $c = 1$.}
+    Mean community indiscernibility (y-axis), 
+    in relationship to linguistic complexity (left) and 
+    CCLM information gain (right). Shown here for the LSTM
+    model with $l_c=1$. See \cref{tab:ind-corrs} for 
+    Pearson's r correlations for all models.
+  }
   \label{fig:cclm_lmcc_ppl}
-\end{figure}
+\end{figure*}
+
 
 % We could also check if communities are well-separated in the SNAP community encodings
 
@@ -507,18 +537,8 @@ On the other hand, community indiscernibility is correlated with
 the information gain of the CCLM 
 on messages from that community's test set 
 (see \cref{tab:ind-corrs} and, for example, \cref{fig:cclm_lmcc_ppl}).
-Communities for which the language model bennifits most from 
+Communities for which the language model benefits most from 
 the conditioned model are generally easier for the LMCC to classify.
-
-\begin{figure}
-  \pplscatter{lstm-3-1_gain}{lstm-3-1_lmcc}
-  \caption{%
-    Mean community-wise information gain (x-axis) 
-    and indiscernibility (y-axis) 
-    %(Pearson's r = \num{0.16}; p = \num{0.2991}).  
-    Shown here for the LSTM with $c = 1$.}
-  \label{fig:cclm_lmcc_ppl}
-\end{figure}
 
 % Finally, we investigate the correlation between the stability of a
 % community and the perplexity of the LMCC for it. Stability is defined as TODO.
