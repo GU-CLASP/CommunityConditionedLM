@@ -53,8 +53,8 @@
 
 \newcommand\Ppl{\mathsf{Ppl}}
 \newcommand\IG{\mathsf{IG}}
-\newcommand\Ind{I}
-\DeclareMathOperator*{\avg}{avg}
+\newcommand\Ind{\mathsf{Ind}}
+\DeclareMathOperator*{\avg}{average}
 \newcommand\BibTeX{B\textsc{ib}\TeX}
 
 \newlist{hypotheses}{enumerate}{3}
@@ -216,6 +216,9 @@ We combined the 46 community corpora and split the combined corpus,
 reserving 10\% for testing, 10\% for validation and the rest for training.
 Splits were stratified by community so that each community had \num{5000} examples
 for testing, \num{5000} for evaluation, and \num{40000} for training.
+
+In the remainder of the paper we use $M$ to refer to messages in the test set,
+and $M_j$ for the partition of the test set originating from community $c_j$.
 
 We use a vocabulary size of \num{40000} tokens, including a special out-of-vocabulary token.
 The vocabulary consists of the most frequent tokens at the message level (across all communities),
@@ -411,18 +414,22 @@ which we call a language model-based community classifier
 (LMCC). Using the Bayes theorem, we can turn a
 CCLM into a LMCC: the probability that a given message $m$
 belongs to a community $c_i$ is calculated as follows:
-\[P(c=c_i | m) = P(m | c_i)\frac {P(m)} {P(c=c_i)}\]
+\[P(c=c_i \mid m) = P(m | c_i)\frac {P(m)} {P(c=c_i)}\]
 In the above,
 $P(c=c_i)$ is the frequency of community $c_i$ in the dataset, and
-$P(m | c_i)$ (the probability that a message $m$
-belongs in a community $c_i$. ) is estimated by the CCLM. $P(m)$ is the absolute
+$P(m \mid c_i)$ (the probability of a message $m$
+in the context of community $c_i$) is estimated by the CCLM. 
+$P(m)$ is the absolute
 probability of a message, which can be computed as
-\[P(m) = \frac 1 {\sum_i P(c=c_i) P(m|c=c_i ) }\]
+\[P(m) = \sum_i P(c=c_i) P(m\mid c=c_i ). \]
+Since the test set is balanced across communities,
+we have an even prior for $P(c=c_i)$, giving us
+\[P(c=c_i\mid m) \propto  P(m\mid c_i).\]
 
 We can characterise the quality the LMCC with a confusion matrix
-$C$, defined by $C_{ij} = P(c=c_i | m)$ for a given (test set) message $m$ 
+$C$, defined by $C_{ij} = P(c=c_i \mid m)$ for a given (test set) message $m$ 
 from community $c_j$.
-\[C_{ij} = average_{m \in Messages(c_j)}(P(c=c_i | m))\]
+\[C_{ij} = \avg_{m\in M_j}P(c=c_i \mid m)\]
 As a sanity check, we observe that the diagonal dominates the matrix: on average the LMCC picks the right community for a message (\cref{fig:confusion}).
 
 \begin{figure*}
@@ -437,13 +444,19 @@ However, we want to measure the ability of the LMCC to correctly
 recognize messages coming from a given community $c_j$. We could use
 something like an F-score, but we prefer to use a perplexity-like metric,
 which is has stronger information-theoretic grounds.
-We define the linguistic indiscernibility of community $c_j$, noted $\Ind_j$, 
-as the exponential of the entropy of the $j$th row in \(C\),
-(which is a probability distribution
-of predicted community for a random message from $c_j$):
-\[\Ind_j = e^{-\sum_i C_{ij} log(C_{ij})}\]
-Intuititely, $\Ind_j$ is a measure of the uncertainty of the LMCC,
+To this end, we define the \emph{linguistic indiscernibility} of community $c_j$, 
+noted $\Ind_j$. 
+First, note that each row of $C$ is a probability distribution,
+since it is computed as the average of $P(c=c_i \mid m)$ for $m\in M_j$.
+The exponential of the entropy of the $j$th row of \(C\) is therefore a perplexity score.
+To compute $\Ind_j$, we scale this perplexity by the number of communities, 
+which makes $\Ind_j$ comparable across models trained on different
+numbers of communities.\footnote{Although we only consider one set of \num{46} communities in this paper.}
+\[\Ind_j = \frac{e^{-\sum_i C_{ij} log(C_{ij})}}{|C_j|}\]
+Intuitively, $\Ind_j$ is a measure of the uncertainty of the LMCC,
 given messages from a community $c_j$.
+It ranges from $0$ (for a completely deterministic $C_j$) 
+to $1$ (if $C_j$ gives equal weight to every community).
 
 Indiscernibility of a given community is a robust measure: it is
 almost perfectly correlated across CCLMs (such as transformers, LSTM
@@ -461,11 +474,22 @@ Pearson's $r \geq 0.98$ and $p < 0.0001$ (see, for example,
   \label{fig:lmcc_ppl}
 \end{figure}
 
-However, we observe that community-wise CCLM perplexity is only weakly (if at all) \bn{Changed the indiscernability (y-axis) from entropy to Ppl and the p-values all shot up above 0.1. However the r is still very weakly positive for every model.}
+However, we observe that community-wise perplexity is only weakly (if at all) 
 correlated with community indiscernibility under the corresponding latent 
-LMCC (see \cref{fig:cclm_lmcc_ppl} and \cref{tab:cclm_lmcc_ppl}).
+LMCC (see \cref{tab:ind-corrs} and, for example, \cref{fig:cclm_lmcc_ppl}).
 In other words, the linguistic complexity of a given community
 is a poor predictor of how distinct its language is.
+
+\begin{table}
+  \centering
+  \input{floats/ind_corrs.tex}
+  \caption{
+    Pearson's $r$ correlation coefficient between community indiscernibility ($\Ind_j$) and
+    two different predictors: CCLM perplexity on messages from community $c_j$ ($\Ppl_{M_j}$)
+    , and CCLM information gain on messages from $c_j$ ($\IG_{M_j}$).
+  }
+  \label{tab:ind-corrs}
+\end{table}
 
 \begin{figure}
   \pplscatter{lstm-3-1_cclm}{lstm-3-1_lmcc}
@@ -477,20 +501,12 @@ is a poor predictor of how distinct its language is.
   \label{fig:cclm_lmcc_ppl}
 \end{figure}
 
-\begin{table}
-  \centering
-  \input{floats/cclm_lmcc_ppl.tex}
-  \caption{
-  Pearson's $r$ correlation coefficient between community-wise linguistic perplexity and indescernibility for each model.
-  }
-  \label{tab:cclm_lmcc_ppl}
-\end{table}
-
 % We could also check if communities are well-separated in the SNAP community encodings
 
 On the other hand, community indiscernibility is correlated with
-the average information gain of the CCLM over the baseline model,
-for messages in its test set \cref{fig:comm-pca}.
+the information gain of the CCLM 
+on messages from that community's test set 
+(see \cref{tab:ind-corrs} and, for example, \cref{fig:cclm_lmcc_ppl}).
 Communities for which the language model bennifits most from 
 the conditioned model are generally easier for the LMCC to classify.
 
@@ -503,16 +519,6 @@ the conditioned model are generally easier for the LMCC to classify.
     Shown here for the LSTM with $c = 1$.}
   \label{fig:cclm_lmcc_ppl}
 \end{figure}
-
-\begin{table}
-  \centering
-  \input{floats/lmcc_gain.tex}
-  \caption{
-    Pearson's \(r\) correlation coefficient between community-wise information gain (of the CCLM over the un-conditioned model) and indescernibility.
-  }
-  \label{tab:lmcc_gain}
-\end{table}
-
 
 % Finally, we investigate the correlation between the stability of a
 % community and the perplexity of the LMCC for it. Stability is defined as TODO.
