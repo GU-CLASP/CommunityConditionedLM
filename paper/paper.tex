@@ -72,13 +72,8 @@
 
 \begin{document}
 \maketitle
-\jp{Title suffers from wizwoz system syndrome.
-  http://www.cs.sjtu.edu.cn/~kzhu/writing-a-paper-slides.pdf (slide 10+)
-
-  Try to say what the paper brings to the state of the art rather than how it does it.
-}
 \begin{abstract}
-  Using Community-Conditioned Lanaguage Models (CCLMs), we investigate
+  Using Community-Conditioned Language Models (CCLMs), we investigate
   the following questions: 1. Can the level of linguistic complexity
   exhibited by different communities is captured. 2. Are CCLMs
   well-tuned to various communities both by intrinsic (can we build a
@@ -175,7 +170,7 @@ To sum up, we test the following hypotheses:
 %   influences CCLM and its associated latent classifier.
   % This is more of a justification for studying the latent classifier than a real "user-facing" hypothesis.
 \item \label{hyp:extra-linguistic-correlation} The CCLM representation of communities are correlated with
-  co-ocurrence of users between communities.
+  co-occurrence of users between communities.
 % \item Community stability is correlated with language complexity
 \item \label{hyp:rich-harder-to-identify} Linguistically poor communities are easier to identify than
   linguistically rich communities.
@@ -224,7 +219,7 @@ and lower-cased all tokens.
 
 We experiment with two kinds of model architecture: a simple
 unidirectional LSTM \citep{Hochreiter1997} and a Transformer
-\citep{Vaswani2017}.  In either case, the model is organised as a
+\citep{Vaswani2017}.  In either case, the model is organized as a
 standard $n$-layer neural sequence encoder (we set $n=3$ for all
 models). As conventional, word tokens are first converted to vectors
 using a trainable embedding layer. At the other end, word tokens are
@@ -478,7 +473,7 @@ Since the test set is balanced across communities,
 we have an even prior for $P(c=c_i)$, giving us
 \[P(c=c_i\mid m) \propto  P(m\mid c_i).\]
 
-We can characterise the quality the LMCC with a confusion matrix
+We can characterize the quality the LMCC with a confusion matrix
 $C$, defined by $C_{ij} = P(c=c_i \mid m)$ for a given (test set) message $m$ 
 from community $c_j$.
 \[C_{ij} = \avg_{m\in M_j}P(c=c_i \mid m)\]
@@ -615,7 +610,7 @@ This is similar to how our model experiences improved performance
 by learning community representations. 
 Unlike our model, topics are inferred in an unsupervised way, 
 raising the question of whether communities could be identified from 
-unlabelled data as well.
+unlabeled data as well.
 
 Along these lines, \citet{OConnor2010} uses a Bayesian generative
 model to infer communities from variation in text data.  In contrast
@@ -649,7 +644,7 @@ only large communities in our test set, it is difficult to provide a
 conclusive answer, but this kind of correlation would suggest that
 community-specific complexity can be partially attributed to using
 more varied patterns. With an indiscernibility $> 0.9$, the most
-complex communities appear as as even mixture of the kind of language
+complex communities appear as an even mixture of the kind of language
 found in all communities, to our models.
 
 We find that the layer at which the community embedding is taken into
@@ -689,3 +684,11 @@ the set of the vector embeddings of its members.
 \bibliographystyle{acl_natbib}
 
 \end{document}
+
+% LocalWords:  CCLMs Gumperz NLP Hovy Ciot Bamman DelTredici CFB SMU
+% LocalWords:  cancelled pre emptively CCLM Reddit subreddits dataset
+% LocalWords:  preprocessed tokenized SpaCy tokenizer Honnibal LSTM
+% LocalWords:  Hochreiter Vaswani softmax un AdamW Loshchilov IG Ppl
+% LocalWords:  LM videogame embeddings PCA Kumar lstm LMCC ij th Lau
+% LocalWords:  indiscernibility Vinyals Kalchbrenner OConnor
+% LocalWords:  monotonicity subreddit
