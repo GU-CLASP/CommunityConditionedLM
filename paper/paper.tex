@@ -296,9 +296,10 @@ trained for about half as long as the LSTM models (test epoch,
 We measure the perplexity of each example\jp{message? community?} in the test set. 
 For this, we use the negative exponential of the mean cross-entropy loss 
 of the language model for a given message and average over a set of messages, $M$.
-\[\Ppl_M = \avg_{m\in M}(-e^{H(m)})\]
+\[\Ppl_M = \avg_{m\in M}(e^{-H(m)})\]
 \bn{Following the logic from IG, should we change Ppl to the exponential of the average cross entropy, rather than using the average of the message-level perplexity?}
 \jp{Yes}
+\[\Ppl_M = e^{\avg_{m\in M} H(m)}\]
 As one would expect, 
 the conditioned models have lower perplexity
 than their respective unconditioned baseline models (\cref{tab:model-results}),
