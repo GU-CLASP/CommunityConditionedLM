@@ -51,7 +51,8 @@ in stdenv.mkDerivation {
       lm # font, latin modern
       lm-math
       logreq
-      make4ht # html conversion 
+      # make4ht # html conversion
+      makecell
       marvosym
       mathdesign # jlm requirement
       mathpartir # math paragraph and inferrules (Didier Rémy)

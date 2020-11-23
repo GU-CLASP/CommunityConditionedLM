@@ -72,47 +72,62 @@
 
 \begin{document}
 \maketitle
-\begin{abstract}
-\end{abstract}
+\jp{Title suffers from wizwoz system syndrome.
+  http://www.cs.sjtu.edu.cn/~kzhu/writing-a-paper-slides.pdf (slide 10+)
 
+  Try to say what the paper brings to the state of the art rather than how it does it.
+}
+\begin{abstract}
+  Using Community-Conditioned Lanaguage Models (CCLMs), we investigate
+  the following questions: 1. Can the level of linguistic complexity
+  exhibited by different communities is captured. 2. Are CCLMs
+  well-tuned to various communities both by intrinsic (can we build a
+  community classifier based on CCLMs) and extrinsic methods (are
+  CCLMs representations correlated with other network-based
+  representations of communities).
+\end{abstract}
+\jp{Not so good abstract}
 
 \section{Introduction}
+\jp{I am seeing computer modern rather than times when building the
+  paper!?}  Linguistic communication requires that speakers share
+knowledge of certain linguistic conventions, such as syntactic
+structure, word meanings, and accepted patterns of interaction.
+Speakers assume that these conventions are \emph{common ground} among
+their interlocutors, based on joint membership in a community
+\cite{Stalnaker2002, Clark1996}.  Such a community may be of any size,
+from the very small, like members of a particular friend group, to the
+very large, like speakers of English.  Because it is the source of
+linguistic convention, the \emph{speech community} is an important
+concept in the study of linguistic variation \citep{Gumperz1972}.
 
-Linguistic communication requires that speakers share 
-knowledge of certain linguistic conventions, such as syntactic structure, 
-word meanings, and accepted patterns of interaction.
-Speakers assume that these conventions are \emph{common ground} among their interlocutors,
-based on joint membership in a community \cite{Stalnaker2002, Clark1996}.
-Such a community may be of any size,
-from the very small, like members of a particular friend group,
-to the very large, like speakers of English.
-Because it is the source of linguistic convention, the \emph{speech community} 
-is an important concept in the study of linguistic variation \citep{Gumperz1972}.
+Not only is linguistic variation an object of inquiry in its own
+right, but it is also important to consider it in the development of
+robust, equitable language technology.  Previous work has shown that
+by taking demographic information into account, models can achieve
+better performance on various standard NLP tasks
+\citep{Hovy2015,Yang2017}, but little is known about how variation at
+the level of speech community affects performance.
+%
+There is a fair amount of work that investigates linguistic variation
+using computational methods.  However, most of it considers variation
+across macro-social categories, such as gender
+\citep{Burger2011,Ciot2013,Bamman2014}, age \citep{Nguyen2013}, and
+geographic location \citep{Eisenstein2010,Bamman2014a}.
+\citet{DelTredici2017} provide an exception, by using the modified
+skip-gram model of \citet{Bamman2014a} to show that lexical semantic
+variation occurs across different communities organized around the
+same topic.
 
-Not only is linguistic variation an object of inquiry in its own right,
-but also important to consider in the development of robust, equitable language technology.
-Previous work has shown that by taking demographic information into account, 
-models can achieve better performance on various standard NLP tasks \citep{Hovy2015,Yang2017},
-but little is known about how variation at the level of speech community affects performance.
-
-There is a fair amount of previous work that investigates linguistic variation using computational methods.
-However, most of this work considers variation across macro-social categories,
-such as gender \citep{Burger2011,Ciot2013,Bamman2014}, age \citep{Nguyen2013}, 
-and geographic location \citep{Eisenstein2010,Bamman2014a}.
-An exception to this is \citet{DelTredici2017},
-who use the modified skip-gram model of \citet{Bamman2014a} to show that lexical semantic
-variation occurs across different communities organized around the same topic.
-
-In the present work, we continue this line of 
-investigating linguistic variation across online communities.
-In contrast to previous work, we investigate variation across speech communities
-(rather than macro-social categories), and use context-sensitive sequence models
+In the present work, we further investigate linguistic variation
+across online communities. In contrast to previous work, we
+investigate variation across speech communities (rather than
+macro-social categories), and use context-sensitive sequence models
 capable of capturing variation beyond the lexical level.
-
-Broadly construed, we want to investigate two questions.  First, we
-are interested in variation in the level of linguistic complexity
-exhibited by different communities.
-
+%
+We do so by investigate two questions.  First, we are interested in
+variation in the level of linguistic complexity exhibited by different
+communities.
 \jp{
   Some examples (perhaps include if there is space):
   
@@ -128,16 +143,15 @@ exhibited by different communities.
   some of which would have been catastrophic. Unfortunately, because
   the work was successful, a lot of people now describe it as a waste
   of time/money and a big deal made out of nothing.  }
-
-
-
-It is folklore that certain communities exhibit more linguistic complexity than others.
-Here we want to quantify this phenomenon.
-More precisely, we investigate if the degree of complexity can be
-captured in a computational model.  For this purpose define various
-Community Conditioned Language Models (CCLM for short), which can be
-modeled as an estimator $M$ of the degree to which a given message $m$ 
-is acceptable in a given community $c$: \(P_M(m \mid c)\).
+%
+Indeed, it is folklore that certain communities exhibit more
+linguistic complexity than others.  Here we want to quantify this
+phenomenon.  More precisely, we investigate if the degree of
+complexity can be captured in a computational model.  For this purpose
+define various Community Conditioned Language Models (CCLM for short),
+which can be modeled as an estimator $M$ of the degree to which a
+given message $m$ is acceptable in a given community $c$:
+\(P_M(m \mid c)\).
 
 Second, we want to find out how, and how much, CCLMs are attuned to
 the specificity of communities. We test whether 1. the linguistic
@@ -147,9 +161,9 @@ classifiers based on the CCLM can accurately identify that a given
 message comes from a given community. Additionally, one may
 intuitively assume that linguistically poor communities are easier to
 recognize: the less linguistic diversity, the more specific the
-language become and the easier it is to identify.
+language becomes and the easier it is to identify.
 
-To sum up we aim at testing the following hypotheses:
+To sum up, we test the following hypotheses:
 \begin{hypotheses}
 \item \label{hyp:varying-complexity} Different communities have different levels of linguistic
   complexity
