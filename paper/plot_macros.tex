@@ -1,3 +1,5 @@
+\usepackage{lmodern}
+
 \newcommand{\commscatter}[3][\community]{%
   \addplot[
   scatter, only marks,
@@ -17,7 +19,6 @@
   visualization depends on={value \thisrow{community} \as \community}
   ] table [x={#2}, y={#3}, meta=category] {floats/comm.csv};
 }
-
 
 \newcommand{\confusionplot}[1]{%
   \addplot[
@@ -39,7 +40,7 @@
     width=8cm,
     xticklabels={Advice,AskWomen,BabyBumps,CFB,Drugs,EDH,EarthPorn,Fantasy,GameDeals,GlobalOffensive,Jokes,Kappa,KerbalSpaceProgram,KotakuInAction,LifeProTips,MLS,MMA,MaddenUltimateTeam,TwoXChromosomes,Warframe,airsoft,bodybuilding,breakingmom,cars,cringe,eu4,exjw,explainlikeimfive,femalefashionadvice,food,heroesofthestorm,jailbreak,justneckbeardthings,oculus,pcmasterrace,photography,reddevils,relationships,rupaulsdragrace,stopdrinking,streetwear,techsupport,todayilearned,toronto,videos,xxfitness},
     yticklabels=none,
-    x tick label style={font=\sffamily\tiny,rotate=45,anchor=east},
+    x tick label style={font=\sffamily\tiny,rotate=90,anchor=east},
     xtick=data,
     legend style={font=\sffamily\small},
     ]
@@ -50,7 +51,7 @@
   \end{groupplot}
 }
 
-\newcommand{\pairwisecommsim}[1]{%
+\newcommand{\pairwisecommsim}[2]{%
   \begin{tikzpicture}
     \begin{axis}[]
       \addplot[
@@ -66,7 +67,7 @@
           other={mark=o, black},
           different={mark=x}
         },
-        ] table [x=snap, y=#1, meta=meta] {floats/comm_sim.csv};
+        ] table [x=#1, y=#2, meta=category] {floats/comm_comm.csv};
     \end{axis}
   \end{tikzpicture}
 }

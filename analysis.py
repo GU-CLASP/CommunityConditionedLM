@@ -170,18 +170,27 @@ df_confusion.columns = cond_models
 
 ## Linguistic indiscernibility 
 for model in cond_models:
-    df_c[f'{model}_lmcc_ppl'] = C[model].apply(ppl)
+    df_c[f'{model}_indisc'] = C[model].apply(lambda x: ppl(x) / len(comms))
 
 ## Pearson correlation of community-wise LMCC perplexity between pairs of models
 df_mm['lmcc_ppl_corr_r'], df_mm['lmcc_ppl_corr_p'] = zip(*[pearsonr(df_c[f'{m1}_lmcc_ppl'], df_c[f'{m2}_lmcc_ppl']) for m1, m2 in df_mm.index])
 
 
-##### Compare LMCC and CCLM perplexity by community
+##### Correlate indiscernibility (Ind) with info gain (IG) and perplexity (Ppl)
 
-corr = pd.DataFrame([pearsonr(df_c[f'{model}_lmcc_ppl'], df_c[f'{model}_lm_ppl']) 
+## Ppl
+corr = pd.DataFrame([pearsonr(df_c[f'{model}_indisc'], df_c[f'{model}_lm_ppl']) 
     for model in cond_models],
     index=cond_models,
-    columns=['lmcc_cclm_corr_r', 'lmcc_cclm_corr_p'])
+    columns=['ind_ppl_corr_r', 'ind_ppl_corr_p'])
+
+df_m = add_columns(df_m, corr)
+
+## IG
+corr = pd.DataFrame([pearsonr(df_c[f'{model}_info_gain'], df_c[f'{model}_lm_ppl']) 
+    for model in cond_models],
+    index=cond_models,
+    columns=['ind_ig_corr_r', 'ind_ig_corr_p'])
 
 df_m = add_columns(df_m, corr)
 
@@ -232,25 +241,24 @@ df_m[['best_epoch', 'lm_ppl', 'info_gain']].to_latex(os.path.join(floats_dir, 'm
 df_c[
         ['lstm-3_lm_ppl'] + [f'lstm-3-{i}_info_gain' for i in range(4)] +
         ['transformer-3_lm_ppl'] + [f'transformer-3-{i}_info_gain' for i in range(4)] 
-    ].to_latex(os.path.join(floats_dir, 'community_results.tex'),
+    ].sort_values('lstm-3_lm_ppl').to_latex(os.path.join(floats_dir, 'community_results.tex'),
         float_format="{:0.2f}".format)
 
-# model_args = list(map(lambda x: x.split('-'), df_m.index))
-# model_arch = map(lambda x: {'lstm': 'LSTM', 'transformer': 'Transformer'}[x[0]], model_args)
-# model_lc = [args[-1] if len(args) == 3 else None for args in model_args]
-# model_args = pd.MultiIndex.from_tuples(zip(model_arch, model_lc), names=['model', 'lc'])
-# df_m.index = model_args
+df_m[['ind_ppl_corr_r', 'ind_ppl_corr_p', 'ind_ig_corr_r', 'ind_ig_corr_p']].loc[cond_models].to_latex(
+        os.path.join(floats_dir, 'ind_corrs.tex'),
+        formatters = {
+            'ind_ppl_corr_r': "{:0.2f}".format,
+            'ind_ppl_corr_p': "{:0.3f}".format,
+            'ind_ig_corr_r': "{:0.2f}".format,
+            'ind_ig_corr_p': "{:0.3f}".format
+        },
+        )
 
-# df_m.to_csv(os.path.join(floats_dir, 'model.csv'), sep='\t', na_rep='nan')
-# df_mm.to_csv(os.path.join(floats_dir, 'model_model.csv'), sep='\t', na_rep='nan')
-# df_c.to_csv(os.path.join(floats_dir, 'comm.csv'), sep='\t', na_rep='nan')
-# df_cc.to_csv(os.path.join(floats_dir, 'comm_comm.csv'), sep='\t', na_rep='nan')
-# df_confusion.to_csv(os.path.join(floats_dir, 'confusion.csv'), sep='\t', na_rep='nan')
+df_c.to_csv(os.path.join(floats_dir, 'comm.csv'), sep='\t', na_rep='nan')
 
-##### Looking for examples 
+df_cc.to_csv(os.path.join(floats_dir, 'comm_comm.csv'), sep='\t', na_rep='nan')
 
-# lmcc = pd.read_pickle(os.path.join(model_dir, 'lstm-3-1', 'comm_probs.pickle'))
-# lmcc['pred'] =  lmcc[comms].idxmax(axis=1)
-# lmcc['prob'] =  lmcc[comms].max(axis=1)
-# lmcc['comment'] = cclm_ppl['comment']
-# lmcc = lmcc.drop(comms, axis=1)
+# floats/comm_sim.tex
+df_m[['snap_cos_sim_corr_r', 'snap_cos_sim_corr_p']].loc[cond_models]
+
+df_confusion.to_csv(os.path.join(floats_dir, 'confusion.csv'), sep='\t', na_rep='nan')

@@ -321,7 +321,6 @@ For others communities it is higher, meaning that the CCLM performs better than
 the baseline for those communities (\cref{tab:community-results}).
 
 \begin{table*}
-  \small
   \centering
   \input{floats/community_results.tex}
   \caption{
@@ -360,12 +359,14 @@ suggesting that the embedding space learned by the model is meaningful.
 \begin{figure*}
 \begin{tikzpicture}
   \begin{groupplot}[
-    group style={group size=2 by 1}
+    group style={group size=2 by 1},
+    legend style={anchor=north, legend columns=1, font=\sffamily\tiny},
   ]
     \nextgroupplot
     \commscatter{lstm-3-1_pca1}{lstm-3-1_pca2}
     \nextgroupplot
     \commscatter{transformer-3-3_pca1}{transformer-3-3_pca2}
+    \legend{General interest,Videogames,Technology,Sports,Female-focused,Other}
   \end{groupplot}
 \end{tikzpicture}
 \caption{Community embedding PCA of the best LSTM (left, $c=1$) and transformer (right, $c=3$) models.}
@@ -392,7 +393,7 @@ restricted to the 46 communities chosen for our study
 (\cref{fig:pairwise-comm-sim}).
 
 \begin{figure}
-  \pairwisecommsim{lstm-3-1} 
+  \pairwisecommsim{snap_cos_sim}{lstm-3-1_cos_sim} 
   \caption{Pairwise cosine similarity between community vectors for 
     the membership-based embedding (x-axis) and
   the LSTM CCLM embedding with $c=1$ (y-axis). 
@@ -471,7 +472,7 @@ almost perfectly correlated across CCLMs (such as transformers, LSTM
 and various values of $l_c$).  In fact, we observe a correlation
 between the indiscernibility measures by every pair of models with
 Pearson's $r \geq 0.98$ and $p < 0.0001$ (see, for example,
-\cref{fig:lmcc_ppl}).
+\cref{fig:lmcc-ppl}).
 
 \begin{figure}
   \begin{tikzpicture}
@@ -484,12 +485,12 @@ Pearson's $r \geq 0.98$ and $p < 0.0001$ (see, for example,
     the best LSTM ($c = 1$) and transformer ($c = 3$) models
     (Pearson's $r = 0.99$, $p < 0.0001$).
   }
-  \label{fig:lmcc_ppl}
+  \label{fig:lmcc-ppl}
 \end{figure}
 
 However, we observe that community-wise perplexity is only weakly (if at all) 
 correlated with community indiscernibility under the corresponding latent 
-LMCC (see \cref{tab:ind-corrs} and, for example, \cref{fig:cclm_lmcc_ppl}).
+LMCC (see \cref{tab:ind-corrs} and, for example, \cref{fig:cclm-lmcc-ppl}).
 In other words, the linguistic complexity of a given community
 is a poor predictor of how distinct its language is.
 
@@ -527,7 +528,7 @@ is a poor predictor of how distinct its language is.
     model with $l_c=1$. See \cref{tab:ind-corrs} for 
     Pearson's r correlations for all models.
   }
-  \label{fig:cclm_lmcc_ppl}
+  \label{fig:cclm-lmcc-ppl}
 \end{figure*}
 
 
@@ -536,7 +537,7 @@ is a poor predictor of how distinct its language is.
 On the other hand, community indiscernibility is correlated with
 the information gain of the CCLM 
 on messages from that community's test set 
-(see \cref{tab:ind-corrs} and, for example, \cref{fig:cclm_lmcc_ppl}).
+(see \cref{tab:ind-corrs} and, for example, \cref{fig:cclm-lmcc-ppl}).
 Communities for which the language model benefits most from 
 the conditioned model are generally easier for the LMCC to classify.
 
@@ -611,7 +612,7 @@ them. In contrast, the distinctive patterns of narrow-topic
 communities are just as recognizable by all our LSTM and Transformer
 models.
 
-We cannot exclude a correlation (\cref{tab:cclm_lmcc_ppl}) between the perplexity of the
+We cannot exclude a correlation (\cref{tab:ind-corrs}) between the perplexity of the
 % \bn{I'm not sure if we can make this claim or not with the Ppl-Ppl correlations. However, given that *all* of them have positive correlation, even though the p-values are somewhat higher than .1 maybe we can?}
 CCLM and the indiscernibility of the corresponding community
 \ref{hyp:rich-harder-to-identify}. Because we have relatively few,
