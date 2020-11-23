@@ -209,8 +209,9 @@ with at least \num{15000} messages per month for each month
 in the three years between 2015 and 2017. 
 We initially selected \num{50} subreddits, 
 but excluded four of them from further analysis: 
-two because they were primarily non-English and two with particularly short average message lengths.\footnote{
+two because they were primarily non-English and two with particularly short average message lengths.\\footnote{
 The macro-average message length was \num{39.3} ($\sigma=15.7$) and the two removed communities had average comment lengths of \num{10.7} and \num{18.1}.}
+% According to your footnote the removed communities are barely outliers. I wouldn't have removed them, but it is too late to do anything about that.
 Each community corpus consist of \num{50000} randomly selected messages from the year 2015.
 
 Messages were preprocessed as follows: 
@@ -221,25 +222,28 @@ and lower-cased all tokens.
 
 \subsection{Models}
 
-We experiment with two kinds of model architecture: a simple unidirectional LSTM
-\citep{Hochreiter1997} and a Transformer \citep{Vaswani2017}.  In either
-case, the model is organised as a standard $n$-layer neural sequence
-encoder (we set $n=3$ for all models). As is standard, word tokens are
-first converted to vectors using a trainable embedding layer. At the
-other end, word tokens are predicted using a softmax projection layer. The set of word tokens is a
-pre-determined vocabulary.  These encoders form the core of the
-community-conditioned language models (CCLM), and we call them
+We experiment with two kinds of model architecture: a simple
+unidirectional LSTM \citep{Hochreiter1997} and a Transformer
+\citep{Vaswani2017}.  In either case, the model is organised as a
+standard $n$-layer neural sequence encoder (we set $n=3$ for all
+models). As conventional, word tokens are first converted to vectors
+using a trainable embedding layer. At the other end, word tokens are
+predicted using a softmax projection layer. The set of word tokens is
+a pre-determined vocabulary.  These encoders form the core of the
+of our models, as such do not take community into account, and we call them
 unconditioned models.
 
-To condition the model, we add a \emph{community embedding} parameter to the models.
-This parameter is concatenated with the hidden layer of the sequence encoder,
-for some layer $l_c \leq n$, and passed through a linear layer 
-which projects the resulting vector back to the original hidden layer size.
-For $l_c = n$, the output of this linear layer is passed directly to the softmax function,
-just as the final hidden layer of the sequence encoder is in other models.
-For $l_c=0$, the community embedding is concatenated with the token embedding.
-For this reason, we set the hidden size of the sequence encoder 
-and the size of the token to be embedding equal for all models.
+To condition the model (and obtain community-conditioned language
+models --- CCLM), we add a \emph{community embedding} parameter to the
+models.  This parameter is concatenated with the hidden layer of the
+sequence encoder, for some layer $l_c \leq n$, and passed through a
+linear layer which projects the resulting vector back to the original
+hidden layer size.  For $l_c = n$, the output of this linear layer is
+passed directly to the softmax function, just as the final hidden
+layer of the sequence encoder is in other models.  For $l_c=0$, the
+community embedding is concatenated with the token embedding.  For
+this reason, we set the hidden size of the sequence encoder and the
+size of the token to be embedding equal for all models.
 
 
 \subsection{Training scheme}
@@ -249,26 +253,31 @@ reserving 10\% for testing, 10\% for validation and the rest for training.
 Splits were stratified by community so that each community had \num{5000} examples
 for testing, \num{5000} for evaluation, and \num{40000} for training.
 
-In the remainder of the paper we use $M$ to refer to messages in the test set,
-and $M_j$ for the partition of the test set originating from community $c_j$.
+In the remainder of the paper we use $M$ to refer to messages in the
+test set, and $M_j$ for the partition of the test set originating from
+community $c_j$.
 
-We use a vocabulary size of \num{40000} tokens, including a special out-of-vocabulary token.
-The vocabulary consists of the most frequent tokens at the message level (across all communities),
-meaning that we only count each token once per message.
-The main reason for this choice is to avoid over-counting otherwise rare tokens that were spammed
-many times in a single message.
+We use a vocabulary size of \num{40000} tokens, including a special
+out-of-vocabulary token.  The vocabulary consists of the most frequent
+tokens at the message level (across all communities), meaning that we
+only count each token once per message.  The main reason for this
+choice is to avoid over-counting otherwise rare tokens that were
+repeated many times in a single message.
 
-For the LSTM, we trained the models on a simple left-to-right language modeling task
-with cross-entropy loss over the vocabulary. 
-Because the transformer operates on all tokens in the sequence at once,
-the language modeling was achieved by masking and incrementally un-masking input tokens
-in a left-to-right fashion (so we have an auto-regressive\jp{check} model).
-We used the AdamW \citep{Loshchilov2019} optimization algorithm,
-with an initial learning rate of \num{0.001}, without any extra control on the decay of learning rate.
-We used a batch size of \num{256} and a maximum sequence length of \num{64} tokens, 
-truncating longer messages (16.8\% of messages were longer than \num{64} tokens).
-During training, a dropout rate of $0.1$ was applied between encoder layers 
-and after each linear layer.
+For the LSTM, we trained the models on a simple left-to-right language
+modeling task with cross-entropy loss over the vocabulary.  Because
+the transformer operates on all tokens in the sequence at once, the
+language modeling was achieved by masking and incrementally un-masking
+input tokens in a left-to-right fashion (so we have an
+auto-regressive\jp{check} model).  We used the AdamW
+\citep{Loshchilov2019} optimization algorithm, with an initial
+learning rate of \num{0.001}, without any extra control on the decay
+of learning rate.
+%
+We used a batch size of \num{256} and a maximum sequence length of
+\num{64} tokens, truncating longer messages (16.8\% of messages were
+longer than \num{64} tokens).  During training, a dropout rate of
+$0.1$ was applied between encoder layers and after each linear layer.
 
 All experiments use models with \num{3} sequence encoder layers,
 each with hidden (and token embedding) size of \num{256}. 
@@ -279,19 +288,22 @@ The transformer models had \num{8} attention heads per layer.\footnote{
 The conditional models were given a community embedding with \num{16} dimensions. 
 We experimented with every possible value for $l_c$ in a three-layer model ($l_c\in\{0,1,2,3\}$).
 
-We trained the models until the validation loss stopped decreasing 
-for two epochs in a row,
-and used the weights from the epoch with the smallest validation loss for testing.
-In general, transformer models trained for about half as long as the LSTM models (test epoch, \cref{tab:model-results}).
+We trained the models until the validation loss stopped decreasing for
+two epochs in a row, and used the weights from the epoch with the
+smallest validation loss for testing.  In general, transformer models
+trained for about half as long as the LSTM models (test epoch,
+\cref{tab:model-results}).
 
 \section{Results and analysis}
 
 \subsection{Losses of CCLM}
 
-We measure the perplexity of each example in the test set. 
+We measure the perplexity of each example\jp{message? community?} in the test set. 
 For this, we use the negative exponential of the mean cross-entropy loss 
 of the language model for a given message and average over a set of messages, $M$.
-\[\Ppl_M = \avg_{m\in M}(-e^{H(m)})\] \bn{Following the logic from IG, should we change Ppl to the exponential of the average cross entropy, rather than using the average of the message-level perplexity?} 
+\[\Ppl_M = \avg_{m\in M}(-e^{H(m)})\]
+\bn{Following the logic from IG, should we change Ppl to the exponential of the average cross entropy, rather than using the average of the message-level perplexity?}
+\jp{Yes}
 As one would expect, 
 the conditioned models have lower perplexity
 than their respective unconditioned baseline models (\cref{tab:model-results}),
@@ -315,11 +327,11 @@ after all the sequence encoder layers.
   \label{tab:model-results}
 \end{table}
 
-We also consider model performance stratified by community;
-that is, $\Ppl_{M_j}$, where $M_j$ is the test-set messages from community $c_j$.
-We observe a great deal of variation in baseline perplexity across communities,
-with $\Ppl_{M_j}$ ranging from \num{53.07} to \num{115.29} for the LSTM model
-(\cref{tab:community-results}). 
+We also consider model performance stratified by community; that is,
+$\Ppl_{M_j}$, where $M_j$ is the test-set messages from community
+$c_j$.  We observe a great deal of variation in baseline perplexity
+across communities, with $\Ppl_{M_j}$ ranging from \num{53.07} to
+\num{115.29} for the LSTM model (\cref{tab:community-results}).
 
 \subsection{Information gain of the CCLM}
 
@@ -364,17 +376,16 @@ the baseline for those communities (\cref{tab:community-results}).
 \end{table*}
 
 
-As an informal observation, we note 
-that across all the models we tested, 
-communities where conditioning has the least effect
-tend to be more organized around more general interest topics,
-such as the \emph{relationships} and \emph{advice} subreddits, where the subject matter is relevant to a broad
-range of people.
-Conditioning the model on community has the most benefit
-for narrower special-interest subreddits, such as those organized
-around a certain videogame, sports team, or subculture.
-This makes sense intuitively, since communities with more niche topics
-would tend to have more specialized vocabulary and other linguistic patterns.
+As an informal observation, we note that across all the models we
+tested, communities where conditioning has the least effect tend to be
+more organized around more general interest topics, such as the
+\emph{relationships} and \emph{advice} subreddits, where the subject
+matter is relevant to a broad range of people.  Conditioning the model
+on community has the most benefit for narrower special-interest
+subreddits, such as those organized around a certain videogame, sports
+team, or subculture.  This makes sense intuitively, since communities
+with more niche topics would tend to have more specialized vocabulary
+and other linguistic patterns.
 
 \subsection{Analysis of CCLM community embeddings}
 
@@ -451,7 +462,7 @@ restricted to the 46 communities chosen for our study
 The perplexity of a CCLM gives us a measure of linguistic complexity,
 but it is not a measure of how linguistically \emph{specific} the
 community is. However, the CCLM induces a latent classifier,
-which we call a language model-based community classifier
+which we call a language-model-based community classifier
 (LMCC). Using the Bayes theorem, we can turn a
 CCLM into a LMCC: the probability that a given message $m$
 belongs to a community $c_i$ is calculated as follows:
@@ -471,8 +482,8 @@ We can characterise the quality the LMCC with a confusion matrix
 $C$, defined by $C_{ij} = P(c=c_i \mid m)$ for a given (test set) message $m$ 
 from community $c_j$.
 \[C_{ij} = \avg_{m\in M_j}P(c=c_i \mid m)\]
-As a sanity check, we observe that the diagonal dominates the matrix: on average the LMCC picks the right community for a message (\cref{fig:confusion}).
-
+We observe that the diagonal dominates the matrix: the LMCC generally finds the right community for a message (\cref{fig:confusion}).
+%
 \begin{figure*}
 \begin{tikzpicture}
   \confusiongroupplot{lstm-3-1}{transformer-3-3}
@@ -480,8 +491,8 @@ As a sanity check, we observe that the diagonal dominates the matrix: on average
 \caption{LMCC confusion matrices for the best LSTM (left, $c=1$) and transformer (right, $c=3$) models.}
 \label{fig:confusion}
 \end{figure*}
-
-However, we want to measure the ability of the LMCC to correctly
+%
+But we want a more quantitative measure, corresponding to the ability of the LMCC to correctly
 recognize messages coming from a given community $c_j$. We could use
 something like an F-score, but we prefer to use a perplexity-like metric,
 which is has stronger information-theoretic grounds.
@@ -489,15 +500,14 @@ To this end, we define the \emph{linguistic indiscernibility} of community $c_j$
 noted $\Ind_j$. 
 First, note that each row of $C$ is a probability distribution,
 since it is computed as the average of $P(c=c_i \mid m)$ for $m\in M_j$.
-The exponential of the entropy of the $j$th row of \(C\) is therefore a perplexity score.
-To compute $\Ind_j$, we scale this perplexity by the number of communities, 
-which makes $\Ind_j$ comparable across models trained on different
-numbers of communities.\footnote{Although we only consider one set of \num{46} communities in this paper.}
+The exponential of the entropy of the $j$th row of \(C\) is therefore a perplexity score,
+whose maximum is the total number of communities (46 for us).
+Thus we define $\Ind_j$ by scaling this perplexity by the number of communities:
 \[\Ind_j = \frac{e^{-\sum_i C_{ij} log(C_{ij})}}{|C_j|}\]
-Intuitively, $\Ind_j$ is a measure of the uncertainty of the LMCC,
-given messages from a community $c_j$.
-It ranges from $0$ (for a completely deterministic $C_j$) 
-to $1$ (if $C_j$ gives equal weight to every community).
+This way $Ind_j=0$ means that the LMCC is completely certain of its
+choice, while $Ind_j=1$ means that equal probability is given to all
+predictions.  In general $\Ind_j$ is a score of uncertainty of the
+LMCC, given messages from a community $c_j$.
 
 Indiscernibility of a given community is a robust measure: it is
 almost perfectly correlated across CCLMs (such as transformers, LSTM
@@ -524,16 +534,15 @@ However, we observe that community-wise perplexity is only weakly (if at all)
 correlated with community indiscernibility under the corresponding latent 
 LMCC (see \cref{tab:ind-corrs} and, for example, \cref{fig:cclm-lmcc-ppl}).
 In other words, the linguistic complexity of a given community
-is a poor predictor of how distinct its language is.
+is a poor predictor of how distinctive its language is.
 
 \begin{table}
   \centering
   \input{floats/ind_corrs.tex}
-  \caption{
-    Pearson's $r$ correlation coefficient between community indiscernibility ($\Ind_j$) and
-    two different predictors: CCLM perplexity on messages from community $c_j$ ($\Ppl_{M_j}$)
-    , and CCLM information gain on messages from $c_j$ ($\IG_{M_j}$).
-  }
+  \caption{ Pearson's $r$ correlation coefficient between community
+    indiscernibility ($\Ind_j$) and two different predictors: CCLM
+    perplexity on messages from community $c_j$ ($\Ppl_{M_j}$), and
+    CCLM information gain on messages from $c_j$ ($\IG_{M_j}$).  }
   \label{tab:ind-corrs}
 \end{table}
 
@@ -566,8 +575,8 @@ is a poor predictor of how distinct its language is.
 % We could also check if communities are well-separated in the SNAP community encodings
 
 On the other hand, community indiscernibility is correlated with
-the information gain of the CCLM 
-on messages from that community's test set 
+the information gain of the CCLM
+on messages from that community's test set
 (see \cref{tab:ind-corrs} and, for example, \cref{fig:cclm-lmcc-ppl}).
 Communities for which the language model benefits most from 
 the conditioned model are generally easier for the LMCC to classify.
@@ -602,19 +611,18 @@ There are, however, related applications of conditional neural language models.
 words on the sentence-level and represent topics on the document level.
 The topic representation is then fed back into the language model, 
 improving its performance on next word prediction.
-This is similar to how our model improves experiences improved performance
+This is similar to how our model experiences improved performance
 by learning community representations. 
 Unlike our model, topics are inferred in an unsupervised way, 
 raising the question of whether communities could be identified from 
 unlabelled data as well.
 
-Along these lines, \citep{OConnor2010} uses a Bayesian generative model to
-infer communities from variation in text data.
-In contrast to our work, this model treats words as
-independent events, ignoring the structure (and variation) in the
-construction of sequences.
-It does further suggest, however, that community-level variation
-could be modeled in an unsupervised way.
+Along these lines, \citet{OConnor2010} uses a Bayesian generative
+model to infer communities from variation in text data.  In contrast
+to our work, this model treats words as independent events, ignoring
+the structure (and variation) in the construction of sequences.  It
+does further suggest, however, that community-level variation could be
+modeled in an unsupervised way.
 
 \section{Discussion and Conclusion}
 
@@ -632,41 +640,41 @@ them. In contrast, the distinctive patterns of narrow-topic
 communities are just as recognizable by all our LSTM and Transformer
 models.
 
-We cannot exclude a correlation (\cref{tab:ind-corrs}) between the perplexity of the
+We cannot exclude a correlation (\cref{tab:ind-corrs}) between the
+perplexity of the
 % \bn{I'm not sure if we can make this claim or not with the Ppl-Ppl correlations. However, given that *all* of them have positive correlation, even though the p-values are somewhat higher than .1 maybe we can?}
 CCLM and the indiscernibility of the corresponding community
-\ref{hyp:rich-harder-to-identify}. Because we have relatively few,
-and only large communities in our test set, it is difficult to
-provide a conclusive answer, but this kind of correlation would suggest that
+\ref{hyp:rich-harder-to-identify}. Because we have relatively few, and
+only large communities in our test set, it is difficult to provide a
+conclusive answer, but this kind of correlation would suggest that
 community-specific complexity can be partially attributed to using
-more varied patterns. However, even the most complex communities
-(perplexity per word above 100) have an indiscernibility of about 3
-(out of a maximum of 46)\jp{make consistent with data once the plot is stablilized}, so they retain fairly specific patterns:
-they are not simply an even mixture of the kind of comments found in
-other communities.
+more varied patterns. With an indiscernibility $> 0.9$, the most
+complex communities appear as as even mixture of the kind of language
+found in all communities, to our models.
 
 We find that the layer at which the community embedding is taken into
 account in a CCLM influences its perplexity \ref{hyp:layer-effect},
 albeit weakly. For LSTM models, the perplexity per word, averaged over
-all communities, varies between 76.80 and 78.64. (with 80.70 for the unconditioned model)
-The perplexity per word is slightly higher for $l_c=0$, and has very
-little difference between the other models, with $l_c=1$ being the best.
-For transformer models, it varies
-between 89.38 and 122.56. Here perplexity per-word is clearly not a monotonous
+all communities, varies between 76.80 and 78.64. (with 80.70 for the
+unconditioned model) The perplexity per word is slightly higher for
+$l_c=0$, and has very little difference between the other models, with
+$l_c=1$ being the best.  For transformer models, it varies between
+89.38 and 122.56. Here perplexity per-word is clearly not a monotonous
 function of $l_c$: the maximum is reached at $l_c=2$. We did not
-expect non-monotonicity, and leave studying this effect to future work.
+expect non-monotonicity, and leave studying this effect to future
+work.
 
-The pattern of information gain by community is similar across architectures.
-Communities that benefit most from the conditioned model behave that way for 
-both the LSTM and transformer.
-However, there are some differences.
-For example, the subreddit \emph{relationships} has an information gain of \num{1.018} for
-the best CCLM LSTM but only \num{0.998} for the best transformer model.
-Why was the LSTM able to take advantage of the community information for
-this community, where the transformer wasn't?
-It would be interesting to investigate these differences in future work,
-since it could reveal differences in the kind of linguistic variation the different
-model architectures capture.
+The pattern of information gain by community is similar across
+architectures.  Communities that benefit most from the conditioned
+model behave that way for both the LSTM and transformer.  However,
+there are some differences.  For example, the subreddit
+\emph{relationships} has an information gain of \num{1.018} for the
+best CCLM LSTM but only \num{0.998} for the best transformer model.
+Why was the LSTM able to take advantage of the community information
+for this community, where the transformer was not?  It would be
+interesting to investigate these differences in future work, since it
+could reveal differences in the kind of linguistic variation the
+different model architectures capture.
 
 The representation of communities built by CCLM exhibits a clear
 correlation with user co-occurrence patterns
