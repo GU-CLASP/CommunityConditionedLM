@@ -89,9 +89,26 @@ to the very large, like speakers of English.
 Because it is the source of linguistic convention, the \emph{speech community} 
 is an important concept in the study of linguistic variation \citep{Gumperz1972}.
 
-\jp{We want to identify a niche that we want to fill. A quick summary of the state of the art + what is missing.}
+Not only is linguistic variation an object of inquiry in its own right,
+but also important to consider in the development of robust, equitable language technology.
+Previous work has shown that by taking demographic information into account, 
+models can achieve better performance on various standard NLP tasks \citep{Hovy2015,Yang2017},
+but little is known about how variation at the level of speech community affects performance.
 
-In the present work, we investigate linguistic variation across online communities.
+There is a fair amount of previous work that investigates linguistic variation using computational methods.
+However, most of this work considers variation across macro-social categories,
+such as gender \citep{Burger2011,Ciot2013,Bamman2014}, age \citep{Nguyen2013}, 
+and geographic location \citep{Eisenstein2010,Bamman2014a}.
+An exception to this is \citet{DelTredici2017},
+who use the modified skip-gram model of \citet{Bamman2014a} to show that lexical semantic
+variation occurs across different communities organized around the same topic.
+
+In the present work, we continue this line of 
+investigating linguistic variation across online communities.
+In contrast to previous work, we investigate variation across speech communities
+(rather than macro-social categories), and use context-sensitive sequence models
+capable of capturing variation beyond the lexical level.
+
 Broadly construed, we want to investigate two questions.  First, we
 are interested in variation in the level of linguistic complexity
 exhibited by different communities.
@@ -565,38 +582,27 @@ of the conditioned variable to the input of the sequence model.
 This approach has been applied in various conditioned text generation domains such as 
 image captioning \citep{Vinyals2015}, machine translation \citep{Kalchbrenner2013},
 but it has not, to our knowledge, been used extensively to study linguistic variation.
-There are, however some related methods that have been used to study variation,
-and related applications of conditional neural language models.
 
-In the later category, conditional neural language models have been
-used to study linguistic change.
+There are, however, related applications of conditional neural language models.
+\citet{Lau2017a} presents a neural language model that jointly learns to predict
+words on the sentence-level and represent topics on the document level.
+The topic representation is then fed back into the language model, 
+improving its performance on next word prediction.
+This is similar to how our model improves experiences improved performance
+by learning community representations. 
+Unlike our model, topics are inferred in an unsupervised way, 
+raising the question of whether communities could be identified from 
+unlabelled data as well.
 
-
-
-\paragraph{Language models for sociolinguistic variation}
-\cite{DelTredici2017}
-
-\cite{khan2020reddit}
-
-
-\paragraph{Pre-trained language models}
-- Unsupervised Domain Clusters in Pretrained Language Models https://www.aclweb.org/anthology/2020.acl-main.692/ % 404?
-
-\paragraph{Topic modelling}
-Modelling communities is not unlike the classic task of \emph{topic
-  modelling}. In topic modelling, one most often want to
-\emph{discover} topics. In constrast, we take as a given that a given
-message belongs to a given community. However, deep-learning topic
-modelling is often built around the idea of a conditioned language
-model \citep{Lau2017a}, with a separate topic-discovery module.
-
-% - Discovering Discrete Latent Topics with Neural Variational Inference https://arxiv.org/pdf/1706.00359.pdf
-
-% \paragraph{Vector representations of online communities encode semantic relationships}
-% https://www.aclweb.org/anthology/W17-2904.pdf
+Along these lines, \citep{OConnor2010} uses a Bayesian generative model to
+infer communities from variation in text data.
+In contrast to our work, this model treats words as
+independent events, ignoring the structure (and variation) in the
+construction of sequences.
+It does further suggest, however, that community-level variation
+could be modeled in an unsupervised way.
 
 \section{Discussion and Conclusion}
-
 
 We find that various communities exhibit widely varying levels of
 linguistic complexity \ref{hyp:varying-complexity}, with perplexity
