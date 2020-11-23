@@ -93,15 +93,17 @@ df_m['best_epoch'] = best_epoch
 ## Model perplexity on test examples
 lm_ppl = pd.read_pickle(os.path.join(model_dir, 'test_ppl.pickle'))
 
+## Model entropy on test examples
+lm_entr = lm_ppl[models].apply(np.log)
+lm_entr['community'] = lm_ppl['community']
+
 ## Mean language model perplexity
-df_m['lm_ppl'] = lm_ppl[models].mean()
+df_m['lm_ppl'] = lm_entr[models].mean().apply(np.exp) 
 
 ## Mean language model perplexity by community
-df_c = add_columns(df_c, lm_ppl.groupby('community').mean(), suffix='_lm_ppl')
-
+df_c = add_columns(df_c, lm_entr.groupby('community').mean().apply(np.exp), suffix='_lm_ppl')
 
 #### Community embeddings
-
 comm_w = {model: np.load(os.path.join(model_dir, f'{model}/comm_embed.npy'))[1:] 
         for model in cond_models}
 
@@ -172,8 +174,34 @@ df_confusion.columns = cond_models
 for model in cond_models:
     df_c[f'{model}_indisc'] = C[model].apply(lambda x: ppl(x) / len(comms))
 
-## Pearson correlation of community-wise LMCC perplexity between pairs of models
-df_mm['lmcc_ppl_corr_r'], df_mm['lmcc_ppl_corr_p'] = zip(*[pearsonr(df_c[f'{m1}_lmcc_ppl'], df_c[f'{m2}_lmcc_ppl']) for m1, m2 in df_mm.index])
+## Pearson correlation of linguistic indiscernibility across models 
+df_mm['indisc_corr_r'], df_mm['indisc_corr_p'] = zip(*[pearsonr(df_c[f'{m1}_indisc'], df_c[f'{m2}_indisc']) for m1, m2 in df_mm.index])
+
+
+##### Information gain (AKA mutual information)
+
+## Model entropy on test examples
+
+lstm_baseline_ppl = np.exp(lm_entr['lstm-3'].mean())
+lstm_cond_ppl = lm_entr[cond_lstms].mean().apply(np.exp) 
+lstm_info_gain = lstm_cond_ppl.apply(lambda x: lstm_baseline_ppl / x)
+transformer_baseline_ppl = np.exp(lm_entr['transformer-3'].mean())
+transformer_cond_ppl = lm_entr[cond_transformers].mean().apply(np.exp) 
+transformer_info_gain = transformer_cond_ppl.apply(lambda x: transformer_baseline_ppl / x)
+info_gain = pd.concat([lstm_info_gain, transformer_info_gain], axis=0)
+df_m['info_gain'] = info_gain
+
+# Mean information gain by community
+lm_entr_comm = lm_entr.groupby('community').mean()
+lstm_baseline_ppl = np.exp(lm_entr_comm['lstm-3'])
+lstm_cond_ppl = lm_entr_comm[cond_lstms].apply(np.exp) 
+lstm_info_gain = lstm_cond_ppl.apply(lambda x: lstm_baseline_ppl / x)
+lm_entr_comm = lm_entr.groupby('community').mean()
+transformer_baseline_ppl = np.exp(lm_entr_comm['transformer-3'])
+transformer_cond_ppl = lm_entr_comm[cond_transformers].apply(np.exp) 
+transformer_info_gain = transformer_cond_ppl.apply(lambda x: transformer_baseline_ppl / x)
+info_gain_comm = pd.concat([lstm_info_gain, transformer_info_gain], axis=1)
+df_c = add_columns(df_c, info_gain_comm, suffix='_info_gain')
 
 
 ##### Correlate indiscernibility (Ind) with info gain (IG) and perplexity (Ppl)
@@ -187,7 +215,7 @@ corr = pd.DataFrame([pearsonr(df_c[f'{model}_indisc'], df_c[f'{model}_lm_ppl'])
 df_m = add_columns(df_m, corr)
 
 ## IG
-corr = pd.DataFrame([pearsonr(df_c[f'{model}_info_gain'], df_c[f'{model}_lm_ppl']) 
+corr = pd.DataFrame([pearsonr(df_c[f'{model}_indisc'], df_c[f'{model}_info_gain']) 
     for model in cond_models],
     index=cond_models,
     columns=['ind_ig_corr_r', 'ind_ig_corr_p'])
@@ -195,55 +223,31 @@ corr = pd.DataFrame([pearsonr(df_c[f'{model}_info_gain'], df_c[f'{model}_lm_ppl'
 df_m = add_columns(df_m, corr)
 
 ## Commuinty indiscrenibility correlation between two example models
-r, p = pearsonr(df_c['lstm-3-1_lmcc_ppl'], df_c['transformer-3-3_lmcc_ppl'])
+r, p = pearsonr(df_c['lstm-3-1_indisc'], df_c['transformer-3-3_indisc'])
+
 print(f"r = {r:0.4f} p = {p:0.6f}")
 # r = 0.9935 p = 0.000000 
 
 
-##### Information gain (AKA mutual information)
-
-## Model entropy on test examples
-lm_entropy = lm_ppl[models].apply(np.log)
-lm_entropy['community'] = lm_ppl['community']
-
-lstm_baseline_ppl = np.exp(lm_entropy['lstm-3'].mean())
-lstm_cond_ppl = lm_entropy[cond_lstms].mean().apply(np.exp) 
-lstm_info_gain = lstm_cond_ppl.apply(lambda x: lstm_baseline_ppl / x)
-transformer_baseline_ppl = np.exp(lm_entropy['transformer-3'].mean())
-transformer_cond_ppl = lm_entropy[cond_transformers].mean().apply(np.exp) 
-transformer_info_gain = transformer_cond_ppl.apply(lambda x: transformer_baseline_ppl / x)
-info_gain = pd.concat([lstm_info_gain, transformer_info_gain], axis=0)
-
-df_m['info_gain'] = info_gain
-
-# Mean information gain by community
-lm_entropy_comm = lm_entropy.groupby('community').mean()
-lstm_baseline_ppl = np.exp(lm_entropy_comm['lstm-3'])
-lstm_cond_ppl = lm_entropy_comm[cond_lstms].apply(np.exp) 
-lstm_info_gain = lstm_cond_ppl.apply(lambda x: lstm_baseline_ppl / x)
-lm_entropy_comm = lm_entropy.groupby('community').mean()
-transformer_baseline_ppl = np.exp(lm_entropy_comm['transformer-3'])
-transformer_cond_ppl = lm_entropy_comm[cond_transformers].apply(np.exp) 
-transformer_info_gain = transformer_cond_ppl.apply(lambda x: transformer_baseline_ppl / x)
-info_gain_comm = pd.concat([lstm_info_gain, transformer_info_gain], axis=1)
-df_c = add_columns(df_c, info_gain_comm, suffix='_info_gain')
-
 ##### Write tabels and CSVs for plots
 
+# model_results.tex (tab:model-results)
 df_m[['best_epoch', 'lm_ppl', 'info_gain']].to_latex(os.path.join(floats_dir, 'model_results.tex'),
         formatters={
             'lm_ppl': "{:0.2f}".format,
-            'info_gain': "{:0.4f}".format
+            'info_gain': "{:0.3f}".format
             },
         na_rep='-'
         )
 
+# community_results.tex (tab:community-results)
 df_c[
         ['lstm-3_lm_ppl'] + [f'lstm-3-{i}_info_gain' for i in range(4)] +
         ['transformer-3_lm_ppl'] + [f'transformer-3-{i}_info_gain' for i in range(4)] 
     ].sort_values('lstm-3_lm_ppl').to_latex(os.path.join(floats_dir, 'community_results.tex'),
         float_format="{:0.2f}".format)
 
+# ind_corrs.tex (tab:ind-corrs)
 df_m[['ind_ppl_corr_r', 'ind_ppl_corr_p', 'ind_ig_corr_r', 'ind_ig_corr_p']].loc[cond_models].to_latex(
         os.path.join(floats_dir, 'ind_corrs.tex'),
         formatters = {
@@ -262,3 +266,4 @@ df_cc.to_csv(os.path.join(floats_dir, 'comm_comm.csv'), sep='\t', na_rep='nan')
 df_m[['snap_cos_sim_corr_r', 'snap_cos_sim_corr_p']].loc[cond_models]
 
 df_confusion.to_csv(os.path.join(floats_dir, 'confusion.csv'), sep='\t', na_rep='nan')
+
