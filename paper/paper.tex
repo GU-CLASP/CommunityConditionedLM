@@ -623,29 +623,30 @@ modeled in an unsupervised way.
 
 We find that various communities exhibit widely varying levels of
 linguistic complexity \ref{hyp:varying-complexity}, with perplexity
-per-word ranging from less than 53 to 104 for the best model
+per-word ranging from less than 53 to more than 104 for the best model
 architecture.
 
 With indiscernibility values evenly ranging over the whole possible
 range (0 to 1), we find that CCLMs can be used to recognize certain
 communities based on latent Bayesian classification
 \ref{hyp:LMCC-works}, but not all.  If generic communities exhibit
-distinctive linguistic patterns, none of our model is able to discern
+distinctive linguistic patterns, none of our models is able to discern
 them. In contrast, the distinctive patterns of narrow-topic
 communities are just as recognizable by all our LSTM and Transformer
 models.
 
-We cannot exclude a correlation (\cref{tab:ind-corrs}) between the
+We find no statistically significant correlation (\cref{tab:ind-corrs}) between the
 perplexity of the
 % \bn{I'm not sure if we can make this claim or not with the Ppl-Ppl correlations. However, given that *all* of them have positive correlation, even though the p-values are somewhat higher than .1 maybe we can?}
 CCLM and the indiscernibility of the corresponding community
 \ref{hyp:rich-harder-to-identify}. Because we have relatively few, and
-only large communities in our test set, it is difficult to provide a
-conclusive answer, but this kind of correlation would suggest that
-community-specific complexity can be partially attributed to using
-more varied patterns. With an indiscernibility $> 0.9$, the most
-complex communities appear as an even mixture of the kind of language
-found in all communities, to our models.
+only large communities in our test set, it is difficult to say if this
+finding generalizes. Regardless, this kind of correlation would suggest that
+community-specific complexity can be at least partially attributed to
+using more varied patterns. This is view is supported by the
+observation that, with an indiscernibility $> 0.9$, the most complex
+communities appear as an even mixture of the kind of language found in
+all communities, to our models.
 
 We find that the layer at which the community embedding is taken into
 account in a CCLM influences its perplexity \ref{hyp:layer-effect},
