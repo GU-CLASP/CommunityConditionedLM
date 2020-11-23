@@ -142,7 +142,7 @@ is acceptable in a given community $c$: \(P_M(m \mid c)\).
 Second, we want to find out how, and how much, CCLMs are attuned to
 the specificity of communities. We test whether 1. the linguistic
 models are correlated with a model of communities based only on
-co-occurence of users between communities and 2. if latent community
+co-occurrence of users between communities and 2. if latent community
 classifiers based on the CCLM can accurately identify that a given
 message comes from a given community. Additionally, one may
 intuitively assume that linguistically poor communities are easier to
@@ -156,7 +156,7 @@ To sum up we aim at testing the following hypotheses:
 \item \label{hyp:layer-effect} The layer at which the community embedding is taken into account
   in a CCLM influences its perplexity.
 \item \label{hyp:LMCC-works} CCLM can be used to recognize communities based on
-  latent bayesian classification.
+  latent Bayesian classification.
 % \item \label{hyp:LMCC-works} The layer at which the community embedding is taken into account
 %   influences CCLM and its associated latent classifier.
   % This is more of a justification for studying the latent classifier than a real "user-facing" hypothesis.
@@ -260,7 +260,7 @@ All experiments use models with \num{3} sequence encoder layers,
 each with hidden (and token embedding) size of \num{256}. 
 The transformer models had \num{8} attention heads per layer.\footnote{
   This number of attention heads was chosen in part to give the LSTM and transformer
-  models a comparable number of paramters 
+  models a comparable number of parameters 
   (\num{22171203} and \num{21779523}, respectively).}
 The conditional models were given a community embedding with \num{16} dimensions. 
 We experimented with every possible value for $l_c$ in a three-layer model ($l_c\in\{0,1,2,3\}$).
@@ -377,6 +377,7 @@ suggesting that the embedding space learned by the model is meaningful.
 \begin{tikzpicture}
   \begin{groupplot}[
     group style={group size=2 by 1},
+    yticklabels={,,}, xticklabels={,,},
     legend style={anchor=north, legend columns=1, font=\sffamily\tiny},
   ]
     \nextgroupplot
@@ -393,7 +394,7 @@ suggesting that the embedding space learned by the model is meaningful.
 As a quantitative assessment, we compare the CCLM-learned community
 embedding with the community embedding created by \citet{Kumar2018},
 who generated them using using a negative-sampling optimization
-algorithm and the message-community co-occurence matrix as ground
+algorithm and the message-community co-occurrence matrix as ground
 truth, using data which spans January 2014 to April 2017.
 We refer the reader
 to \citet{Kumar2018}
@@ -527,7 +528,6 @@ is a poor predictor of how distinct its language is.
   \begin{tikzpicture}
   \begin{groupplot}[
     group style={group size=2 by 1},
-    yticklabels={,,}, xticklabels={,,},
     legend style={anchor=north, legend columns=1, font=\tiny},
     every node near coord/.append style={font=\sffamily\tiny}%
   ]
@@ -611,7 +611,7 @@ architecture.
 
 With indiscernibility values evenly ranging over the whole possible
 range (0 to 1), we find that CCLMs can be used to recognize certain
-communities based on latent bayesian classification
+communities based on latent Bayesian classification
 \ref{hyp:LMCC-works}, but not all.  If generic communities exhibit
 distinctive linguistic patterns, none of our model is able to discern
 them. In contrast, the distinctive patterns of narrow-topic
@@ -640,10 +640,10 @@ little difference between the other models, with $l_c=1$ being the best.
 For transformer models, it varies
 between 89.38 and 122.56. Here perplexity per-word is clearly not a monotonous
 function of $l_c$: the maximum is reached at $l_c=2$. We did not
-expect non-mononicity, and leave studying this effect to future work.
+expect non-monotonicity, and leave studying this effect to future work.
 
 The pattern of information gain by community is similar across architectures.
-Communities that bennifit most from the conditioned model behave that way for 
+Communities that benefit most from the conditioned model behave that way for 
 both the LSTM and transformer.
 However, there are some differences.
 For example, the subreddit \emph{relationships} has an information gain of \num{1.018} for
@@ -655,10 +655,10 @@ since it could reveal differences in the kind of linguistic variation the differ
 model architectures capture.
 
 The representation of communities built by CCLM exhibits a clear
-correlation with user-coocurrence patterns
+correlation with user co-occurrence patterns
 \ref{hyp:extra-linguistic-correlation}. A natural
 question that may arise is how much this correlation can be explain by
-user-specifc linguistic patterns. We plan to control for this variable
+user-specific linguistic patterns. We plan to control for this variable
 in future work, for example by building author-conditioned language
 models and testing if community vector embeddings can be determined by
 the set of the vector embeddings of its members.
