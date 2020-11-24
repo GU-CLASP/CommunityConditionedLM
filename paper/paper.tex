@@ -75,15 +75,16 @@
 \begin{document}
 \maketitle
 \begin{abstract}
-  Using Community-Conditioned Language Models (CCLMs), we investigate
-  the following questions: 1. Can the level of linguistic complexity
-  exhibited by different communities is captured. 2. Are CCLMs
-  well-tuned to various communities both by intrinsic (can we build a
-  community classifier based on CCLMs) and extrinsic methods (are
-  CCLMs representations correlated with other network-based
-  representations of communities).
+  Community-Conditioned Language Models (CCLMs) are an under-researched tool for 
+  investigating community-level linguistic variation.
+  In this paper, experiment with different neural CCLM architectures and
+  report empirical results on data from 46 online communities.
+  We find that the community embeddings learned by these models
+  correlate with representations based on  non-linguistic features.
+  We define a metric of the linguistic \emph{indiscernability} of a community
+  and investigate the relationship between indiscernibility and other
+  linguistic properties of the community.
 \end{abstract}
-\jp{Not so good abstract}
 
 \section{Introduction}
 Linguistic communication requires that speakers share
@@ -199,7 +200,7 @@ Hereafter we refer to such comments as ``messages'', to match our
 convention in mathematical formulas: the letter $c$ stands for a
 community, and $m$ stands for a message.
 
-Our dataset includes messages from \num{46} subreddits, 
+Our dataset includes messages from \num{46} English-language subreddits, 
 randomly selected from the set of all forums 
 with at least \num{15000} messages per month for each month
 in the three years between 2015 and 2017. 
@@ -442,9 +443,9 @@ the baseline for those communities (\cref{fig:comm-info-gain}).
 
 This variation in information gain across communities is not 
 related to perplexity, however. 
-Some of the most linguistically complex communities benifit a lot
+Some of the most linguistically complex communities benefit a lot
 from community conditioning, while others do not benefit at all. 
-Similarly, among the less linguistically complex communites 
+Similarly, among the less linguistically complex communities 
 there some have high information gain, and some have information
 gain of \num{1} or less (\cref{fig:ppl-info-gain}).
 
@@ -473,12 +474,12 @@ with more niche topics would tend to have more specialized vocabulary
 and other linguistic patterns.
 
 
-\subsection{Latent language-model-based community classifiers}
+\subsection{Latent language model-based community classifiers}
 
 The perplexity of a CCLM gives us a measure of linguistic complexity,
 but it is not a measure of how linguistically \emph{specific} the
 community is. However, the CCLM induces a latent classifier,
-which we call a language-model-based community classifier
+which we call a language model-based community classifier
 (LMCC). Using the Bayes theorem, we can turn a
 CCLM into a LMCC: the probability that a given message $m$
 belongs to a community $c_i$ is calculated as follows:
@@ -500,13 +501,13 @@ from community $c_j$.
 \[C_{ij} = \avg_{m\in M_j}P(c=c_i \mid m)\]
 We observe that the diagonal dominates the matrix: the LMCC generally finds the right community for a message (\cref{fig:confusion}).
 %
-\begin{figure*}
-%\begin{tikzpicture}
-  %\confusiongroupplot{lstm-3-1}{transformer-3-3}
-%\end{tikzpicture}
-\caption{LMCC confusion matrices for the best LSTM (left, $c=1$) and transformer (right, $c=3$) models.}
+\begin{figure}
+\begin{tikzpicture}
+  \confusionsingleplot{lstm-3-1}
+\end{tikzpicture}
+\caption{LMCC confusion matrices for the LSTM model with $c=1$.}
 \label{fig:confusion}
-\end{figure*}
+\end{figure}
 %
 But we want a more quantitative measure, corresponding to the ability of the LMCC to correctly
 recognize messages coming from a given community $c_j$. We could use
@@ -531,7 +532,7 @@ and various values of $l_c$).  In fact, we observe a correlation
 between the indiscernibility measures by every pair of models with
 Pearson's $r \geq 0.98$ and $p < 0.0001$ (see, for example,
 \cref{fig:indisc-corr}).
-
+%
 \begin{figure}
   \begin{tikzpicture}
     \begin{axis}
@@ -545,13 +546,13 @@ Pearson's $r \geq 0.98$ and $p < 0.0001$ (see, for example,
   }
   \label{fig:indisc-corr}
 \end{figure}
-
+%
 However, we observe that community-wise perplexity is only weakly (if at all) 
 correlated with community indiscernibility under the corresponding latent 
 LMCC (see \cref{tab:ind-corrs} and, for example, \cref{fig:cclm-lmcc-ppl}).
 In other words, the linguistic complexity of a given community
 is a poor predictor of how distinctive its language is.
-
+%
 \begin{table}
   \small
   \centering
@@ -562,8 +563,7 @@ is a poor predictor of how distinctive its language is.
     CCLM information gain on messages from $c_j$ ($\IG_{M_j}$).  }
   \label{tab:ind-corrs}
 \end{table}
-
-
+%
 \begin{figure*}
   \begin{tikzpicture}
   \begin{groupplot}[
