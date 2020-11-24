@@ -16,7 +16,7 @@
   nodes near coords*={#1},
   nodes near coords align={vertical},
   every node near coord/.append style={font=\sffamily\tiny},
-  visualization depends on={value \thisrow{community} \as \community}
+  visualization depends on={value \thisrow{community} \as \community},
   ] table [x={#2}, y={#3}, meta=category] {floats/comm.csv};
 }
 
@@ -72,3 +72,37 @@
   \end{tikzpicture}
 }
 
+\newcommand{\infogainboxplot}{
+  \begin{groupplot}[
+    group style={
+      group size=1 by 2,
+      every plot/.style={
+        xmin=0.65,
+        xmax=1.25,
+      },
+    },
+    height=4cm, width=8cm,
+    ytick={1,2,3,4,5,6,7,8},
+    yticklabels={0, 1, 2, 3, 0, 1, 2, 3},
+    ylabel={$l_c$},
+    ]
+  \nextgroupplot
+  \addplot+[boxplot,draw=blue,mark=*,solid]
+  table [y=lstm-3-0_info_gain] {floats/comm.csv};
+  \addplot+[boxplot,draw=blue,mark=*,solid]
+  table [y=lstm-3-1_info_gain] {floats/comm.csv};
+  \addplot+[boxplot,draw=blue,mark=*,solid]
+  table [y=lstm-3-2_info_gain] {floats/comm.csv};
+  \addplot+[boxplot,draw=blue,mark=*,solid]
+  table [y=lstm-3-3_info_gain] {floats/comm.csv};
+  \nextgroupplot
+  \addplot+[boxplot,draw=red,mark=*,solid]
+  table [y=transformer-3-0_info_gain] {floats/comm.csv};
+  \addplot+[boxplot,draw=red,mark=*,solid]
+  table [y=transformer-3-1_info_gain] {floats/comm.csv};
+  \addplot+[boxplot,draw=red,mark=*,solid]
+  table [y=transformer-3-2_info_gain] {floats/comm.csv};
+  \addplot+[boxplot,draw=red,mark=*,solid]
+  table [y=transformer-3-3_info_gain] {floats/comm.csv};
+  \end{groupplot}
+}

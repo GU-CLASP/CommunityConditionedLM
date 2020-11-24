@@ -31,7 +31,9 @@
 \usepackage{multirow}
 
 \usepgfplotslibrary{groupplots}
+\usepgfplotslibrary{statistics}
 \pgfplotsset{compat=1.16}
+\pgfplotsset{every tick label/.append style={font=\footnotesize}}
 
 \renewcommand{\UrlFont}{\ttfamily\small}
 
@@ -293,12 +295,9 @@ trained for about half as long as the LSTM models (test epoch,
 
 \subsection{Losses of CCLM}
 
-We measure the perplexity of each example\jp{message? community?} in the test set. 
+We measure the perplexity of each message in the test set. 
 For this, we use the negative exponential of the mean cross-entropy loss 
 of the language model for a given message and average over a set of messages, $M$.
-\[\Ppl_M = \avg_{m\in M}(e^{-H(m)})\]
-\bn{Following the logic from IG, should we change Ppl to the exponential of the average cross entropy, rather than using the average of the message-level perplexity?}
-\jp{Yes}
 \[\Ppl_M = e^{\avg_{m\in M} H(m)}\]
 As one would expect, 
 the conditioned models have lower perplexity
@@ -313,7 +312,7 @@ incorporates the community information last,
 after all the sequence encoder layers.
 
 \begin{table}
-  \footnotesize
+  \small
   \centering
   \input{floats/model_results.tex}
   \caption{
@@ -325,63 +324,9 @@ after all the sequence encoder layers.
 
 We also consider model performance stratified by community; that is,
 $\Ppl_{M_j}$, where $M_j$ is the test-set messages from community
-$c_j$.  We observe a great deal of variation in baseline perplexity
-across communities, with $\Ppl_{M_j}$ ranging from \num{53.07} to
-\num{115.29} for the LSTM model (\cref{tab:community-results}).
-
-\subsection{Information gain of the CCLM}
-
-Next, we consider the \emph{information gain} of each CCLM over its baseline
-un-conditioned counterpart with the same sequence encoder architecture.
-For a given message, information gain is defined as the difference
-between the cross-entropy of the unconditioned model and the conditioned model:
-\[H_{LM}(m) - H_{CCLM}(m)\]
-For a set of messages, $M$, we consider the average information gain
-in exponential space (as a ratio of perplexities):
-\[\IG_M = \frac{e^{\avg_M(H_{LM}(m))}}{e^{\avg_M(H_{CCLM}(m))}}\]
-%\jp{What we had before: average entropy gain is $H(m)-H_0(m)$, and
-  %then taking the average over all messages:
-  %$avg(H(m)-H_0(m)) = avg(H(m))-avg(H_0(m)) = H - H₀$. Taking the exponential
-  %gives a ratio of perplexity.  Here it seems that you have commuted
-  %exponential and average. It is rather weird to do average in the
-  %exponential space without normalising to a probability.
-
-  %Compare: $e^{avg(H(m))} / e^{avg(H_0(m))}$ with $avg \frac{e^{H(m)}}{e^{H₀(m)}}$.
-%}
-
-While the absolute performance of the LSTM models is better,
-we find that the best transformer CCLM has higher information gain 
-than the best LSTM (\cref{tab:model-results}).
-
-The conditioned models also perform differently across different communities---%
-for some communities, $\IG_{M_j}$ around \num{1}, or even slightly lower,
-meaning that the CCLM has no advantage over the unconditioned baseline for that community.
-For others communities it is higher, meaning that the CCLM performs better than 
-the baseline for those communities (\cref{tab:community-results}).
-
-\begin{table*}
-  \centering
-  \input{floats/community_results.tex}
-  \caption{
-    Model perplexity and information gain by community. We show the absolute perplexity 
-    of the baseline models and the information gain of the CCLMs.
-    Rows are sorted by the perplexity of the baseline
-    LSTM model.
-}
-  \label{tab:community-results}
-\end{table*}
-
-
-As an informal observation, we note that across all the models we
-tested, communities where conditioning has the least effect tend to be
-more organized around more general interest topics, such as the
-\emph{relationships} and \emph{advice} subreddits, where the subject
-matter is relevant to a broad range of people.  Conditioning the model
-on community has the most benefit for narrower special-interest
-subreddits, such as those organized around a certain videogame, sports
-team, or subculture.  This makes sense intuitively, since communities
-with more niche topics would tend to have more specialized vocabulary
-and other linguistic patterns.
+$c_j$.  We observe a lot of variation in baseline perplexity
+across communities, with $\Ppl_{M_j}$ ranging from \num{34.47} to
+\num{66.43} for the LSTM model (see table 1 in the supplementary materials).
 
 \subsection{Analysis of CCLM community embeddings}
 
@@ -394,7 +339,7 @@ We see that there is some evidence of clustering according to
 the topic categories we identified,
 suggesting that the embedding space learned by the model is meaningful.
 
-\begin{figure*}
+\begin{figure*}[t]
 \begin{tikzpicture}
   \begin{groupplot}[
     group style={group size=2 by 1},
@@ -444,6 +389,7 @@ restricted to the 46 communities chosen for our study
 \end{figure}
 
 \begin{table}
+  \small
   \centering
   \input{floats/comm_sim.tex}
   \caption{Pearson's $r$ between the pairwise similarity of community vectors
@@ -452,6 +398,80 @@ restricted to the 46 communities chosen for our study
   }
   \label{tab:pairwise-comm-sim}
 \end{table}
+
+\subsection{Information gain of the CCLM}
+
+Next, we consider the \emph{information gain} of each CCLM over its baseline
+un-conditioned counterpart with the same sequence encoder architecture.
+For a given message, information gain is defined as the difference
+between the cross-entropy of the unconditioned model and the conditioned model:
+\[H_{LM}(m) - H_{CCLM}(m)\]
+For a set of messages, $M$, we consider the average information gain
+in exponential space (as a ratio of perplexities):
+\[\IG_M = \frac{e^{\avg_M(H_{LM}(m))}}{e^{\avg_M(H_{CCLM}(m))}}\]
+%\jp{What we had before: average entropy gain is $H(m)-H_0(m)$, and
+  %then taking the average over all messages:
+  %$avg(H(m)-H_0(m)) = avg(H(m))-avg(H_0(m)) = H - H₀$. Taking the exponential
+  %gives a ratio of perplexity.  Here it seems that you have commuted
+  %exponential and average. It is rather weird to do average in the
+  %exponential space without normalising to a probability.
+
+  %Compare: $e^{avg(H(m))} / e^{avg(H_0(m))}$ with $avg \frac{e^{H(m)}}{e^{H₀(m)}}$.
+%}
+
+While the absolute performance of the LSTM models is better,
+we find that the best transformer CCLM has higher information gain 
+than the best LSTM (\cref{tab:model-results}).
+
+The conditioned models also perform differently across different communities---%
+for some communities, $\IG_{M_j}$ around \num{1}, or even slightly lower,
+meaning that the CCLM has no advantage over the unconditioned baseline for that community.
+For other communities it is higher, meaning that the CCLM performs better than 
+the baseline for those communities (\cref{fig:comm-info-gain}).
+
+\begin{figure}
+\begin{tikzpicture}
+  \infogainboxplot
+\end{tikzpicture}
+\caption{
+  Distribution of information gain across communities for each CCLM 
+  (top: LSTM models, bottom: transformer models).
+}
+\label{fig:comm-info-gain}
+\end{figure}
+
+This variation in information gain across communities is not 
+related to perplexity, however. 
+Some of the most linguistically complex communities benifit a lot
+from community conditioning, while others do not benefit at all. 
+Similarly, among the less linguistically complex communites 
+there some have high information gain, and some have information
+gain of \num{1} or less (\cref{fig:ppl-info-gain}).
+
+\begin{figure}
+\begin{tikzpicture}
+\begin{axis}
+\commscatter[]{lstm-3-1_lm_ppl}{lstm-3-1_info_gain}
+\end{axis}
+\end{tikzpicture}
+\caption{
+  Average community perplexity (x-axis) versus information gain (y-axis)
+  for the LSTM model with $l_c = 1$ .
+}
+\label{fig:ppl-info-gain}
+\end{figure}
+
+As an informal observation, we note that across all the models we
+tested, communities where conditioning has the least effect tend to be
+more organized around more general interest topics, such as the
+\emph{relationships} and \emph{advice} subreddits, where the subject
+matter is relevant to a broad range of people.  Conditioning the model
+on community has the most benefit for narrower special-interest
+subreddits, such as those organized around a certain videogame, sports
+team, or subculture.  This makes sense intuitively, since communities
+with more niche topics would tend to have more specialized vocabulary
+and other linguistic patterns.
+
 
 \subsection{Latent language-model-based community classifiers}
 
@@ -481,9 +501,9 @@ from community $c_j$.
 We observe that the diagonal dominates the matrix: the LMCC generally finds the right community for a message (\cref{fig:confusion}).
 %
 \begin{figure*}
-\begin{tikzpicture}
-  \confusiongroupplot{lstm-3-1}{transformer-3-3}
-\end{tikzpicture}
+%\begin{tikzpicture}
+  %\confusiongroupplot{lstm-3-1}{transformer-3-3}
+%\end{tikzpicture}
 \caption{LMCC confusion matrices for the best LSTM (left, $c=1$) and transformer (right, $c=3$) models.}
 \label{fig:confusion}
 \end{figure*}
@@ -533,6 +553,7 @@ In other words, the linguistic complexity of a given community
 is a poor predictor of how distinctive its language is.
 
 \begin{table}
+  \small
   \centering
   \input{floats/ind_corrs.tex}
   \caption{ Pearson's $r$ correlation coefficient between community
@@ -558,7 +579,7 @@ is a poor predictor of how distinctive its language is.
   \end{groupplot}
   \end{tikzpicture}
   \caption{%
-    Mean community indiscernibility (y-axis), 
+    Average community indiscernibility (y-axis), 
     in relationship to linguistic complexity (left) and 
     CCLM information gain (right). Shown here for the LSTM
     model with $l_c=1$. See \cref{tab:ind-corrs} for 
@@ -617,14 +638,14 @@ Along these lines, \citet{OConnor2010} uses a Bayesian generative
 model to infer communities from variation in text data.  In contrast
 to our work, this model treats words as independent events, ignoring
 the structure (and variation) in the construction of sequences.  It
-does further suggest, however, that community-level variation could be
+does further suggest, however, that community-level variation can be
 modeled in an unsupervised way.
 
 \section{Discussion and Conclusion}
 
 We find that various communities exhibit widely varying levels of
 linguistic complexity \ref{hyp:varying-complexity}, with perplexity
-per-word ranging from less than 53 to more than 104 for the best model
+per-word ranging from less than 53 to more than 104 for the best model \bn{update}
 architecture.
 
 With indiscernibility values evenly ranging over the whole possible
@@ -638,7 +659,6 @@ models.
 
 We find no statistically significant correlation (\cref{tab:ind-corrs}) between the
 perplexity of the
-% \bn{I'm not sure if we can make this claim or not with the Ppl-Ppl correlations. However, given that *all* of them have positive correlation, even though the p-values are somewhat higher than .1 maybe we can?}
 CCLM and the indiscernibility of the corresponding community
 \ref{hyp:rich-harder-to-identify}. Because we have relatively few, and
 only large communities in our test set, it is difficult to say if this
@@ -655,7 +675,7 @@ albeit weakly. For LSTM models, the perplexity per word, averaged over
 all communities, varies between 76.80 and 78.64. (with 80.70 for the
 unconditioned model) The perplexity per word is slightly higher for
 $l_c=0$, and has very little difference between the other models, with
-$l_c=1$ being the best.  For transformer models, it varies between
+$l_c=1$ being the best.  For transformer models, it varies between \bn{update}
 89.38 and 122.56. Here perplexity per-word is clearly not a monotonous
 function of $l_c$: the maximum is reached at $l_c=2$. We did not
 expect non-monotonicity, and leave studying this effect to future
