@@ -86,8 +86,7 @@
 \jp{Not so good abstract}
 
 \section{Introduction}
-\jp{I am seeing computer modern rather than times when building the
-  paper!?}  Linguistic communication requires that speakers share
+Linguistic communication requires that speakers share
 knowledge of certain linguistic conventions, such as syntactic
 structure, word meanings, and accepted patterns of interaction.
 Speakers assume that these conventions are \emph{common ground} among
@@ -125,21 +124,21 @@ capable of capturing variation beyond the lexical level.
 We do so by investigating two questions.  First, we are interested in
 variation in the level of linguistic complexity exhibited by different
 communities.
-\jp{
-  Some examples (perhaps include if there is space):
+%\jp{
+  %Some examples (perhaps include if there is space):
   
-  (CFB)
-  It was against SMU in the 47-48 Cotton bowl. They had cancelled a
-  game the year before against Miami for the same reason. There's
-  debate on if that's really the origin for the phrase but the story
-  itself is true.
+  %(CFB)
+  %It was against SMU in the 47-48 Cotton bowl. They had cancelled a
+  %game the year before against Miami for the same reason. There's
+  %debate on if that's really the origin for the phrase but the story
+  %itself is true.
 
-  (Videos)
-  Reminds me of Y2K computer bug. A lot of work went into
-  pre-emptively fixing it, and a lot of bugs were found and fixed,
-  some of which would have been catastrophic. Unfortunately, because
-  the work was successful, a lot of people now describe it as a waste
-  of time/money and a big deal made out of nothing.  }
+  %(Videos)
+  %Reminds me of Y2K computer bug. A lot of work went into
+  %pre-emptively fixing it, and a lot of bugs were found and fixed,
+  %some of which would have been catastrophic. Unfortunately, because
+  %the work was successful, a lot of people now describe it as a waste
+  %of time/money and a big deal made out of nothing.  }
 %
 Indeed, it is folklore that certain communities exhibit more
 linguistic complexity than others.  Here we want to quantify this
@@ -206,7 +205,7 @@ with at least \num{15000} messages per month for each month
 in the three years between 2015 and 2017. 
 We initially selected \num{50} subreddits, 
 but excluded four of them from further analysis: 
-two because they were primarily non-English and two with particularly short average message lengths.\\footnote{
+two because they were primarily non-English and two with particularly short average message lengths.\footnote{
 The macro-average message length was \num{39.3} ($\sigma=15.7$) and the two removed communities had average comment lengths of \num{10.7} and \num{18.1}.}
 % According to your footnote the removed communities are barely outliers. I wouldn't have removed them, but it is too late to do anything about that.
 Each community corpus consist of \num{50000} randomly selected messages from the year 2015.
@@ -266,7 +265,7 @@ modeling task with cross-entropy loss over the vocabulary.  Because
 the transformer operates on all tokens in the sequence at once, the
 language modeling was achieved by masking and incrementally un-masking
 input tokens in a left-to-right fashion (so we have an
-auto-regressive\jp{check} model).  We used the AdamW
+auto-regressive model).  We used the AdamW
 \citep{Loshchilov2019} optimization algorithm, with an initial
 learning rate of \num{0.001}, without any extra control on the decay
 of learning rate.
@@ -304,12 +303,13 @@ the conditioned models have lower perplexity
 than their respective unconditioned baseline models (\cref{tab:model-results}),
 but this effect is different in magnitude
 for models with different community embedding depths.
-For the LSTM encoder, 
-the best model ($l_c=1$) concatenates the community embedding after the first encoder layer,
-with two subsequent LSTM layers. 
-The best transformer model ($l_c=3$), on the other hand,
+The best transformer model ($l_c=3$)
 incorporates the community information last,
 after all the sequence encoder layers.
+For the LSTM encoder, 
+the model that concatenates the community embedding after the first encoder layer ($l_c=1$),
+performs almost as well as the model with $l_c=3$, but that model is still the best.
+There is much less variation in performance across different values of $l_c$ for the LSTM.
 
 \begin{table}
   \small
@@ -353,7 +353,7 @@ suggesting that the embedding space learned by the model is meaningful.
     \legend{General interest,Videogames,Technology,Sports,Female-focused,Other}
   \end{groupplot}
 \end{tikzpicture}
-\caption{Community embedding PCA of the best LSTM (left, $c=1$) and transformer (right, $c=3$) models.}
+\caption{Community embedding PCA of an LSTM (left, $c=1$) and transformer (right, $c=3$) model.}
 \label{fig:comm-pca}
 \end{figure*}
 
@@ -456,7 +456,7 @@ gain of \num{1} or less (\cref{fig:ppl-info-gain}).
 \end{tikzpicture}
 \caption{
   Average community perplexity (x-axis) versus information gain (y-axis)
-  for the LSTM model with $l_c = 1$ .
+  for the LSTM model with $l_c = 1$ (colors based on \cref{fig:comm-pca}).
 }
 \label{fig:ppl-info-gain}
 \end{figure}
@@ -540,7 +540,7 @@ Pearson's $r \geq 0.98$ and $p < 0.0001$ (see, for example,
   \end{tikzpicture}
   \caption{%
     Correlation between indiscernibility for 
-    the best LSTM ($c = 1$) and transformer ($c = 3$) models
+    LSTM ($c = 1$) and transformer ($c = 3$) models
     (Pearson's $r = 0.99$, $p < 0.0001$).
   }
   \label{fig:indisc-corr}
@@ -615,7 +615,7 @@ the conditioned model are generally easier for the LMCC to classify.
 
 \section{Related work}
 
-In this work, we present results using a conditioned neural language models
+We have presented results using conditional neural language models
 to model variation between speech communities.
 The architecture of these models concatenates a vector representation
 of the conditioned variable to the input of the sequence model.
@@ -645,7 +645,7 @@ modeled in an unsupervised way.
 
 We find that various communities exhibit widely varying levels of
 linguistic complexity \ref{hyp:varying-complexity}, with perplexity
-per-word ranging from less than 53 to more than 104 for the best model \bn{update}
+per-word ranging from less than 34 to more than 65 for the best model 
 architecture.
 
 With indiscernibility values evenly ranging over the whole possible
@@ -672,11 +672,11 @@ all communities, to our models.
 We find that the layer at which the community embedding is taken into
 account in a CCLM influences its perplexity \ref{hyp:layer-effect},
 albeit weakly. For LSTM models, the perplexity per word, averaged over
-all communities, varies between 76.80 and 78.64. (with 80.70 for the
+messages from all communities, varies between \num{49.60} and \num{50.83}. (with \num{51.99} for the
 unconditioned model) The perplexity per word is slightly higher for
 $l_c=0$, and has very little difference between the other models, with
-$l_c=1$ being the best.  For transformer models, it varies between \bn{update}
-89.38 and 122.56. Here perplexity per-word is clearly not a monotonous
+$l_c=3$ being the best.  For transformer models, it varies between 
+\num{52.28} and \num{78.76}. Here perplexity per-word is clearly not a monotonous
 function of $l_c$: the maximum is reached at $l_c=2$. We did not
 expect non-monotonicity, and leave studying this effect to future
 work.
