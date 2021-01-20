@@ -1,0 +1,153 @@
+Review #1
+
+    What is this paper about, what contributions does it make, and what are the main strengths and weaknesses?
+
+        Summary
+
+        This paper presents a quantitative evaluation of community-conditioned language models on Reddit data, separated by sub-communities. The paper presents a modified architecture for the well-known LSTM and transformer models, by concatenating a learned community embedding to the models' existing linguistic embeddings. The authors first test the differences in adding the community embeddings at different levels of the models, and they find that higher layers are generally better in terms of learning models with high information gain and low perplexity. The learned community embeddings are shown to have intuitive properties, including clustering by topically-similar communities and high similarity to network-based community embeddings. To further test the validity of their models, the authors introduce a metric for "indiscernability", or how difficult it is to predict the community of a message, and they find that the metric is robust across models and has high correlation with information gain.
+
+        The paper's main contribution addresses the longstanding question of how to address community-level differences in language use with a method to provide such community-level information into modern language models. As a secondary contribution, the paper proposes the indiscernability metric for evaluating socially-aware language models and validates its use with existing language model metrics.
+
+        Strengths
+
+            The study validates the utility of community embeddings on multiple neural-network models with different layer configurations, which makes a stronger case for the robustness of the method.
+
+            The authors provide qualitative analysis of the embeddings to demonstrate the intuitive grouping of different communities by similar topics.
+
+            The idea for deriving social embeddings may not be novel, but the methods for analysis (e.g. indiscernability) can be readily adapted to other social configurations such as demographic-based embeddings.
+
+            The authors make several interesting points about sociolinguistic theory, such as the fact that language model perplexity may not be sufficient to judge the linguistic identity of a particular community.
+
+        Weaknesses
+
+            The authors only consider about 50 communities in their analysis. While not inherently a bad thing, this limited sample makes me wonder about the utility of their embedding strategy, because a community embedding with 16 dimensions should readily capture the variation in only 50 communities (imagine constructing word embeddings with 16 dimensions for a vocabulary of size 50). The limited sample size also means that their metric of "indiscernability" is questionable, as it seems fairly trivial to determine the community of a message with so few choices (supported by the strong classification performance in Figure 5). I suspect that the metric would be less useful with a larger sample size, where community linguistic differences become much more subtle and less easily discerned at the level of single messages. Furthermore, it is unclear whether these learned embeddings are better for model performance than the pretrained embeddings from e.g. Kumar et al. (2018), or for that matter topic-based embeddings (based on the topical grouping in Figure 1). For an alternative approach in evaluating community embeddings, the authors may see work such as Waller and Anderson (2019). It may make sense to evaluate the embeddings on social aspects of the communities under study, such as the relative size or activity of the communities and whether those factors can explain the apparent differences in linguistic complexity (cf. community analysis in Zhang et al. 2017).
+
+            I'm not sure what conclusions to draw from the authors' testing on different layers of the LSTM and transformer models. While theoretically interesting, it's not clear why the models would benefit more from having social information provided at different layers, which (for BERT) are known to encode different information such as morphology, syntax and semantics (e.g. Jawahar et al. 2019). Some of the results require more explanation with respect to this point, such as the inconsistent performance across layers in the transformer model (Table 1). I could see an argument that most communities' language patterns are discernible at the level of pragmatics/semantics, hence the best performance at the highest layer for both LSTMs and transformers.
+
+            The paper makes several claims about communities being more or less "linguistically complex" (or "rich"/"poor"), based on the perplexity of the language models, without considering what exactly this means. Some communities may use relatively common words but still expect their members to uphold complicated linguistic standards, like high levels of respectful behavior ("please"/"thank you"), which I suspect to be common in communities like r/relationships). Even if the words of these communities are common, their linguistic practices may actually be complicated and difficult for language models to "understand." This might seem like a minor point but we can't necessarily call a community's language "simple" based only on the perplexity of a language model. I think that the authors should consider "diversity" as a better term for what they're studying.
+
+            In general, rather than driving at one goal strongly, the paper addresses many different sub-aspects of community embeddings. Some of the research questions seem trivial: for H1, based on prior work we know that communities have different language standards. Some of the analysis could be done in a more robust way: for the comparison of community embeddings (Figure 1), the authors would make a stronger case if they used a more quantitative metric for a community's topical "narrowness". I recommend doing more reading in the space of community-specific language use and deciding how to address a few questions more conclusively. The comparison with network-based embeddings is interesting and I think a fruitful future research direction if the authors are interested, e.g. predicting the size of a subreddit based on its embedding.
+
+            The paper seems to lack significance testing in several key areas, such as the comparison of model performance (Table 1) and overall classification performance for the CCLMs (Figure 5 - are these distributions different than expected under a random distribution?).
+
+    Reasons to accept
+
+            Thorough testing of community-based embeddings in several modern langage models.
+
+            Fair comparison of proposed method with prior community embeddings and multiple measures of language model "complexity."
+
+            Interesting theoretical points about community-specific language use.
+
+    Reasons to reject
+
+            Small sample size limits the validity of some of the quantitative tests.
+
+            Unclear takeaways from the cross-layer analysis, particularly considering the wealth of prior work done in the space.
+
+            Scattered approach to the problem.
+
+    Questions for the Author(s)
+
+            Did you perform significance testing for the perplexity and IG comparisons across layers for the different models (Table 1)?
+
+            3.2: Why did the authors use manually identified topics instead of learned topics via e.g. LDA?
+
+    Missing References
+
+        Jawahar, G., Sagot, B., & Seddah, D. (2019, July). What does BERT learn about the structure of language?. In ACL 2019-57th Annual Meeting of the Association for Computational Linguistics. Waller, I., & Anderson, A. (2019, May). Generalists and specialists: Using community embeddings to quantify activity diversity in online platforms. In The World Wide Web Conference (pp. 1954-1964). Zhang, J., Hamilton, W., Danescu-Niculescu-Mizil, C., Jurafsky, D., & Leskovec, J. (2017, May). Community identity and user engagement in a multi-community landscape. In Proceedings of the International AAAI Conference on Web and Social Media (Vol. 11, No. 1).
+
+    Typos, Grammar, Style, and Presentation Improvements
+
+        273: "using using" 3.3: should define information gain before showing Table 1 Table 3: mixed up columns for correlation (r) and p-value (p)?
+
+    Overall Recommendation:	2.5
+
+
+Review #2
+
+    What is this paper about, what contributions does it make, and what are the main strengths and weaknesses?
+
+        This paper studies linguistic differences between 46 subreddits through LSTM / Trasnformer-based language models (CCLM). Trained CCLMs can evaluate the "linguistic complexity" of messages extracted from a specific community, and these models could be used as membership classifiers (LMCC) of the messages based on the Bayesian framework. Based on LMCC, "Indiscernibility" between communities can be computed.
+
+        (Strength)
+
+            Introducing Community-Conditioned Language Models
+
+            Suggesting conditioned (Pre-trained) language models could be used as a membership classifier
+
+        (Weakness)
+
+            Overall, the paper is hard to follow. Findings and claims should be organized.
+
+            PPL as a measure of Linguistic complexity
+
+    Reasons to accept
+
+            Introducing Community-Conditioned Language Models
+                the authors suggest conditioned language models can be used to analyze community-specific linguistic patterns.
+
+            Suggesting conditioned (Pre-trained) language models could be used as a membership classifier
+                For small datasets, membership-conditioned language models can be used as membership classifiers without any fine-tuning.
+
+    Reasons to reject
+
+            Overall, the paper is hard to follow. Findings and claims should be organized.
+
+                It seems the authors investigate the linguistic ‘complexity’ of communities through conditioned language models. Once the model is trained, they tried to analyze the linguistic ‘specificity’ of the communities by comparing the co-occurrence of users and message classifiers. H1-H5 seems more like the findings of this paper, rather than the hypothesis. Conclusions for each hypothesis (or findings) are not clear.
+
+                For example, It could be difficult to conclude different communities have different levels of linguistic complexity. Assuming PPL is a good measure for the complexity, a different number of PPL on the test set across communities may not lead to this conclusion. Some of the differences between groups will not significant.
+
+                H2 might be findings of ablation study of the models; testing the effectiveness of community embeddings of CCLM. It might be less important to be investigated, compared to the other hypotheses.
+
+                H3 is simply a formulation of LMCC.
+
+                H4 and H5 are analyzing the linguistic ‘specificity’ of the communities through CCLMs, so it might be an appropriate hypothesis to be investigated.
+
+            PPL as a measure of Linguistic complexity
+
+                I am not sure about PPL could be an appropriate measure of the linguistic complexity of the communities. Often PPL is higher because of the text (message) length, so it must be carefully controlled. These PPLs might simply correlate to the average message length (comment length) of each community.
+
+                As shown in Table 1 in Supplementary Material, PPL is higher in Explainlikeimfive, compared to that of Pcmasterrace. Users in Explainlikeimfive Reddit generally use less complex words to explain something without some external hyperlinks. So the messages should be self-contained, often gets longer answers. On the other hand, Pcmasterrace shows low PPL, but I am quite sure about the users in this Reddit will use more complex words, including technical terms, because they will not “Explainlikeimfive”.
+
+    Typos, Grammar, Style, and Presentation Improvements
+
+        Once rejected in other previous conferences, please check the submission latex format. ("Anonymous ACL submission")
+
+    Overall Recommendation:	2
+
+
+Review #3
+
+    What is this paper about, what contributions does it make, and what are the main strengths and weaknesses?
+
+        The paper investigates community-level linguistic variations by training and analyzing neural language models (one LSTM and one TN) conditioned to communities on Reddit. The authors analyze the embeddings from the model top layers over 64 Reddit communities, including comparing low dimensional plots, another embedding method (Kumar et al., 2018), perplexity, information gain, and indeiscernibility (new metric) for each, as well as attempting to predict community given a post. They find communities vary in perplexity (which they claim as linguistic complexity), communities with more specific topics tend to be easier to identify based on their posts with communities that indiscenible appearing to use "a mixture of language found in all communities", and communities with more shared user bases tend to have more similar LM representations.
+
+        As strengths, the paper has nice mix of sociolinguistic and NLP contributions. There are specific hypotheses tested and some demonstration of use of such a conditioned model for prediction by applying Bayes Theorem. The approach could be weaved into most LSTMs or TNs. Results from statistical experiments demonstrate gains in the LMs ability to accurate model based on conditioning as well as provide answers to most experiments.
+
+        As weaknesses, the paper does not provide points of comparisons or simple baselinesfor the tasks. For example, simple features can also be used as community embeddings including: ngram vectors, or just averaging word2vec embeddings. Such approaches might produce reasonable results with less complexity or training time. It would also be helpful to keep the comparison to a non-conditioned model, especially in section 3.2, when comparing to another membership based embedding (Kumar et al. (2018)), The new metric, indiscenibility is an interesting idea but is not well justified -- the reasoning seems to be it is better since the LSTM and transformers are more consistent by it. They could better explain its advantages of perplexity in terms of discriminating communities or comparing against human evaluations.
+
+        The paper also feels a bit drawn out -- A lot of the figures seem unnecessary and represented better simply by correlation coefficients (e.g. the scatter plots when there is no relationship and no artifact, non-linearities, or outliers to point out). I'm sympathetic to being caught between a short and long paper with content and trying to decide between the two. I think this would be stronger as a short paper.
+
+        Small Points:
+
+        re: information gain of LSTM versus TN for relationships: couldn't this minor difference just be chance when exploring 64 communities isn't one bound to go in the other direction by a small margin. Would this happen if replicating on new data for this community?
+
+    Reasons to accept
+
+        An interesting and useful task intersecting NLP with sociolinguistics, answering hypotheses with LMs.
+
+        Nice choices of modern methods demonstrating first versions of community conditioned language models.
+
+    Reasons to reject
+
+        Comparisons with other approaches or even minimal baselines are missing.
+
+        New metric is not clearly justified.
+
+    Typos, Grammar, Style, and Presentation Improvements
+
+        L 476 : This is view is…
+
+        Table 3 seemingly has “p” and “r” backwards.
+
+    Overall Recommendation:	3
