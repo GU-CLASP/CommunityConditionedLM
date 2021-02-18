@@ -3,9 +3,9 @@ __pycache__
 model/*
 *~
 scratch.py
-data/*
 *.aux
 *.log
 *.out
 *.pdf
 .DS_Store
+*.csv

@@ -7,12 +7,10 @@ let
          {
           python3 = super.python3.override {
            packageOverrides = python-self: python-super: {
-	     sacremoses = python-self.callPackage /opt/nix/sacremoses-0.0.35.nix {};
-	     sentencepiece = python-self.callPackage /opt/nix/sentencepiece-0.1.84.nix {};
-             #transformers = python-self.callPackage /opt/nix/transformers-2.1.1.nix { };
              torchtext = python-self.callPackage /opt/nix/torchtext-0.4.0.nix { };
              snapy = python-self.callPackage /opt/nix/snapy-1.0.2.nix { };
              mmh3 = python-self.callPackage /opt/nix/mmh3-2.5.1.nix { };
+             six = python-self.callPackage ./nix/six-1.14.0.nix { };
              google-resumable-media = python-self.callPackage ./nix/google-resumable-media-0.5.0.nix { };
              google-cloud-core = python-self.callPackage ./nix/google-cloud-core-1.3.0.nix { };
              google-api-core = python-self.callPackage ./nix/google-api-core-1.16.0.nix { };
@@ -36,8 +34,6 @@ let
     pyEnv = py.buildEnv.override {
       extraLibs = with py.pkgs;
         [
-         # If you want to have a local virtualenv, see here: https://github.com/NixOS/nixpkgs/blob/master/doc/languages-frameworks/python.section.md
-         #transformers 
          pytorch
          torchtext
          notebook
@@ -47,8 +43,8 @@ let
          plotly
          statsmodels
          numpy
-         mmh3
-         snapy
+         #mmh3
+         #snapy
          google-cloud-bigquery
          google-cloud-bigquery-storage
         ];
@@ -56,7 +52,7 @@ let
 in
   pkgs.stdenv.mkDerivation {
     name = "sh-env";
-    buildInputs = [pyEnv pkgs.ranger pkgs.htop];
+    buildInputs = [pyEnv pkgs.htop];
     shellHook = ''
       export LANG=en_US.UTF-8
       export PYTHONIOENCODING=UTF-8
