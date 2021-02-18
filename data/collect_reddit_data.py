@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+from pathlib import Path
 import google.auth
 from google.cloud import bigquery
 from google.cloud import bigquery_storage_v1beta1
@@ -120,3 +121,10 @@ if __name__ == '__main__':
         sample_subreddit_comments(2015, month, subs, n_sample_comments, 
             gcp_project, gs_bucket, gs_dir, bq_dataset_id, bq)
 
+    # copy the files locally from google storage
+    os.system("gsutil -m cp gs://bill-gu-research/CondLM/2015-*.csv reddit_sample/")
+
+    corpus_dir = Path('reddit_sample')
+    for comment_file in corpus_dir.glob('*.csv'):
+        print(comment_file)
+        remove_nul(comment_file)
