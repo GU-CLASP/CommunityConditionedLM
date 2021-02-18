@@ -9,7 +9,6 @@ def iter_comments(corpus_dir):
             for comment in reader:
                 yield comment['id'], comment['body']
 
-
 def find_dupe_comments(comments):
     min_length = 50
     seen_hashes = set()
