@@ -1,11 +1,15 @@
 __pycache__
 .ipynb_checkpoints
 model/*
+embedding/*
 *~
 scratch.py
 *.aux
 *.log
 *.out
 *.pdf
+*.auxlock
+*.dvi
 .DS_Store
 *.csv
+*.swp

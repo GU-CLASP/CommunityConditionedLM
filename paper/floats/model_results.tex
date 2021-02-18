@@ -1,0 +1,19 @@
+                
+\begin{tabular}{llrrr}
+\toprule
+                               &       & \makecell{test \\ epoch} & $\Ppl$ & $\IG$     \\
+                               & $l_c$ &         &                 &                   \\
+\midrule
+\multirow{5}{*}{LSTM}         & - &          21 &  51.99          &       -           \\
+                              & 0 &          17 &  50.83          &    1.023          \\
+                              & 1 &          34 &  49.66          &    1.047          \\
+                              & 2 &          11 &  50.23          &    1.035          \\
+                              & 3 &          16 &  \textbf{49.60} &    \textbf{1.048} \\
+\midrule
+\multirow{5}{*}{Transformer}  & - &          20 &  61.43          &        -          \\
+                              & 0 &           7 &  58.71          &    1.046          \\
+                              & 1 &          12 &  61.69          &    0.992          \\
+                              & 2 &           7 &  78.76          &    0.780          \\
+                              & 3 &          10 &  \textbf{52.28} &    \textbf{1.054} \\
+\bottomrule
+\end{tabular}
