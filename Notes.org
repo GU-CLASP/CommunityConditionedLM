@@ -116,3 +116,16 @@ Experiments:
 ** Language models for sociolinguistic variation
 - Del Tredici, M., & Fernández, R. (2017). Semantic Variation in Online Communities of Practice. https://www.aclweb.org/anthology/W17-6804
 
+* Possible improvements/expansions
+- Some kind of probing to characterize what kind of variation is happening.
+  - Idea: Take a BERT model and cut off a certain layer.
+    - Problem: This is almost completely disjoint with what we've done before.
+  - Fine tune BERT on each community and see differences in where the change happens (using TX-Ray method). 
+- A larger set of communities
+- Goal: See if in a community the community-specific variation is just lexical or if it is syntactic or...
+  - Idea: take a sentence from a subreddit (one that is quite characteristic) - adversairily make minimal changes to fit to another subreddit
+    - Problem: How do you know if you have succeded or not
+  - Compare LSTM info gain to simpler model (unigram, bigram, ..., convolutional?) info gain 
+    - Related to a method shalom used to quantify acceptability (subtracting out lexical frequency effects)
+    - Quantify differences in indiscernibility for the different models: E.g., Are there communities that are much more discernable with the more complex models?
+
