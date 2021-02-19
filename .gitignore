@@ -13,3 +13,5 @@ scratch.py
 .DS_Store
 *.csv
 *.swp
+*.fdb_latexmk
+*.appendix.fls
