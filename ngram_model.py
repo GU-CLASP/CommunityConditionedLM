@@ -59,7 +59,17 @@ for example in train_data:
     text = fields['text'].process([example.text]).numpy().squeeze()
     comm = fields['community'].vocab.stoi[example.community]
     for bigram in iter_ngrams(text, 2):
-        C[comm][bigram[0]][bigram[1]] += 1 # plus one smoothing... (TODO: laplace? good-turing? something else?) 
+        C[comm][bigram[0]][bigram[1]] += 1 
+
+# P(c,x,y) = C(c,x,y) / Sum_j(C(c,x,j))
+# Laplace smoothing: Add alpha to every 
+# P'(c,x,y) = (P(c,x,y) + alpha) / (1 + |V| * alpha)
+# Heurisitc: alpha should be smaller than smallest P(c,x,y) (certanily very much smaller than 1/|V|, possibly 1/|V|**2)
+# Hyperparameter search for alpha using the test set
+
+C + 1
+
+# plus one smoothing... (TODO: laplace? good-turing? something else?) 
 
 
 
