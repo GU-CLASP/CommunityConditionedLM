@@ -67,9 +67,10 @@ for example in train_data:
 # Heurisitc: alpha should be smaller than smallest P(c,x,y) (certanily very much smaller than 1/|V|, possibly 1/|V|**2)
 # Hyperparameter search for alpha using the test set
 
-C + 1
-
-# plus one smoothing... (TODO: laplace? good-turing? something else?) 
-
+alpha = 1/vocab_size
+P = C / C.sum(axis=2).reshape(n_comms, vocab_size, 1)
+P = np.nan_to_num(P, 0) # zeros where the ngram prefix has 0 prob
+P_smooth_unnorm = P + alpha 
+P_smooth = P_smooth_unnorm / P_smooth_unnorm.sum(axis=2).reshape(n_comms, vocab_size,1)
 
 
