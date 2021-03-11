@@ -10,7 +10,7 @@ import math
 import random
 import util
 
-def train(lm, batches, vocab_size, comm_unk_idx, criterion, optimizer, log):
+def train(lm, batches, vocab_size, criterion, optimizer, log):
     lm.train()
     batches.init_epoch()
     train_loss = 0
@@ -32,7 +32,7 @@ def train(lm, batches, vocab_size, comm_unk_idx, criterion, optimizer, log):
             train_loss = 0
     return lm
 
-def evaluate(lm, batches, vocab_size, comm_unk_idx, criterion):
+def evaluate(lm, batches, vocab_size, criterion):
     lm.eval()
     batches.init_epoch()
     eval_losses = []
@@ -52,7 +52,6 @@ def evaluate(lm, batches, vocab_size, comm_unk_idx, criterion):
 @click.command()
 @click.argument('architecture', type=click.Choice(['Transformer', 'LSTM'], case_sensitive=False))
 @click.argument('model_dir', type=click.Path(exists=True))
-@click.argument('model_name', type=str)
 @click.argument('data_dir', type=click.Path(exists=True))
 @click.option('--rebuild-vocab/--no-rebuild-vocab', default=False)
 @click.option('--vocab-size', default=40000)
@@ -66,15 +65,17 @@ def evaluate(lm, batches, vocab_size, comm_unk_idx, criterion):
 @click.option('--batch-size', default=32)
 @click.option('--max-seq-len', default=64)
 @click.option('--lr', default=0.001)
+@click.option('--max-epochs', type=int, default=None)
 @click.option('--file-limit', type=int, default=None,
         help="Number of examples per file (community).")
 @click.option('--gpu-id', type=int, default=None,
         help="ID of the GPU, if traning with CUDA")
-def cli(architecture, model_dir, model_name, data_dir, rebuild_vocab,
+def cli(architecture, model_dir, data_dir, rebuild_vocab,
         vocab_size, encoder_layers, heads, hidden_size,
         condition_community, community_emsize, community_layer_no, dropout,
-        batch_size, max_seq_len, lr, file_limit, gpu_id):
+        batch_size, max_seq_len, lr, max_epochs, file_limit, gpu_id):
 
+    model_name = f"{architecture.lower()}-{encoder_layers}" + (f"-{community_layer_no}" if condition_community else "")
     save_dir = os.path.join(model_dir, model_name)
     util.mkdir(save_dir)
     log = util.create_logger('train', os.path.join(save_dir, 'training.log'), True)
@@ -85,7 +86,6 @@ def cli(architecture, model_dir, model_name, data_dir, rebuild_vocab,
             max_seq_len, file_limit, vocab_size, rebuild_vocab)
     vocab_size = len(fields['text'].vocab.itos)
     comm_vocab_size = len(fields['community'].vocab.itos)
-    comm_unk_idx = fields['community'].vocab.stoi['<unk>']
     text_pad_idx = fields['text'].vocab.stoi['<pad>']
     log.info(f"Loaded {len(dataset)} examples.")
 
@@ -146,8 +146,8 @@ def cli(architecture, model_dir, model_name, data_dir, rebuild_vocab,
     while True:
         epoch += 1
         log.info(f'Starting epoch {epoch}')
-        lm = train(lm, train_iterator, vocab_size, comm_unk_idx, criterion, optimizer, log)
-        val_loss = evaluate(lm, val_iterator, vocab_size, comm_unk_idx, criterion)
+        lm = train(lm, train_iterator, vocab_size, criterion, optimizer, log)
+        val_loss = evaluate(lm, val_iterator, vocab_size, criterion)
         val_loss = sum(val_loss) / len(val_loss)
         if epoch == 1 or val_loss < min(val_losses):
             torch.save(lm.state_dict(), os.path.join(save_dir, 'model.bin'))
@@ -155,7 +155,7 @@ def cli(architecture, model_dir, model_name, data_dir, rebuild_vocab,
                 f.write(f'{epoch:03d}')
         val_losses.append(val_loss)
         log.info(f"Epoch {epoch:3d} | val loss {val_loss:5.2f} | ppl {math.exp(val_loss):0.2f}")
-        if val_losses[-1] > min(val_losses) and val_losses[-2] > min(val_losses):
+        if (val_losses[-1] > min(val_losses) and val_losses[-2] > min(val_losses)) or epoch == max_epochs:
             log.info(f'Stopping early after epoch {epoch}.')
             break
 

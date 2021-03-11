@@ -91,9 +91,10 @@ def example_nll(n, P, comm, text):
 
 def test_lm(P, data):
 
-C = count_ngrams(2, train_data)
+n = 2
+C = count_ngrams(n, train_data)
 
-alpha = 1/vocab_size
+alpha = 100/(vocab_size)
 P = build_lm(C, alpha)
 
 results = []
@@ -103,4 +104,6 @@ for comm, text in iter_examples(n,test_data):
     ppl = np.exp(mean_nll)
     results.append({'comm': comm, 'ppl': ppl})
 
+import pandas as pd
 df = pd.DataFrame(results)
+df.groupby('comm').mean('ppl').mean()
