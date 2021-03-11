@@ -60,6 +60,7 @@ def cli(ctx, model_family_dir, data_dir, batch_size, max_seq_len, file_limit, gp
     ctx.ensure_object(dict)
 
     ctx.obj['device'] = torch.device(f'cuda:{gpu_id}' if gpu_id is not None else 'cpu')
+    ctx.obj['batch_size'] = batch_size
 
     # load the dataset
     dataset, fields = load_data_and_fields(data_dir, model_family_dir,
@@ -73,9 +74,6 @@ def cli(ctx, model_family_dir, data_dir, batch_size, max_seq_len, file_limit, gp
     _, _, test_data = dataset.split(split_ratio=[0.8,0.1,0.1],
             stratified=True, strata_field='community', random_state=random_state)
     ctx.obj['test_data'] = test_data
-
-    ctx.obj['test_iterator'] = tt.data.BucketIterator(test_data, device=ctx.obj['device'],
-        batch_size=batch_size, sort=False, shuffle=False, train=False)
 
     ctx.obj['model_family_dir'] = Path(model_family_dir)
     ctx.obj['conditional_architectures'] = [x.stem for x in ctx.obj['model_family_dir'].glob('*-*-*')]
@@ -96,6 +94,11 @@ def test_cclm(ctx):
     """ Find the test perpelixity for each model on each test example."""
 
     results_file = ctx.obj['model_family_dir']/'test_ppl.pickle'
+
+
+    test_iterator = tt.data.BucketIterator(ctx.obj['test_data'], device=ctx.obj['device'],
+        batch_size=ctx.obj['batch_size'], sort=False, shuffle=False, train=False)
+
 
     def test_ppl(lm, test_batches):
         ppls = []
@@ -120,54 +123,58 @@ def test_cclm(ctx):
         model.load_state_dict(torch.load(model_dir/'model.bin'))
         model.to(ctx.obj['device'])
         model.eval()
-        ppls = test_ppl(model, ctx.obj['test_iterator'])
+        ppls = test_ppl(model, test_iterator)
         df[model_name] = ppls
     df.to_pickle(results_file)
 
 @cli.command()
-@click.argument('model_name', type=str)
 @click.pass_context
-def test_lmcc(ctx, model_name):
+def test_lmcc(ctx):
     """ Language model-based community classification. """
 
-    model_dir = os.path.join(ctx.obj['model_family_dir'], model_name)
 
     fields = ctx.obj['fields']
     n_communities = len(fields['community'].vocab)
     comms = fields['community'].vocab.itos
 
-    model_args = json.load(open(os.path.join(model_dir, 'model_args.json')))
-    model = CommunityConditionedLM.build_model(**model_args).to(ctx.obj['device'])
-    model.load_state_dict(torch.load(os.path.join(model_dir, 'model.bin')))
-    model.to(ctx.obj['device'])
-    model.eval()
+    for model_name in ctx.obj['conditional_architectures']:
 
-    def batchify_comm(comm, batch_size):
-        comm_idx = fields['community'].vocab.stoi[comm]
-        return torch.tensor(comm_idx).repeat(batch_size).to(ctx.obj['device'])
+        print(f"testing lmcc for {model_name}")
 
-    comm_probs = []
-    actual_comms = []
-    with torch.no_grad():
-        for i, batch in enumerate(ctx.obj['test_iterator']):
-            print(f"{i}/{len(ctx.obj['test_iterator'])}",end='\r')
-            with torch.no_grad():
-                nlls = torch.stack([
-                    batch_nll(
-                        model, batch,
-                        comm=batchify_comm(comm, batch.batch_size)
-                    ) for comm in comms[1:]
-                    ], dim=0).cpu().numpy()
-            comm_probs_batch = exp_normalize(-nlls, axis=0)
-            comm_probs.append(comm_probs_batch)
-            actual_comms += batch.community.tolist()
-    comm_probs = np.concatenate(comm_probs, axis=1).T
+        test_iterator = tt.data.BucketIterator(ctx.obj['test_data'], device=ctx.obj['device'],
+            batch_size=ctx.obj['batch_size'], sort=False, shuffle=False, train=False)
 
-    df = pd.DataFrame(comm_probs, columns=comms[1:])
-    df['actual_comm'] = [comms[c] for c in actual_comms]
-    df.to_pickle(os.path.join(model_dir, 'comm_probs.pickle'))
+        model_dir = ctx.obj['model_family_dir'] / model_name
+        model_args = json.load(open(model_dir/'model_args.json'))
+        model = CommunityConditionedLM.build_model(**model_args).to(ctx.obj['device'])
+        model.load_state_dict(torch.load(model_dir/'model.bin'))
+        model.to(ctx.obj['device'])
+        model.eval()
+
+        def batchify_comm(comm, batch_size):
+            comm_idx = fields['community'].vocab.stoi[comm]
+            return torch.tensor(comm_idx).repeat(batch_size).to(ctx.obj['device'])
+
+        comm_probs = []
+        actual_comms = []
+        with torch.no_grad():
+            for i, batch in enumerate(test_iterator):
+                print(f"{i}/{len(test_iterator)}",end='\r')
+                with torch.no_grad():
+                    nlls = torch.stack([
+                        batch_nll(
+                            model, batch,
+                            comm=batchify_comm(comm, batch.batch_size)
+                        ) for comm in comms[1:]
+                        ], dim=0).cpu().numpy()
+                comm_probs_batch = exp_normalize(-nlls, axis=0)
+                comm_probs.append(comm_probs_batch)
+                actual_comms += batch.community.tolist()
+        comm_probs = np.concatenate(comm_probs, axis=1).T
+
+        df = pd.DataFrame(comm_probs, columns=comms[1:])
+        df['actual_comm'] = [comms[c] for c in actual_comms]
+        df.to_pickle(os.path.join(model_dir, 'comm_probs.pickle'))
 
 if __name__ == '__main__':
     cli(obj={})
-
-
