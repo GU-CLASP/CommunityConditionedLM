@@ -107,7 +107,7 @@ def cli(architecture, model_dir, model_name, data_dir, rebuild_vocab,
     if architecture == 'Transformer':
         log.info(f"Attention heads: {heads}")
 
-    model.CommunityConditionedLM.build_model(
+    lm = model.CommunityConditionedLM.build_model(
             architecture, heads, hidden_size, vocab_size, 
             condition_community, community_emsize, 
             layers_before, layers_after, comm_vocab_size,

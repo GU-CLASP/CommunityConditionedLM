@@ -7,7 +7,7 @@ from multiprocessing import Pool
 from pathlib import Path
 import csv
 
-def preprocess(text)
+def preprocess(text):
     text = re.sub(r"\^", ' ', text)
     # For some reason the pushshift.io comments have HTML escapes in the markdown
     # we relpace them since the markdown parser doesn't recognie them.
@@ -34,6 +34,7 @@ def preprocess(text)
     text = re.sub(r"https?:\/\/[^\s]+", '', text)
     # Remove extra whitespace
     text = re.sub(r"^\s+|\s+$|\s+(?=\s)", '', text)
+    return text
 
 def preprocess_file(comment_file):
     nlp = English()
@@ -44,11 +45,26 @@ def preprocess_file(comment_file):
     with open(comment_file, 'r') as f:
         reader = csv.DictReader(f)
         for comment in reader:
-            comment_text = preprocess(comment['body'])
+            try:
+                comment_text = preprocess(comment['body'])
+            except Exception as e:
+                print("Preprocessing exception.")
+                print(e)
+                print(comment['body'])
+                continue
             tokenized = [token.text for token in spacy_tokenizer(comment_text)]
-            tokenized_comments.append((comment['subreddit'], comment_text))
+            tokenized_comments.append({'comm': comment['subreddit'], 'text': comment_text})
     return tokenized_comments
 
 corpus_dir = Path('reddit_sample')
-with Pool(processes=8) as p:
-    p.starmap(preprocess_file, corpus_dir.glob('*.csv'))
+with Pool(processes=12) as p:
+    data = p.starmap(preprocess_file, [(f,) for f in corpus_dir.glob('*.csv')])
+
+tokenized_corpus_dir = Path('reddit_tokenized')
+output_files = {}
+for shard in data:
+    for comment in shard:
+        if not comment['comm'] in output_files:
+            output_files[comment['comm']] = open(tokenized_corpus_dir/f"{comment['comm']}.txt", 'w')
+        output_files[comment['comm']].write(comment['text'] + '\n')
+
