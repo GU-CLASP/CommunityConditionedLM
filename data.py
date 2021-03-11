@@ -6,8 +6,8 @@ import csv
 import util
 
 def create_fields():
-    COMMUNITY = tt.data.Field(sequential=False, pad_token=None)
-    TEXT = tt.data.Field(eos_token='<eos>', tokenize=None)
+    COMMUNITY = tt.data.Field(sequential=False, pad_token=None, unk_token=None)
+    TEXT = tt.data.Field(eos_token='<eos>', init_token='<bos>', tokenize=None)
     return  OrderedDict([('community', COMMUNITY), ('text', TEXT)])
 
 def gen_examples(data_dir, fields, max_seq_len, file_limit):
@@ -18,12 +18,13 @@ def gen_examples(data_dir, fields, max_seq_len, file_limit):
 
 def build_fields(fields, data, vocab_size):
 
-    fields['community'].build_vocab(data, specials=['<unk>'])
+    fields['community'].build_vocab(data)
 
     token_counts = Counter()
     for i, example in enumerate(data):
         token_counts.update(set(example.text)) # avoid over-counting spammed tokens
-    fields['text'].vocab = tt.vocab.Vocab(token_counts, max_size=vocab_size, specials=['<eos>', '<unk>', '<pad>'])
+    fields['text'].vocab = tt.vocab.Vocab(token_counts, max_size=vocab_size, 
+            specials=['<eos>', '<unk>', '<bos>', '<pad>'])
 
     return fields
 

@@ -36,14 +36,14 @@
   year = {2020},
   month = jan,
   abstract = {Social media data has become crucial to the advancement of scientific understanding. However, even though it has become ubiquitous, just collecting large-scale social media data involves a high degree of engineering skill set and computational resources. In fact, research is often times gated by data engineering problems that must be overcome before analysis can proceed. This has resulted recognition of datasets as meaningful research contributions in and of themselves.},
-  archivePrefix = {arXiv},
+  archiveprefix = {arXiv},
   eprint = {2001.08435},
   eprinttype = {arxiv},
   file = {/Users/xnobwi/.zotero/storage/EKD4IX6E/Baumgartner et al. - 2020 - The Pushshift Reddit Dataset.pdf},
   journal = {arXiv:2001.08435 [cs]},
   keywords = {Computer Science - Computers and Society,Computer Science - Social and Information Networks},
   language = {en},
-  primaryClass = {cs}
+  primaryclass = {cs}
 }
 
 @inproceedings{Burger2011,
@@ -101,6 +101,23 @@
   publisher = {{Association for Computational Linguistics}},
   address = {{Cambridge, MA}},
   file = {/Users/xnobwi/.zotero/storage/87VK9SZ9/Eisenstein et al. - 2010 - A Latent Variable Model for Geographic Lexical Var.pdf}
+}
+
+@article{Elazar2020,
+  title = {Amnesic {{Probing}}: {{Behavioral Explanation}} with {{Amnesic Counterfactuals}}},
+  shorttitle = {Amnesic {{Probing}}},
+  author = {Elazar, Yanai and Ravfogel, Shauli and Jacovi, Alon and Goldberg, Yoav},
+  year = {2020},
+  month = dec,
+  abstract = {A growing body of work makes use of probing in order to investigate the working of neural models, often considered black boxes. Recently, an ongoing debate emerged surrounding the limitations of the probing paradigm. In this work, we point out the inability to infer behavioral conclusions from probing results, and offer an alternative method which focuses on how the information is being used, rather than on what information is encoded. Our method, Amnesic Probing, follows the intuition that the utility of a property for a given task can be assessed by measuring the influence of a causal intervention which removes it from the representation. Equipped with this new analysis tool, we can ask questions that were not possible before, e.g. is part-of-speech information important for word prediction? We perform a series of analyses on BERT to answer these types of questions. Our findings demonstrate that conventional probing performance is not correlated to task importance, and we call for increased scrutiny of claims that draw behavioral or causal conclusions from probing results.},
+  archiveprefix = {arXiv},
+  eprint = {2006.00995},
+  eprinttype = {arxiv},
+  file = {/Users/xnobwi/.zotero/storage/5ZVIPC7M/Elazar et al. - 2020 - Amnesic Probing Behavioral Explanation with Amnes.pdf},
+  journal = {arXiv:2006.00995 [cs]},
+  keywords = {Computer Science - Computation and Language},
+  language = {en},
+  primaryclass = {cs}
 }
 
 @inproceedings{Feng2010,
@@ -227,13 +244,13 @@
   year = {2019},
   month = jan,
   abstract = {L\$\_2\$ regularization and weight decay regularization are equivalent for standard stochastic gradient descent (when rescaled by the learning rate), but as we demonstrate this is \textbackslash emph\{not\} the case for adaptive gradient algorithms, such as Adam. While common implementations of these algorithms employ L\$\_2\$ regularization (often calling it "weight decay" in what may be misleading due to the inequivalence we expose), we propose a simple modification to recover the original formulation of weight decay regularization by \textbackslash emph\{decoupling\} the weight decay from the optimization steps taken w.r.t. the loss function. We provide empirical evidence that our proposed modification (i) decouples the optimal choice of weight decay factor from the setting of the learning rate for both standard SGD and Adam and (ii) substantially improves Adam's generalization performance, allowing it to compete with SGD with momentum on image classification datasets (on which it was previously typically outperformed by the latter). Our proposed decoupled weight decay has already been adopted by many researchers, and the community has implemented it in TensorFlow and PyTorch; the complete source code for our experiments is available at https://github.com/loshchil/AdamW-and-SGDW},
-  archivePrefix = {arXiv},
+  archiveprefix = {arXiv},
   eprint = {1711.05101},
   eprinttype = {arxiv},
   file = {/Users/xnobwi/.zotero/storage/M5NJK34K/Loshchilov and Hutter - 2019 - Decoupled Weight Decay Regularization.pdf},
   journal = {arXiv:1711.05101 [cs, math]},
   keywords = {Computer Science - Machine Learning,Computer Science - Neural and Evolutionary Computing,Mathematics - Optimization and Control},
-  primaryClass = {cs, math}
+  primaryclass = {cs, math}
 }
 
 @inproceedings{Martin2017,
@@ -275,6 +292,18 @@
   language = {en}
 }
 
+@inproceedings{Peters2018a,
+  title = {Dissecting {{Contextual Word Embeddings}}: {{Architecture}} and {{Representation}}},
+  booktitle = {Proceedings of the 2018 {{Conference}} on {{Empirical Methods}} in {{Natural Language Processing}}},
+  author = {Peters, Matthew and Neumann, Mark and Zettlemoyer, Luke and Yih, Wen-tau},
+  year = {2018},
+  pages = {1499--1509},
+  address = {{Brussels, Belgium}},
+  abstract = {Contextual word representations derived from pre-trained bidirectional language models (biLMs) have recently been shown to provide significant improvements to the state of the art for a wide range of NLP tasks. However, many questions remain as to how and why these models are so effective. In this paper, we present a detailed empirical study of how the choice of neural architecture (e.g. LSTM, CNN, or self attention) influences both end task accuracy and qualitative properties of the representations that are learned. We show there is a tradeoff between speed and accuracy, but all architectures learn high quality contextual representations that outperform word embeddings for four challenging NLP tasks. Additionally, all architectures learn representations that vary with network depth, from exclusively morphological based at the word embedding layer through local syntax based in the lower contextual layers to longer range semantics such coreference at the upper layers. Together, these results suggest that unsupervised biLMs, independent of architecture, are learning much more about the structure of language than previously appreciated.},
+  file = {/Users/xnobwi/.zotero/storage/Z6JP4TYC/Peters et al. - Dissecting Contextual Word Embeddings Architectur.pdf},
+  language = {en}
+}
+
 @article{Stalnaker2002,
   title = {Common {{Ground}}},
   author = {Stalnaker, Robert},
@@ -292,14 +321,14 @@
   year = {2017},
   month = jun,
   abstract = {The dominant sequence transduction models are based on complex recurrent or convolutional neural networks that include an encoder and a decoder. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely. Experiments on two machine translation tasks show these models to be superior in quality while being more parallelizable and requiring significantly less time to train. Our model achieves 28.4 BLEU on the WMT 2014 Englishto-German translation task, improving over the existing best results, including ensembles, by over 2 BLEU. On the WMT 2014 English-to-French translation task, our model establishes a new single-model state-of-the-art BLEU score of 41.8 after training for 3.5 days on eight GPUs, a small fraction of the training costs of the best models from the literature. We show that the Transformer generalizes well to other tasks by applying it successfully to English constituency parsing both with large and limited training data.},
-  archivePrefix = {arXiv},
+  archiveprefix = {arXiv},
   eprint = {1706.03762},
   eprinttype = {arxiv},
   file = {/Users/xnobwi/.zotero/storage/IWEAZI3G/Vaswani et al. - 2017 - Attention Is All You Need.pdf},
   journal = {arXiv:1706.03762 [cs]},
   keywords = {Computer Science - Computation and Language,Computer Science - Machine Learning},
   language = {en},
-  primaryClass = {cs}
+  primaryclass = {cs}
 }
 
 @article{Vinyals2015,
@@ -309,13 +338,13 @@
   year = {2015},
   month = apr,
   abstract = {Automatically describing the content of an image is a fundamental problem in artificial intelligence that connects computer vision and natural language processing. In this paper, we present a generative model based on a deep recurrent architecture that combines recent advances in computer vision and machine translation and that can be used to generate natural sentences describing an image. The model is trained to maximize the likelihood of the target description sentence given the training image. Experiments on several datasets show the accuracy of the model and the fluency of the language it learns solely from image descriptions. Our model is often quite accurate, which we verify both qualitatively and quantitatively. For instance, while the current state-of-the-art BLEU-1 score (the higher the better) on the Pascal dataset is 25, our approach yields 59, to be compared to human performance around 69. We also show BLEU-1 score improvements on Flickr30k, from 56 to 66, and on SBU, from 19 to 28. Lastly, on the newly released COCO dataset, we achieve a BLEU-4 of 27.7, which is the current state-of-the-art.},
-  archivePrefix = {arXiv},
+  archiveprefix = {arXiv},
   eprint = {1411.4555},
   eprinttype = {arxiv},
   file = {/Users/xnobwi/.zotero/storage/SDGLT9PD/Vinyals et al. - 2015 - Show and Tell A Neural Image Caption Generator.pdf},
   journal = {arXiv:1411.4555 [cs]},
   keywords = {Computer Science - Computer Vision and Pattern Recognition},
-  primaryClass = {cs}
+  primaryclass = {cs}
 }
 
 @article{Yang2017,
