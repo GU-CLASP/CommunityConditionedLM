@@ -106,6 +106,7 @@ def cli(ctx, model_family_dir, data_dir, ngram_size, max_seq_len, file_limit, gr
     model_family_dir = Path(model_family_dir)
     data_dir = Path(data_dir)
     model_dir = model_family_dir/model_name
+    results_file = model_dir/'test_ppl.pickle'
 
     util.mkdir(model_dir)
 
@@ -137,6 +138,9 @@ def cli(ctx, model_family_dir, data_dir, ngram_size, max_seq_len, file_limit, gr
     np.save(model_dir/'model', P)
     with open(os.path.join(model_dir, 'smoothing-alpha.txt'), 'w') as f:
         f.write(f'{alpha:0.8f}')
+
+    df = test_lm(P, test_data)
+    df.to_pickle(results_file)
 
 if __name__ == '__main__':
     cli()
