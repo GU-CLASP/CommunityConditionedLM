@@ -7,6 +7,7 @@ import itertools
 import numpy as np
 import pandas as pd
 import click
+import os
 
 def iter_ngrams(text, n=2):
     ts = itertools.tee(text, n)
@@ -130,7 +131,12 @@ def cli(ctx, model_family_dir, data_dir, ngram_size, max_seq_len, file_limit, gr
     min_alpha = 1 / (vocab_size**2)
     max_alpha = 1
     grid_points = 10
-    grid_search(lambda x: test_alpha(C, x, val_data), grid_points, min_alpha, max_alpha, gridsearch_iters, log)
+    alpha = grid_search(lambda x: test_alpha(C, x, val_data), grid_points, min_alpha, max_alpha, gridsearch_iters, log)
+
+    P = build_lm(C, alpha)
+    np.save(model_dir/'model', P)
+    with open(os.path.join(model_dir, 'smoothing-alpha.txt'), 'w') as f:
+        f.write(f'{alpha:0.8f}')
 
 if __name__ == '__main__':
     cli()
