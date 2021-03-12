@@ -1,9 +1,12 @@
+from data import load_data_and_fields
 from pathlib import Path
 import util
 import data
 import random
 import itertools
 import numpy as np
+import pandas as pd
+import click
 
 def iter_ngrams(text, n=2):
     ts = itertools.tee(text, n)
@@ -11,44 +14,6 @@ def iter_ngrams(text, n=2):
         for _ in range(i+1):
             next(t)
     return zip(*ts)
-
-# @click.argument('model_dir', type=click.Path(exists=True))
-# @click.argument('model_name', type=str)
-# @click.argument('data_dir', type=click.Path(exists=True))
-# @click.option('--rebuild-vocab/--no-rebuild-vocab', default=False)
-# @click.option('--vocab-size', default=40000)
-# @click.option('--max-seq-len', default=64)
-# @click.option('--file-limit', type=int, default=None,
-        # help="Number of examples per file (community).")
-
-model_dir = 'model/synth'
-model_name = 'bigram'
-data_dir = 'data/synth_data'
-rebuild_vocab = False
-vocab_size = 40000
-max_seq_len = 64
-file_limit = None
-
-model_dir = Path(model_dir)
-data_dir = Path(data_dir)
-save_dir = model_dir/model_name
-
-util.mkdir(model_dir)
-util.mkdir(save_dir)
-
-log = util.create_logger('ngram', save_dir/'ngram.log', True)
-
-dataset, fields = data.load_data_and_fields(data_dir, model_dir,
-        max_seq_len, file_limit, vocab_size, rebuild_vocab)
-
-comm_unk_idx = fields['community'].vocab.stoi['<unk>']
-text_pad_idx = fields['text'].vocab.stoi['<pad>']
-log.info(f"Loaded {len(dataset)} examples.")
-
-random.seed(42)
-random_state = random.getstate()
-train_data, val_data, test_data = dataset.split(split_ratio=[0.8,0.1,0.1], stratified=True, strata_field='community', random_state=random_state)
-log.info(f"Splits: train: {len(train_data)} val: {len(val_data)} test: {len(test_data)} ")
 
 def iter_examples(n, data):
     fields = data.fields
@@ -84,26 +49,88 @@ def build_lm(C, alpha):
 
 def example_nll(n, P, comm, text):
     p = []
-    for y_hat, ngram in zip(text[n-1:], iter_ngrams(text, n-1)):
-        p.append(P[comm][ngram][y_hat])
+    if n == 1:
+        for y_hat in text[n-1:]:
+            p.append(P[comm][y_hat])
+    else:
+        for y_hat, ngram in zip(text[n-1:], iter_ngrams(text, n-1)):
+            p.append(P[comm][ngram][y_hat])
     p = np.array(p)
     return -np.log(p)
 
 def test_lm(P, data):
+    results = []
+    n = len(P.shape) - 1
+    for comm, text in iter_examples(n,data):
+        nll = example_nll(n, P, comm,text)
+        mean_nll = nll.sum() / len(nll)
+        ppl = np.exp(mean_nll)
+        results.append({'comm': comm, 'ppl': ppl})
+    df = pd.DataFrame(results)
+    return df
 
-n = 2
-C = count_ngrams(n, train_data)
+def grid_search(func, n_points, min_value, max_value, n_iters, log):
+    """ Grid search of one parameter """
+    def grid_search_iter(min_value, max_value):
+        log.info(f"Testing {n_points} points between {min_value:0.4E} and {max_value:0.4E}")
+        step = (max_value - min_value) / n_points
+        params = np.arange(start=min_value, stop=max_value, step=step)
+        results = np.array([func(param) for param in params])
+        best = np.argmin(results)
+        best_value = params[best]
+        log.info(f"Lowest loss {results[best]:0.6f} with parameter {best_value:0.4E} (point {best+1}/{n_points})")
+        return params[max(best-1,0)], params[min(best+1, len(params)-1)], best_value
+    for i in range(n_iters):
+        min_value, max_value, best_value = grid_search_iter(min_value, max_value)
+    return best_value
 
-alpha = 100/(vocab_size)
-P = build_lm(C, alpha)
+def test_alpha(C, alpha, test_data):
+    P = build_lm(C, alpha)
+    results = test_lm(P, test_data) 
+    return float(results.groupby('comm').mean('ppl').mean()) # macro average ppl
 
-results = []
-for comm, text in iter_examples(n,test_data):
-    nll = example_nll(n, P, comm,text)
-    mean_nll = nll.sum() / len(nll)
-    ppl = np.exp(mean_nll)
-    results.append({'comm': comm, 'ppl': ppl})
+@click.command()
+@click.argument('model_family_dir', type=click.Path(exists=False))
+@click.argument('data_dir', type=click.Path(exists=True))
+@click.argument('ngram_size', type=int) # N-gram size
+@click.option('--max-seq-len', default=64)
+@click.option('--file-limit', type=int, default=None,
+        help="Number of examples per file (community).")
+@click.option('--gridsearch-iters', type=int, default=10)
+@click.pass_context
+def cli(ctx, model_family_dir, data_dir, ngram_size, max_seq_len, file_limit, gridsearch_iters):
+    ctx.ensure_object(dict)
 
-import pandas as pd
-df = pd.DataFrame(results)
-df.groupby('comm').mean('ppl').mean()
+    model_name = f"{ngram_size}-gram"
+    model_family_dir = Path(model_family_dir)
+    data_dir = Path(data_dir)
+    model_dir = model_family_dir/model_name
+
+    util.mkdir(model_dir)
+
+    log = util.create_logger('ngram', model_dir/'ngram.log', True)
+
+    dataset, fields = load_data_and_fields(data_dir, model_family_dir,
+            max_seq_len, file_limit)
+    log.info(f"Loaded {len(dataset)} examples.")
+
+    text_pad_idx = fields['text'].vocab.stoi['<pad>']
+    vocab_size = len(fields['text'].vocab.stoi)
+
+
+    random.seed(42)
+    random_state = random.getstate()
+    train_data, val_data, test_data = dataset.split(split_ratio=[0.8,0.1,0.1], stratified=True, strata_field='community', random_state=random_state)
+    log.info(f"Splits: train: {len(train_data)} val: {len(val_data)} test: {len(test_data)} ")
+
+    log.info("Counting n-grams in the training data")
+    C = count_ngrams(ngram_size, train_data)
+    log.info("Finding optimal smoothing parameter")
+
+    min_alpha = 1 / (vocab_size**2)
+    max_alpha = 1
+    grid_points = 10
+    grid_search(lambda x: test_alpha(C, x, val_data), grid_points, min_alpha, max_alpha, gridsearch_iters, log)
+
+if __name__ == '__main__':
+    cli()
