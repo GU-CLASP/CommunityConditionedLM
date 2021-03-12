@@ -51,7 +51,7 @@ def batch_nll(model, batch, comm=None):
 @click.argument('data_dir', type=click.Path(exists=True))
 @click.option('--batch-size', default=512)
 @click.option('--max-seq-len', default=64)
-@click.option('--file-limit', type=int, default=50000,
+@click.option('--file-limit', type=int, default=None,
         help="Number of examples per file (community).")
 @click.option('--gpu-id', type=int, default=None,
         help="ID of the GPU, if traning with CUDA")
