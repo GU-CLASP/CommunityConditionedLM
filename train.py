@@ -81,13 +81,14 @@ def cli(architecture, model_dir, data_dir, rebuild_vocab,
     log = util.create_logger('train', os.path.join(save_dir, 'training.log'), True)
     log.info(f"Model will be saved to {save_dir}.")
 
-    log.info(f"Loading dataset from {data_dir} files.")
-    dataset, fields = data.load_data_and_fields(data_dir, model_dir,
-            max_seq_len, file_limit, vocab_size, rebuild_vocab)
+    log.info(f"Loading data from {data_dir}.")
+    fields = data.load_fields(model_dir, data_dir, vocab_size)
+    train_data = data.load_data(data_dir, fields, 'train', max_seq_len, file_limit)
     vocab_size = len(fields['text'].vocab.itos)
     comm_vocab_size = len(fields['community'].vocab.itos)
     text_pad_idx = fields['text'].vocab.stoi['<pad>']
-    log.info(f"Loaded {len(dataset)} examples.")
+    dev_data = data.load_data(data_dir, fields, 'dev', max_seq_len, None)
+    log.info(f"Loaded {len(train_data)} train and {len(dev_data)} dev examples.")
 
     if not condition_community:
         community_layer_no = 0
@@ -120,22 +121,19 @@ def cli(architecture, model_dir, data_dir, rebuild_vocab,
     device = torch.device(f'cuda:{gpu_id}' if gpu_id is not None else 'cpu')
     lm.to(device)
 
-    random.seed(42)
-    random_state = random.getstate()
-    train_data, val_data, test_data = dataset.split(split_ratio=[0.8,0.1,0.1], stratified=True, strata_field='community', random_state=random_state)
-    log.info(f"Splits: train: {len(train_data)} val: {len(val_data)} test: {len(test_data)} ")
-
     train_iterator = tt.data.BucketIterator(
         train_data,
         device=device,
         batch_size=batch_size,
         sort_key=lambda x: len(x.text),
+        shuffle=True,
         train=True)
     val_iterator = tt.data.BucketIterator(
-        val_data,
+        dev_data,
         device=device,
         batch_size=batch_size,
         sort_key=lambda x: len(x.text),
+        shuffle=False,
         train=False)
 
     criterion = nn.NLLLoss(ignore_index=text_pad_idx, reduction='none')

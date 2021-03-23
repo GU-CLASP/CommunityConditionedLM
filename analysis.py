@@ -7,8 +7,8 @@ from scipy.special import entr
 from itertools import combinations
 from sklearn.decomposition import PCA
 
-model_dir = 'model/reddit2015'
-floats_dir = 'paper/floats'
+model_dir = 'model/reddit'
+floats_dir = 'paper/floats_new'
 
 def add_columns(df, new, suffix=''):
     new = new.rename(lambda x: str(x) + suffix, axis=1)

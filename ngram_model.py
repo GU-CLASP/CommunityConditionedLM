@@ -1,4 +1,3 @@
-from data import load_data_and_fields
 from pathlib import Path
 import util
 import data
@@ -95,11 +94,12 @@ def test_alpha(C, alpha, test_data):
 @click.argument('data_dir', type=click.Path(exists=True))
 @click.argument('ngram_size', type=int) # N-gram size
 @click.option('--max-seq-len', default=64)
+@click.option('--vocab-size', default=40000)
 @click.option('--file-limit', type=int, default=None,
         help="Number of examples per file (community).")
 @click.option('--gridsearch-iters', type=int, default=10)
 @click.pass_context
-def cli(ctx, model_family_dir, data_dir, ngram_size, max_seq_len, file_limit, gridsearch_iters):
+def cli(ctx, model_family_dir, data_dir, ngram_size, max_seq_len, vocab_size, file_limit, gridsearch_iters):
     ctx.ensure_object(dict)
 
     model_name = f"{ngram_size}-gram"
@@ -112,18 +112,17 @@ def cli(ctx, model_family_dir, data_dir, ngram_size, max_seq_len, file_limit, gr
 
     log = util.create_logger('ngram', model_dir/'ngram.log', True)
 
-    dataset, fields = load_data_and_fields(data_dir, model_family_dir,
-            max_seq_len, file_limit)
-    log.info(f"Loaded {len(dataset)} examples.")
+    log.info(f"Loading data from {data_dir}.")
+    fields = data.load_fields(model_family_dir, data_dir, vocab_size)
+    train_data = data.load_data(data_dir, fields, 'train', max_seq_len, file_limit)
+    vocab_size = len(fields['text'].vocab.itos)
+    comm_vocab_size = len(fields['community'].vocab.itos)
+    text_pad_idx = fields['text'].vocab.stoi['<pad>']
+    dev_data = data.load_data(data_dir, fields, 'dev', max_seq_len, None)
+    log.info(f"Loaded {len(train_data)} train and {len(dev_data)} dev examples.")
 
     text_pad_idx = fields['text'].vocab.stoi['<pad>']
     vocab_size = len(fields['text'].vocab.stoi)
-
-
-    random.seed(42)
-    random_state = random.getstate()
-    train_data, val_data, test_data = dataset.split(split_ratio=[0.8,0.1,0.1], stratified=True, strata_field='community', random_state=random_state)
-    log.info(f"Splits: train: {len(train_data)} val: {len(val_data)} test: {len(test_data)} ")
 
     log.info("Counting n-grams in the training data")
     C = count_ngrams(ngram_size, train_data)

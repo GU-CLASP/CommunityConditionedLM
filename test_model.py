@@ -160,13 +160,12 @@ def test_lmcc(ctx):
         with torch.no_grad():
             for i, batch in enumerate(test_iterator):
                 print(f"{i}/{len(test_iterator)}",end='\r')
-                with torch.no_grad():
-                    nlls = torch.stack([
-                        batch_nll(
-                            model, batch,
-                            comm=batchify_comm(comm, batch.batch_size)
-                        ) for comm in comms[1:]
-                        ], dim=0).cpu().numpy()
+                nlls = torch.stack([
+                    batch_nll(
+                        model, batch,
+                        comm=batchify_comm(comm, batch.batch_size)
+                    ) for comm in comms[1:]
+                    ], dim=0).cpu().numpy()
                 comm_probs_batch = exp_normalize(-nlls, axis=0)
                 comm_probs.append(comm_probs_batch)
                 actual_comms += batch.community.tolist()

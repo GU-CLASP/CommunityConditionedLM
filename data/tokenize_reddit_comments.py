@@ -45,6 +45,8 @@ def preprocess_file(comment_file):
     with open(comment_file, 'r') as f:
         reader = csv.DictReader(f)
         for comment in reader:
+            if comment['body'] == '[deleted]':
+                continue
             try:
                 comment_text = preprocess(comment['body'])
             except Exception as e:
@@ -53,7 +55,7 @@ def preprocess_file(comment_file):
                 print(comment['body'])
                 continue
             tokenized = [token.text for token in spacy_tokenizer(comment_text)]
-            tokenized_comments.append({'comm': comment['subreddit'], 'text': comment_text})
+            tokenized_comments.append({'comm': comment['subreddit'], 'text': ' '.join(tokenized)})
     return tokenized_comments
 
 corpus_dir = Path('reddit_sample')

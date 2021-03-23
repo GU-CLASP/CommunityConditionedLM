@@ -6,13 +6,13 @@ import json
 
 def get_community_label(file_path):
     base = os.path.basename(file_path)
-    return os.path.splitext(base)[0]
+    return base.split('.')[0]
 
 def get_communities(data_dir):
-    return [get_community_label(f) for f in  os.listdir(data_dir)]
+    return [get_community_label(f) for f in  os.listdir(data_dir) if f.endswith('.train.txt')]
 
-def data_filename(data_dir, comm):
-    return Path(data_dir)/f'{comm}.txt'
+def data_filename(data_dir, split, comm):
+    return Path(data_dir)/f'{comm}.{split}.txt'
 
 def mkdir(path):
     if os.path.exists(path):
@@ -33,10 +33,11 @@ def create_logger(name, filename, debug):
     logger.addHandler(console)
     return logger
 
-def iter_data(data_dir, file_limit=None):
+def iter_data(data_dir, split, file_limit=None):
     communities = get_communities(data_dir)
     for community in communities:
-        filename = data_filename(data_dir, community)
+        filename = data_filename(data_dir, split, community)
+        print(filename)
         for i, line in enumerate(iter_file(filename)):
             yield community, line
             if file_limit and i >= file_limit:
