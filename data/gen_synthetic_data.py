@@ -37,16 +37,28 @@ def cli(output_dir, n_communities, samples_per_community, max_seq_len, vocab_siz
     vocab = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")[:vocab_size]
     t_dim = len(vocab) + 1
 
+    test_dev_samples = int((0.1 * samples_per_community)/2)
+    train_samples = samples_per_community - (2 * test_dev_samples)
+
     for i, alpha in enumerate(np.linspace(alpha_start, alpha_end, n_communities)): # various Dirichlet hyperparameters 
         comm = f"COMM{i:02d}"
         print(f"Generating {comm}")
         t_mat = np.array([np.random.dirichlet([alpha] * t_dim) for _ in range(t_dim)])
         mc = MarkovChain(t_mat, vocab)
-        with open(os.path.join(output_dir, comm + '.txt'), 'w') as f:
-            for i in range(samples_per_community):
-                sample = ' '.join(itertools.islice(mc, max_seq_len))
-                if sample:
-                    f.write(sample + '\n')
+        samples = []
+        while len(samples) < samples_per_community:
+            sample = ' '.join(itertools.islice(mc, max_seq_len))
+            if sample:
+                samples.append(sample)
+        with open(os.path.join(output_dir, comm + '.train.txt'), 'w') as f:
+            for sample in samples[:train_samples]:
+                f.write(sample + '\n')
+        with open(os.path.join(output_dir, comm + '.test.txt'), 'w') as f:
+            for sample in samples[train_samples:-test_dev_samples]:
+                f.write(sample + '\n')
+        with open(os.path.join(output_dir, comm + '.dev.txt'), 'w') as f:
+            for sample in samples[train_samples + test_dev_samples:]:
+                f.write(sample + '\n')
 
 if __name__ == '__main__':
     cli()
