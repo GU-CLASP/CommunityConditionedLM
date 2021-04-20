@@ -271,12 +271,17 @@ In the remainder of the paper we use $M$ to refer to messages in the
 test set, and $M_j$ for the partition of the test set originating from
 community $c_j$.
 
-We use a vocabulary size of \num{40000} tokens, including a special
-out-of-vocabulary token.  The vocabulary consists of the most frequent
-tokens at the message level (across all communities), meaning that we
-only count each token once per message.  The main reason for this
-choice is to avoid over-counting otherwise rare tokens that were
-repeated many times in a single message.
+The vocabulary is drawn from the set of all words appearing with a frequency
+greater than \num{5e-5} (1 in \num{2000}) in at least one community.
+This results in a vocabulary size of \num{47403}, including a special
+out-of-vocablary token.
+
+%We use a vocabulary size of \num{40000} tokens, including a special
+%out-of-vocabulary token.  The vocabulary consists of the most frequent
+%tokens at the message level (across all communities), meaning that we
+%only count each token once per message.  The main reason for this
+%choice is to avoid over-counting otherwise rare tokens that were
+%repeated many times in a single message.
 
 For the LSTM, we trained the models on a simple left-to-right language
 modeling task with cross-entropy loss over the vocabulary.  Because

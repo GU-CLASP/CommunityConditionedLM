@@ -1,4 +1,3 @@
-import os
 import click
 import data
 import model
@@ -9,6 +8,8 @@ import torch.nn.functional as F
 import math
 import random
 import util
+import os
+from pathlib import Path
 
 def train(lm, batches, vocab_size, criterion, optimizer, log):
     lm.train()
@@ -55,15 +56,15 @@ def evaluate(lm, batches, vocab_size, criterion):
 @click.argument('data_dir', type=click.Path(exists=True))
 @click.option('--resume-training/--no-resume-training', default=False)
 @click.option('--rebuild-vocab/--no-rebuild-vocab', default=False)
-@click.option('--vocab-size', default=40000)
+@click.option('--min-token-freq', default=5e-5)
 @click.option('--encoder-layers', default=1)
 @click.option('--heads', default=8)
-@click.option('--hidden-size', default=256)
+@click.option('--hidden-size', default=128)
 @click.option('--condition-community/--no-condition-community', default=True)
 @click.option('--community-emsize', default=16)
 @click.option('--community-layer-no', default=0)
 @click.option('--dropout', default=0.1)
-@click.option('--batch-size', default=32)
+@click.option('--batch-size', default=128)
 @click.option('--max-seq-len', default=64)
 @click.option('--lr', default=0.001)
 @click.option('--max-epochs', type=int, default=None)
@@ -72,23 +73,24 @@ def evaluate(lm, batches, vocab_size, criterion):
 @click.option('--gpu-id', type=int, default=None,
         help="ID of the GPU, if traning with CUDA")
 def cli(architecture, model_dir, data_dir, resume_training, rebuild_vocab,
-        vocab_size, encoder_layers, heads, hidden_size,
+        min_token_freq, encoder_layers, heads, hidden_size,
         condition_community, community_emsize, community_layer_no, dropout,
         batch_size, max_seq_len, lr, max_epochs, file_limit, gpu_id):
 
+    model_dir = Path(model_dir)
     model_name = f"{architecture.lower()}-{encoder_layers}" + (f"-{community_layer_no}" if condition_community else "")
-    save_dir = os.path.join(model_dir, model_name)
+    save_dir = model_dir/model_name
     util.mkdir(save_dir)
-    log = util.create_logger('train', os.path.join(save_dir, 'training.log'), True)
+    log = util.create_logger('train', save_dir/'training.log', True)
     log.info(f"Model will be saved to {save_dir}.")
 
     log.info(f"Loading data from {data_dir}.")
-    fields = data.load_fields(model_dir, data_dir, vocab_size)
+    fields = data.load_fields(model_dir, data_dir, min_token_freq, file_limit)
     train_data = data.load_data(data_dir, fields, 'train', max_seq_len, file_limit)
     vocab_size = len(fields['text'].vocab.itos)
     comm_vocab_size = len(fields['community'].vocab.itos)
     text_pad_idx = fields['text'].vocab.stoi['<pad>']
-    dev_data = data.load_data(data_dir, fields, 'dev', max_seq_len, None)
+    dev_data = data.load_data(data_dir, fields, 'dev', max_seq_len, file_limit)
     log.info(f"Loaded {len(train_data)} train and {len(dev_data)} dev examples.")
 
     if not condition_community:
@@ -113,7 +115,7 @@ def cli(architecture, model_dir, data_dir, resume_training, rebuild_vocab,
             architecture, heads, hidden_size, vocab_size, 
             condition_community, community_emsize, 
             layers_before, layers_after, comm_vocab_size,
-            dropout, save_args_file=os.path.join(save_dir, 'model_args.json'))
+            dropout, save_args_file=save_dir/'model_args.json')
 
     total_params = sum(p.numel() for p in lm.parameters() if p.requires_grad)
     log.info(f"Built model with {total_params} parameters.")
@@ -140,10 +142,10 @@ def cli(architecture, model_dir, data_dir, resume_training, rebuild_vocab,
     criterion = nn.NLLLoss(ignore_index=text_pad_idx, reduction='none')
     optimizer = torch.optim.AdamW(lm.parameters(), lr=lr)
 
-    if resume_training:
-        with open(os.path.join(save_dir, 'saved-epoch.txt'), 'r') as f:
+    if resume_training and os.path.exists(save_dir/'saved-epoch.txt'):
+        with open(save_dir/'saved-epoch.txt', 'r') as f:
             epoch = int(f.read().strip())
-        lm.load_state_dict(torch.load(os.path.join(save_dir, 'model.bin')))
+        lm.load_state_dict(torch.load(save_dir/'model.bin'))
         log.info(f"Resuming trainng after epoch {epoch}.")
         val_ppls = util.read_logged_val_ppls(save_dir)
         saved_val_ppl = val_ppls[epoch-1]
@@ -157,14 +159,16 @@ def cli(architecture, model_dir, data_dir, resume_training, rebuild_vocab,
 
     while True:
         epoch += 1
-        log.info(f'Starting epoch {epoch}')
+        log.debug(f'Starting epoch {epoch} training.')
         lm = train(lm, train_iterator, vocab_size, criterion, optimizer, log)
+        log.debug(f'Starting epoch {epoch} validation.')
         val_loss = evaluate(lm, val_iterator, vocab_size, criterion)
         val_loss = sum(val_loss) / len(val_loss)
         val_ppl = math.exp(val_loss)
         if val_ppls == [] or val_ppl < min(val_ppls):
-            torch.save(lm.state_dict(), os.path.join(save_dir, 'model.bin'))
-            with open(os.path.join(save_dir, 'saved-epoch.txt'), 'w') as f:
+            log.debug(f'Saving epoch {epoch} model.')
+            torch.save(lm.state_dict(), save_dir/'model.bin')
+            with open(save_dir/'saved-epoch.txt', 'w') as f:
                 f.write(f'{epoch:03d}')
         val_ppls.append(val_ppl)
         log.info(f"Epoch {epoch:3d} | val loss {val_loss:5.2f} | ppl {val_ppl}")
@@ -175,3 +179,4 @@ def cli(architecture, model_dir, data_dir, resume_training, rebuild_vocab,
 
 if __name__ == '__main__':
     cli()
+
