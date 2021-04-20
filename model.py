@@ -22,7 +22,6 @@ class CommunityConditionedLM(nn.Module):
         self.decoder = nn.Linear(hidden_size, n_tokens)
         self.encoder_before = encoder_before
         self.encoder_after = encoder_after
-        self.use_tunned_comm = False
         if use_community:
             self.comm_inference = nn.Embedding(n_comms, n_comms)
             self.comm_embed = WeightedEmbedding(n_comms, comm_emsize)
@@ -58,10 +57,7 @@ class CommunityConditionedLM(nn.Module):
         if self.encoder_before is not None:
             x = self.drop(self.encoder_before(x))
         if self.use_community:
-            if self.use_tunned_comm:
-                x_comm = self.comm_inference(comm).softmax(1)
-            else:
-                x_comm = F.one_hot(comm, num_classes=self.n_comms).type(torch.FloatTensor).to(device)
+            x_comm = F.one_hot(comm, num_classes=self.n_comms).type(torch.FloatTensor).to(device)
             x_comm = self.comm_embed(x_comm).repeat(text.shape[0],1,1)
             x = torch.cat((x, x_comm), 2)
             x = self.drop(self.comm_linear(x))
