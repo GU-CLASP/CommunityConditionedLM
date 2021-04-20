@@ -8,17 +8,6 @@ let
           python3 = super.python3.override {
            packageOverrides = python-self: python-super: {
              torchtext = python-self.callPackage /opt/nix/torchtext-0.4.0.nix { };
-             snapy = python-self.callPackage /opt/nix/snapy-1.0.2.nix { };
-             mmh3 = python-self.callPackage /opt/nix/mmh3-2.5.1.nix { };
-             six = python-self.callPackage ./nix/six-1.14.0.nix { };
-             google-resumable-media = python-self.callPackage ./nix/google-resumable-media-0.5.0.nix { };
-             google-cloud-core = python-self.callPackage ./nix/google-cloud-core-1.3.0.nix { };
-             google-api-core = python-self.callPackage ./nix/google-api-core-1.16.0.nix { };
-             google-auth = python-self.callPackage ./nix/google-auth-1.11.3.nix { };
-             googleapis-common-protos = python-self.callPackage ./nix/googleapis-common-protos-1.51.0.nix { };
-             google-cloud-bigquery = python-self.callPackage ./nix/google-cloud-bigquery-1.24.0.nix { };
-             google-cloud-bigquery-storage = python-self.callPackage ./nix/google-cloud-bigquery-storage-0.8.0.nix { };
-
            };};})
       ((import /opt/nix/nvidia-450.66.nix  ) pkgs_source )  # fix version of nvidia drivers
       (self: super: {
@@ -43,10 +32,6 @@ let
          plotly
          statsmodels
          numpy
-         #mmh3
-         #snapy
-         google-cloud-bigquery
-         google-cloud-bigquery-storage
         ];
       ignoreCollisions = true;};
 in
