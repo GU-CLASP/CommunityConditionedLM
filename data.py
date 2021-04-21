@@ -31,7 +31,7 @@ def build_fields(data_dir, vocab_size):
             specials=['<eos>', '<unk>', '<bos>', '<pad>'])
     return fields
 
-def load_fields(field_dir, data_dir=None, vocab_size):
+def load_fields(field_dir, data_dir=None, vocab_size=None):
     text_field_file = os.path.join(field_dir, 'text.field')
     comm_field_file = os.path.join(field_dir, 'community.field')
     print(text_field_file)
