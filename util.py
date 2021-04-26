@@ -4,15 +4,7 @@ import click
 from pathlib import Path
 import json
 import re
-
-def get_community_label(file_path):
-    base = os.path.basename(file_path)
-    return base.split('.')[0]
-
-def get_communities(data_dir):
-    comms = [get_community_label(f) for f in  os.listdir(data_dir) if f.endswith('.train.txt')]
-    comms.sort()
-    return comms
+import torch
 
 def data_filename(data_dir, split, comm):
     return Path(data_dir)/f'{comm}.{split}.txt'
@@ -36,13 +28,22 @@ def create_logger(name, filename, debug):
     logger.addHandler(console)
     return logger
 
+def get_communities(data_dir):
+    comms = [get_community_label(f) for f in  os.listdir(data_dir) if f.endswith('.train.txt')]
+    comms.sort()
+    return comms
+
+def get_community_label(file_path):
+    base = os.path.basename(file_path)
+    return base.split('.')[0]
+
 def iter_data(data_dir, split, file_limit=None):
     communities = get_communities(data_dir)
     for community in communities:
         filename = data_filename(data_dir, split, community)
         print(filename)
         for i, line in enumerate(iter_file(filename)):
-            yield community, line
+            yield community, line, i
             if file_limit and i >= file_limit:
                 break
 
@@ -61,4 +62,9 @@ def read_logged_val_ppls(model_dir):
     ppls = [ppls[i+1] for i in range(len(ppls))]
     return ppls
 
+def extract_comm_embedding(model_dir):
+    model_dir = Path(model_dir)
+    model_weights = torch.load(model_dir/'model.bin', map_location='cpu')
+    comm_embed = model_weights['comm_embed.weight'].numpy()
+    return comm_embed
 

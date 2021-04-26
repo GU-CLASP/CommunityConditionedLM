@@ -57,6 +57,7 @@ def evaluate(lm, batches, vocab_size, criterion):
 @click.option('--resume-training/--no-resume-training', default=False)
 @click.option('--rebuild-vocab/--no-rebuild-vocab', default=False)
 @click.option('--vocab-size', default=40000)
+@click.option('--lower-case/--no-lower-case', default=False)
 @click.option('--encoder-layers', default=1)
 @click.option('--heads', default=8)
 @click.option('--hidden-size', default=128)
@@ -73,7 +74,7 @@ def evaluate(lm, batches, vocab_size, criterion):
 @click.option('--gpu-id', type=int, default=None,
         help="ID of the GPU, if traning with CUDA")
 def cli(architecture, model_dir, data_dir, resume_training, rebuild_vocab,
-        vocab_size, encoder_layers, heads, hidden_size,
+        vocab_size, lower_case, encoder_layers, heads, hidden_size,
         condition_community, community_emsize, community_layer_no, dropout,
         batch_size, max_seq_len, lr, max_epochs, file_limit, gpu_id):
 
@@ -85,12 +86,14 @@ def cli(architecture, model_dir, data_dir, resume_training, rebuild_vocab,
     log.info(f"Model will be saved to {save_dir}.")
 
     log.info(f"Loading data from {data_dir}.")
-    fields = data.load_fields(model_dir, data_dir, vocab_size) 
-    train_data = data.load_data(data_dir, fields, 'train', max_seq_len, file_limit)
+    fields = data.load_fields(model_dir, data_dir, vocab_size)
+    train_data = data.load_data(data_dir, fields, 'train',
+            max_seq_len, file_limit, lower_case)
     vocab_size = len(fields['text'].vocab.itos)
     comm_vocab_size = len(fields['community'].vocab.itos)
     text_pad_idx = fields['text'].vocab.stoi['<pad>']
-    dev_data = data.load_data(data_dir, fields, 'dev', max_seq_len, file_limit)
+    dev_data = data.load_data(data_dir, fields, 'dev',
+            max_seq_len, file_limit, lower_case)
     log.info(f"Loaded {len(train_data)} train and {len(dev_data)} dev examples.")
 
     if not condition_community:
