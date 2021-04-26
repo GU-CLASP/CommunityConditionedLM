@@ -17,12 +17,6 @@ import os
 import click
 from pathlib import Path
 
-def exp_normalize(x, axis):
-    """ https://timvieira.github.io/blog/post/2014/02/11/exp-normalize-trick/ """
-    b = x.max(axis=axis)
-    y = np.exp(x - b)
-    return y / y.sum(axis)
-
 def batch_nll(lm, batch, pad_idx, comm=None):
     """
     Compute the negative log likelihood of the batch for the given community
@@ -37,7 +31,8 @@ def batch_nll(lm, batch, pad_idx, comm=None):
     vocab_size = y_hat.shape[-1]
     nll_seq = F.nll_loss(y_hat.view(-1,vocab_size), y.view(-1), 
             reduction='none', ignore_index=pad_idx).view(y.shape).sum(axis=0)
-    return nll_seq
+    nll_seq_per_word = nll_seq / lengths.float()
+    return nll_seq_per_word
 
 @click.command()
 @click.argument('model_family_dir', type=click.Path(exists=False))
@@ -74,6 +69,9 @@ def cli(model_family_dir, model_name, data_dir, batch_size, max_seq_len, file_li
     lm.eval()
     log.debug(str(lm))
 
+    if not lm.use_community:
+        comms = ['nll'] # dummy label since there's only one nll value per row
+
     test_iterator = tt.data.BucketIterator(
         test_data,
         device=device,
@@ -99,7 +97,10 @@ def cli(model_family_dir, model_name, data_dir, batch_size, max_seq_len, file_li
                 )
             ]
             for comm in comms:
-                batch_comm = batchify_comm(comm, batch.batch_size)
+                if lm.use_community:
+                    batch_comm = batchify_comm(comm, batch.batch_size)
+                else: 
+                    batch_comm = None
                 nlls_comm = batch_nll(lm, batch, pad_idx, comm=batch_comm)
                 for j, nll in enumerate(nlls_comm):
                     nlls_batch[j][comm] = nll.item()
@@ -107,24 +108,6 @@ def cli(model_family_dir, model_name, data_dir, batch_size, max_seq_len, file_li
             log.info(f"Completed {i+1}/{len(test_iterator)}")
 
 
-    # comm_probs_batch = exp_normalize(-nlls, axis=0)
-    # comm_probs.append(comm_probs_batch)
-    # actual_comms += batch.community.tolist()
-    # comm_probs = np.concatenate(comm_probs, axis=1).t
-
-
-    # def test_ppl(lm, test_batches):
-        # ppls = []
-        # with torch.no_grad():
-            # for i, batch in enumerate(test_batches):
-                # text, lengths = batch.text
-                # print(f'{i+1}/{len(test_batches)}', end='\r')
-                # nll_seq = batch_nll(lm, batch)
-                # nll_mean = nll_seq / lengths.float()
-                # ppl = nll_mean.exp()
-                # ppls.append(ppl.cpu().numpy())
-        # ppls = np.concatenate(ppls)
-        # return ppls
-
 if __name__ == '__main__':
     cli(obj={})
+
