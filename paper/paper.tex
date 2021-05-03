@@ -95,9 +95,9 @@
   Community-Conditioned Language Models (CCLMs) are an under-researched tool for 
   investigating community-level linguistic variation.
   In this paper, we experiment with different neural CCLM architectures and
-  report empirical results on data from 46 online communities.
+  report empirical results from CCLMs trained on 510 online communities.
   We find that the community embeddings learned by these models
-  correlate with representations based on  non-linguistic features.
+  correlate with representations based on non-linguistic features.
   We define a metric of the linguistic \emph{indiscernability} of a community
   and investigate the relationship between indiscernibility and other
   linguistic properties of the community.
@@ -120,21 +120,19 @@ right, but it is also important to consider it in the development of
 robust, equitable language technology.  Previous work has shown that
 by taking demographic information into account, models can achieve
 better performance on various standard NLP tasks
-\citep{Hovy2015,Yang2017}, but little is known about how variation at
-the level of speech community affects performance.
+\citep{Hovy2015,Yang2017}, 
 %
-There is a fair amount of work that investigates linguistic variation
-using computational methods.  However, most of it considers variation
-across macro-social categories, such as gender
+However, most of the previous computational work on linguistic variation 
+has considered variation at the level of macro-social categories, such as gender
 \citep{Burger2011,Ciot2013,Bamman2014}, age \citep{Nguyen2013}, and
 geographic location \citep{Eisenstein2010,Bamman2014a}.
-\citet{DelTredici2017} provide an exception, by using the modified
+An exception is \citet{DelTredici2017} who use the modified
 skip-gram model of \citet{Bamman2014a} to show that lexical semantic
 variation occurs across different communities organized around the
 same topic.
 
-In the present work, we further investigate linguistic variation
-across online communities. In contrast to previous work, we
+In the present work, we investigate linguistic variation
+across different online communities. In contrast to previous work, we
 investigate variation across speech communities (rather than
 macro-social categories), and use context-sensitive sequence models
 capable of capturing variation beyond the lexical level.
@@ -168,9 +166,9 @@ given message $m$ is acceptable in a given community $c$:
 \(P_M(m \mid c)\).
 
 Second, we want to find out how, and how much, CCLMs are attuned to
-the specificity of communities. We test whether 1. the linguistic
+the specificity of communities. We test whether 1.\ the linguistic
 models are correlated with a model of communities based only on
-co-occurrence of users between communities and 2. if latent community
+co-occurrence of users between communities and 2.\ if latent community
 classifiers based on the CCLM can accurately identify that a given
 message comes from a given community. Additionally, one may
 intuitively assume that linguistically poor communities are easier to
@@ -197,44 +195,7 @@ To sum up, we test the following hypotheses:
 
 %\jp{Perhaps: Outline of the paper.}
 
-\section{Experimental setup}
-
-\subsection{Data sets}
-
-We investigate linguistic variation across various communities present
-on the social media website Reddit.\footnote{Comments were obtained
-  from the archive at \url{https://pushshift.io/}.
-  \cite{Baumgartner2020}.}
-%
-Reddit is divided into forums called \textit{subreddits}, 
-which are typically organized around a topic of interest. 
-Users create \textit{posts}, which consist of a link, image, 
-or text, along with a \emph{comment} section. 
-Comments are threaded: a comment can be made directly on a post,
-or appear as a reply to another comment.
-%
-Hereafter we refer to such comments as ``messages'', to match our
-convention in mathematical formulas: the letter $c$ stands for a
-community, and $m$ stands for a message.
-
-Our dataset includes messages from \num{46} English-language subreddits, 
-randomly selected from the set of all forums 
-with at least \num{15000} messages per month for each month
-in the three years between 2015 and 2017. 
-We initially selected \num{50} subreddits, 
-but excluded four of them from further analysis: 
-two because they were primarily non-English and two with particularly short average message lengths.\footnote{
-The macro-average message length was \num{39.3} ($\sigma=15.7$) and the two removed communities had average comment lengths of \num{10.7} and \num{18.1}.}
-% According to your footnote the removed communities are barely outliers. I wouldn't have removed them, but it is too late to do anything about that.
-Each community corpus consist of \num{50000} randomly selected messages from the year 2015.
-
-Messages were preprocessed as follows: 
-We excluded the content of block quotes, code blocks, and tables.
-We removed any markup (formatting) commands from the remaining text, extracting only rendered text.
-We tokenized the messages using the default English model for the SpaCy tokenizer Version 2.2.3 \citep{Honnibal2017}
-and lower-cased all tokens.
-
-\subsection{Models}
+\section{Community-conditioned language models}
 
 We experiment with two kinds of model architecture: a simple
 unidirectional LSTM \citep{Hochreiter1997} and a Transformer
@@ -259,6 +220,38 @@ community embedding is concatenated with the token embedding.  For
 this reason, we set the hidden size of the sequence encoder and the
 size of the token to be embedding equal for all models.
 
+
+\subsection{Data sets}
+
+We investigate linguistic variation across various communities present
+on the social media website Reddit.\footnote{Comments were obtained
+  from the archive at \url{https://pushshift.io/}.
+  \cite{Baumgartner2020}.}
+%
+Reddit is divided into forums called \textit{subreddits}, 
+which are typically organized around a topic of interest. 
+Users create \textit{posts}, which consist of a link, image, 
+or text, along with a \emph{comment} section. 
+Comments are threaded: a comment can be made directly on a post,
+or appear as a reply to another comment.
+%
+Hereafter we refer to such comments as ``messages'', to match our
+convention in mathematical formulas: the letter $c$ stands for a
+community, and $m$ stands for a message.
+
+Our dataset includes messages from \num{510} subreddits, 
+sampled from the set of all forums 
+with at least \num{5000} messages per month for each month
+of the year 2015.
+Each community corpus consist of \num{42000} randomly selected messages from the year 2015.
+For each community, we reserve \num{1000} messages each for development and testing,
+leaving a total of \num{20.4}M messages for training.
+
+Messages were preprocessed as follows: 
+We excluded the content of block quotes, code blocks, and tables.
+We removed any markup (formatting) commands from the remaining text, extracting only rendered text.
+We tokenized the messages using the default English model for the SpaCy tokenizer Version 2.2.3 \citep{Honnibal2017}
+and lower-cased all tokens.
 
 \subsection{Training scheme}
 
@@ -449,11 +442,10 @@ the baseline for those communities (\cref{fig:comm-info-gain}).
 
 \begin{figure}
 \begin{tikzpicture}
-  \infogainboxplot
+  \pplbycommbox
 \end{tikzpicture}
 \caption{
-  Distribution of information gain across communities for each CCLM 
-  (top: LSTM models, bottom: transformer models).
+  Distribution of $\Ppl_{M_j}$ for each model architecture.
 }
 \label{fig:comm-info-gain}
 \end{figure}
