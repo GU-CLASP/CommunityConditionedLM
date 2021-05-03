@@ -86,9 +86,7 @@ if __name__ == '__main__':
     """
     We want to find subreddits that have at least 5000 comments per month 
     for every month of 2015.
-    We will sample of 250 subreddits from this list.
     And sample 5000 comments per month = 60000 comments per subreddit
-    Which is 60000 * 250 = 15,000,000 comments total
     """
 
     google_credentials_file = '/home/xnobwi/.google-cloud/bill-gu-research-177baaa5bef7.json'
