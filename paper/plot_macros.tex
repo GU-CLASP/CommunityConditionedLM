@@ -92,6 +92,7 @@
   \end{tikzpicture}
 }
 
+
 \newcommand{\infogainboxplot}{
   \begin{groupplot}[
     group style={
@@ -126,3 +127,18 @@
   table [y=transformer-3-3_info_gain] {floats/comm.csv};
   \end{groupplot}
 }
+
+% https://tex.stackexchange.com/questions/183778/how-can-several-boxplots-be-combined-into-a-single-figure-as-groups/183856#183856
+\newcommand{\pplbycommbox}{
+  \begin{axis}
+    \addplot+[boxplot={draw position=-0.2, box extend=0.2}, draw=blue] table [y=lstm-3-0_ig] {floats/ig_by_comm.csv};
+    \addplot+[boxplot={draw position=0.2, box extend=0.2}, draw=red] table [y=transformer-3-0_ig] {floats/ig_by_comm.csv};
+    \addplot+[boxplot={draw position=.8, box extend=0.2}, draw=blue] table [y=lstm-3-1_ig] {floats/ig_by_comm.csv};
+    \addplot+[boxplot={draw position=1.2, box extend=0.2}, draw=red] table [y=transformer-3-1_ig] {floats/ig_by_comm.csv};
+    \addplot+[boxplot={draw position=1.8, box extend=0.2}, draw=blue] table [y=lstm-3-2_ig] {floats/ig_by_comm.csv};
+    \addplot+[boxplot={draw position=2.2, box extend=0.2}, draw=red] table [y=transformer-3-2_ig] {floats/ig_by_comm.csv};
+    \addplot+[boxplot={draw position=2.8, box extend=0.2}, draw=blue] table [y=lstm-3-3_ig] {floats/ig_by_comm.csv};
+    \addplot+[boxplot={draw position=3.2, box extend=0.2}, draw=red] table [y=transformer-3-3_ig] {floats/ig_by_comm.csv};
+  \end{axis}
+}
+
