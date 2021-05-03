@@ -3,10 +3,10 @@ import util
 import data
 import itertools
 import numpy as np
-import pandas as pd
 import click
 from collections import Counter, defaultdict
 import pickle
+import csv
 
 def iter_ngrams(text, n=2):
     ts = itertools.tee(text, n)
@@ -70,15 +70,14 @@ def example_nll(lm, cond, text, alpha=None):
 def test_lm(lm, data, alpha=None):
     results = []
     N = lm.N 
-    for cond, text in iter_examples(N, data):
+    for i, (cond, text) in enumerate(iter_examples(N, data)):
         nll = example_nll(lm, cond, text, alpha)
         mean_nll = nll.sum() / len(nll)
         ppl = np.exp(mean_nll)
-        results.append({'cond': cond, 'ppl': ppl})
-    df = pd.DataFrame(results)
-    return df
+        results.append({'i': i, 'cond': cond, 'ppl': ppl})
+    return results
 
-def grid_search(func, n_points, min_value, max_value, n_iters, log):
+def grid_search(func, n_points, min_value, max_value, converge_threshold, log):
     """ Grid search of one parameter """
     def grid_search_iter(min_value, max_value):
         log.info(f"Testing {n_points} points between {min_value:0.4E} and {max_value:0.4E}")
@@ -89,13 +88,24 @@ def grid_search(func, n_points, min_value, max_value, n_iters, log):
         best_value = params[best]
         log.info(f"Lowest loss {results[best]:0.6f} with parameter {best_value:0.4E} (point {best+1}/{n_points})")
         return params[max(best-1,0)], params[min(best+1, len(params)-1)], best_value
-    for i in range(n_iters):
+    prev_best = None
+    while True:
         min_value, max_value, best_value = grid_search_iter(min_value, max_value)
-    return best_value
+        best_delta = abs(prev_best - best_value) if prev_best else None
+        if best_delta:
+            log.info(f"Parameter delta: {best_delta:0.6f} (convergence threshold {converge_threshold:0.6f})")
+            if best_delta < converge_threshold:
+                return best_value
+        prev_best = best_value
 
 def test_alpha(lm, alpha, test_data):
     results = test_lm(lm, test_data, alpha=alpha) 
-    return float(results.groupby('cond').mean('ppl').mean()) # macro average ppl
+    results_by_cond = defaultdict(list)
+    for res in results:
+        results_by_cond[res['cond']].append(res['ppl'])
+    conds = list(results_by_cond.keys())
+    mean_ppl_by_cond = {cond: sum(results_by_cond[cond]) / len(results_by_cond[cond]) for cond in conds}
+    return sum(mean_ppl_by_cond.values()) / len(conds) # macro average ppl
 
 @click.command()
 @click.argument('model_family_dir', type=click.Path(exists=False))
@@ -105,9 +115,10 @@ def test_alpha(lm, alpha, test_data):
 @click.option('--vocab-size', default=40000)
 @click.option('--file-limit', type=int, default=None,
         help="Number of examples per file (community).")
-@click.option('--gridsearch-iters', type=int, default=10)
+@click.option('--gridsearch-converge-threshold', type=float, default=1e-5)
 @click.pass_context
-def cli(ctx, model_family_dir, data_dir, ngram_size, max_seq_len, vocab_size, file_limit, gridsearch_iters):
+def cli(ctx, model_family_dir, data_dir, ngram_size, max_seq_len, vocab_size, file_limit, 
+        gridsearch_converge_threshold):
     ctx.ensure_object(dict)
 
     model_name = f"{ngram_size}-gram"
@@ -135,18 +146,26 @@ def cli(ctx, model_family_dir, data_dir, ngram_size, max_seq_len, vocab_size, fi
     lm = CondNGramLM(ngram_size, cond_vocab_size, vocab_size, None)
     log.info("Fitting n-gram model to the training data")
     lm.fit(train_data)
-    log.info("Finding optimal smoothing parameter")
+    log.info("Saving un-smoothed model.")
+    lm.save(model_dir/'model.pickle')
 
+    log.info("Finding optimal smoothing parameter")
     min_alpha = 1 / (vocab_size**2)
     max_alpha = 1
     grid_points = 10
-    alpha = grid_search(lambda x: test_alpha(lm, x, dev_data), grid_points, min_alpha, max_alpha, gridsearch_iters, log)
+    alpha = grid_search(lambda x: test_alpha(lm, x, dev_data), grid_points, min_alpha, max_alpha, 
+            gridsearch_converge_threshold, log)
     lm.alpha = alpha
-    lm.save(model_dir/'model')
+    log.info("Saving smoothed model.")
+    lm.save(model_dir/'model.pickle')
 
+    log.info("Testing model.")
     test_data = data.load_data(data_dir, fields, 'test', max_seq_len, None)
-    df = test_lm(lm, test_data)
-    df.to_pickle(results_file)
+    test_results = test_lm(lm, test_data)
+    with open(results_file, 'w') as f:
+        writer = csv.DictWriter(f, fieldnames=['i', 'cond', 'ppl'])
+        writer.writeheader()
+        writer.writerows(test_results)
 
 if __name__ == '__main__':
     cli()

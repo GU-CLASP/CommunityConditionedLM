@@ -53,6 +53,7 @@ def evaluate(lm, batches, vocab_size, criterion):
 @click.argument('architecture', type=click.Choice(['Transformer', 'LSTM'], case_sensitive=False))
 @click.argument('model_dir', type=click.Path(exists=True))
 @click.argument('data_dir', type=click.Path(exists=True))
+@click.option('--resume-training/--no-resume-training', default=False)
 @click.option('--rebuild-vocab/--no-rebuild-vocab', default=False)
 @click.option('--vocab-size', default=40000)
 @click.option('--encoder-layers', default=1)
@@ -70,7 +71,7 @@ def evaluate(lm, batches, vocab_size, criterion):
         help="Number of examples per file (community).")
 @click.option('--gpu-id', type=int, default=None,
         help="ID of the GPU, if traning with CUDA")
-def cli(architecture, model_dir, data_dir, rebuild_vocab,
+def cli(architecture, model_dir, data_dir, resume_training, rebuild_vocab,
         vocab_size, encoder_layers, heads, hidden_size,
         condition_community, community_emsize, community_layer_no, dropout,
         batch_size, max_seq_len, lr, max_epochs, file_limit, gpu_id):
@@ -139,21 +140,35 @@ def cli(architecture, model_dir, data_dir, rebuild_vocab,
     criterion = nn.NLLLoss(ignore_index=text_pad_idx, reduction='none')
     optimizer = torch.optim.AdamW(lm.parameters(), lr=lr)
 
-    val_losses = []
-    epoch = 0
+    if resume_training:
+        with open(os.path.join(save_dir, 'saved-epoch.txt'), 'r') as f:
+            epoch = int(f.read().strip())
+        lm.load_state_dict(torch.load(os.path.join(save_dir, 'model.bin')))
+        log.info(f"Resuming trainng after epoch {epoch}.")
+        val_ppls = util.read_logged_val_ppls(save_dir)
+        saved_val_ppl = val_ppls[epoch-1]
+        if val_ppls[-1] > saved_val_ppl and val_ppls[-2] > saved_val_ppl:
+            log.info("Training is already finished.")
+            exit()
+        val_ppls = val_ppls[:epoch]
+    else:
+        epoch = 0
+        val_ppls = []
+
     while True:
         epoch += 1
         log.info(f'Starting epoch {epoch}')
         lm = train(lm, train_iterator, vocab_size, criterion, optimizer, log)
         val_loss = evaluate(lm, val_iterator, vocab_size, criterion)
         val_loss = sum(val_loss) / len(val_loss)
-        if epoch == 1 or val_loss < min(val_losses):
+        val_ppl = math.exp(val_loss)
+        if val_ppls == [] or val_ppl < min(val_ppls):
             torch.save(lm.state_dict(), os.path.join(save_dir, 'model.bin'))
             with open(os.path.join(save_dir, 'saved-epoch.txt'), 'w') as f:
                 f.write(f'{epoch:03d}')
-        val_losses.append(val_loss)
-        log.info(f"Epoch {epoch:3d} | val loss {val_loss:5.2f} | ppl {math.exp(val_loss):0.2f}")
-        if (val_losses[-1] > min(val_losses) and val_losses[-2] > min(val_losses)) or epoch == max_epochs:
+        val_ppls.append(val_ppl)
+        log.info(f"Epoch {epoch:3d} | val loss {val_loss:5.2f} | ppl {val_ppl}")
+        if (val_ppls[-1] > min(val_ppls) and val_ppls[-2] > min(val_ppls)) or epoch == max_epochs:
             log.info(f'Stopping early after epoch {epoch}.')
             break
 
