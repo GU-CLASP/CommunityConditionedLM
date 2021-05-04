@@ -646,29 +646,29 @@ any orthogonal matrix \(\Omega\) applied to \(L\):
 
 \[d(L,S) = \mathsf{argmin}_\Omega ||ΩL-S||_F\]
 
-Computing this distance is known as the Procrustes problem. Its
+Computing this distance is known as the orthogonal Procrustes problem~\citep{Gower2004}. Its
 solution is
-
-\[d(L,S) = \mathsf {Tr} Σ\], where the \(Σ\) is obtained by the singular value
-decomposition \(U^TΣV = LS^T\).  The vectors of \(U\) and \(V\) give
+\[d(L,S) = \mathsf {Tr} Σ\] where the matrix \(Σ\) is obtained by the singular value
+decomposition \(U^TΣV = LS^T\). Additionally the vectors of \(U\) and \(V\) give
 the directions of correlation respectively of \(L\) and \(S\). The
 singular values \(\sigma_i\) (diagonal elements of \(Σ\)), say how much
 correlation there is between the directions \(U_i\) and \(V_i\).
 
-Further we can arrange the solution so that \(σ_i < σ_j\) iff \(i < j\). That
+Further, we can arrange the solution so that \(σ_i < σ_j\) iff \(i < j\). That
 is, the largest singular value \(σ_0\) corresponds to the principal
-direction of correlation (\(U_0\), \(V_0\)), \(σ_1\) to the second
+directions of correlation (\(U_0\), \(V_0\)), \(σ_1\) to the second
 principal direction, etc. 
 
 The \(d(L,S)\) metric varies between \(0\) (perfect independence) and
-\(n\) (perfect correlation, obtained for example if \(L=S\)).
+\(n\) (perfect correlation, obtained for example if \(L=S\)), where
+$n$ is the number of community embeddings considered.
 
-To get a sense of what value of \(d(L,S)\) indicates significant correlation,
+To get a more precise sense of what value of \(d(L,S)\) indicates significant correlation,
 We have computed experimentally \(d(L,S)\) for 
 \(L\) and \(S\) chosen at random and 16 dimensions. We find
 a mean of TODO and a standard deviation of TODO.
 
-Thus \(d(L,S)\) above \(μ+3σ\) can be safely considered to indicate a
+Thus \(d(L,S)\) below \(μ-3σ\) can be safely considered to indicate a
 statistically significant correlation between \(L\) and
 \(S\). However, below, we will also give a sense of \emph{how} the
 correlation is manifested by analysis of the two principal components
