@@ -606,11 +606,11 @@ the conditioned model are generally easier for the LMCC to classify.
 
 \section{Social Analysis of CCLM community embeddings (TODO: better title)}
 
-- General idea; repeated.
+In this section we investigate whether (and how much) the community
+embeddings obtained from the CCLMs correlate with the community-member
+relationship on reddit.
 
-
-\subsection{Data set}
-We compare the CCLM-learned community
+To this end, we compare the CCLM-learned community
 embedding with the community embedding created by \citet{Kumar2018},
 who generated them using using a negative-sampling optimization
 algorithm and the message-community co-occurrence matrix as ground
@@ -625,18 +625,63 @@ way on which user is the author of any given message: we only use the
 contents of messages, not authorship data.
 %
 
-\subsection{Idea (JP)}
+\subsection{Comparing embeddings: method}
 % Explain the problem (idea: comparing cosine similarities --> too much data, again)
 
-correlate the pairwise cosine similarity of the
-CCLM embeddings with the same metric on the membership embedding,
-restricted to the 46 communities chosen for our study
-(\cref{fig:pairwise-comm-sim}).
+Let us call \(L\) the matrix of (normed) linguistic embeddings and \(S\) the matrix
+of (normed) social embeddings. Thus \(L_i\) and \(S_i\) are the linguistic and
+social embeddings for community \(i\).
+
+To compare embeddings, one might naively think that it suffices to
+calculate the distance between two embeddings index-wise, which is
+equal to the Frobenius distance between \(L\) and \(S\):
+
+\[||L-S||_F = \sum_i (L_i - S_i)\]
+
+The problem with this approach is that the dimensions of \(L\) and \(S\) may
+not coincide. Applying a simple permutation of dimensions may widely
+change the correlation metric. To make the metric resilient to such
+effects, we can compute the minimum distance between \(L_i\) and \(S_i\), for
+any orthogonal matrix \(\Omega\) applied to \(L\):
+
+\[d(L,S) = \mathsf{argmin}_\Omega ||ΩL-S||_F\]
+
+Computing this distance is known as the Procrustes problem. Its
+solution is
+
+\[d(L,S) = \mathsf {Tr} Σ\], where the \(Σ\) is obtained by the singular value
+decomposition \(U^TΣV = LS^T\).  The vectors of \(U\) and \(V\) give
+the directions of correlation respectively of \(L\) and \(S\). The
+singular values \(\sigma_i\) (diagonal elements of \(Σ\)), say how much
+correlation there is between the directions \(U_i\) and \(V_i\).
+
+Further we can arrange the solution so that \(σ_i < σ_j\) iff \(i < j\). That
+is, the largest singular value \(σ_0\) corresponds to the principal
+direction of correlation (\(U_0\), \(V_0\)), \(σ_1\) to the second
+principal direction, etc. 
+
+The \(d(L,S)\) metric varies between \(0\) (perfect independence) and
+\(n\) (perfect correlation, obtained for example if \(L=S\)).
+
+To get a sense of what value of \(d(L,S)\) indicates significant correlation,
+We have computed experimentally \(d(L,S)\) for 
+\(L\) and \(S\) chosen at random and 16 dimensions. We find
+a mean of TODO and a standard deviation of TODO.
+
+Thus \(d(L,S)\) above \(μ+3σ\) can be safely considered to indicate a
+statistically significant correlation between \(L\) and
+\(S\). However, below, we will also give a sense of \emph{how} the
+correlation is manifested by analysis of the two principal components
+of correlation in the linguistic embeddings, \(U_0\) and \(U_1\).
 
 
-\subsection{Procrustes (JP)}
+(Another idea may be to correlate the cosine similarity between
+\((S_i,S_j)\) and \((L_i,L_j)\). But this would yield one number for
+each pair of communities (510 * 509 / 2): too much data to deal with,
+and it is hard to get a sense of the statistical significance of the
+resulting correlation coefficient.)
 
-%    Sketch "procrustes" problem, explain what it yields. (Also what kind of similarity one gets with random input)
+
 
 
 \subsection{Results}
@@ -770,4 +815,4 @@ the set of the vector embeddings of its members.
 % LocalWords:  Hochreiter Vaswani softmax un AdamW Loshchilov IG Ppl
 % LocalWords:  LM videogame embeddings PCA Kumar lstm LMCC ij th Lau
 % LocalWords:  indiscernibility Vinyals Kalchbrenner OConnor
-% LocalWords:  monotonicity subreddit
+% LocalWords:  monotonicity subreddit Frobenius
