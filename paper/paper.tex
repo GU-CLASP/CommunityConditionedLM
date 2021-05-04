@@ -92,6 +92,23 @@
 \begin{document}
 \maketitle
 \begin{abstract}
+  % Context (Optional)
+
+  % Problem?
+
+  - Can community-level linguistic variation be captured by statistical models?
+  
+  - Is community-specific linguistic variation correlated with social
+    relationship between communities?
+  
+  % Why it's interesting
+
+
+  % Results
+
+
+  % What follows from results? (Optional)
+    
   Community-Conditioned Language Models (CCLMs) are an under-researched tool for 
   investigating community-level linguistic variation.
   In this paper, we experiment with different neural CCLM architectures and
@@ -102,6 +119,33 @@
   and investigate the relationship between indiscernibility and other
   linguistic properties of the community.
 \end{abstract}
+
+
+% Introduction
+
+% Data sets
+
+% Community Conditioned Language Models:
+%   Architecture (with emphasis on the embeddings)
+%   Training
+%   Results (loss and loss per community)
+
+% Latent bayesian community classifier
+%    Formula (no training!)
+%    Result 1: Confusion matrix
+%    Transition: too much data; can we extract a more useful metric?
+%    Indiscernibility: Formula, and table
+
+% Correlation between linguistic embedding with social embeddings
+%    Explain the problem (idea: comparing cosine similarities --> too much data, again)
+%    Sketch "procrustes" problem, explain what it yields. (Also what kind of similarity one gets with random input)
+%    Results:
+%      - Correlation between Kumar2018 and best LSTM
+%      - Correlation between Kumar2018 and best Transformer 
+%      - Correlation between Transformer and LSTM
+%      - Concatenations ???
+
+
 
 \section{Introduction}
 Linguistic communication requires that speakers share
@@ -193,7 +237,6 @@ To sum up, we test the following hypotheses:
   linguistically rich communities.
 \end{hypotheses}
 
-%\jp{Perhaps: Outline of the paper.}
 
 \section{Community-conditioned language models}
 
