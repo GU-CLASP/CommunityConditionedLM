@@ -92,6 +92,8 @@
 \begin{document}
 \maketitle
 \begin{abstract}
+
+  TODO: fix this up.
   % Context (Optional)
 
   % Problem?
@@ -237,6 +239,7 @@ To sum up, we test the following hypotheses:
   linguistically rich communities.
 \end{hypotheses}
 
+TODO: outline of the paper.
 
 \section{Community-conditioned language models}
 
@@ -601,16 +604,49 @@ the conditioned model are generally easier for the LMCC to classify.
 
 
 
-\section{Social Analysis of CCLM community embeddings}
+\section{Social Analysis of CCLM community embeddings (TODO: better title)}
 
-As a qualitative assessment of the community embeddings, 
-we manually identified topic categories into which at least three
-of the selected communities fall.
-We plotted the two-component PCA projection of the embeddings,
-annotated with these categories (\cref{fig:comm-pca}).
-We see that there is some evidence of clustering according to
-the topic categories we identified,
-suggesting that the embedding space learned by the model is meaningful.
+- General idea; repeated.
+
+
+\subsection{Data set}
+We compare the CCLM-learned community
+embedding with the community embedding created by \citet{Kumar2018},
+who generated them using using a negative-sampling optimization
+algorithm and the message-community co-occurrence matrix as ground
+truth, using data which spans January 2014 to April 2017.
+We refer the reader
+to \citet{Kumar2018}
+for details, but the important point is that no linguistic
+information is used to create these embeddings: they only depend on
+whether a given user participates in a given
+community. In sharp contrasts, CCLM community embeddings depend in no
+way on which user is the author of any given message: we only use the
+contents of messages, not authorship data.
+%
+
+\subsection{Idea (JP)}
+% Explain the problem (idea: comparing cosine similarities --> too much data, again)
+
+correlate the pairwise cosine similarity of the
+CCLM embeddings with the same metric on the membership embedding,
+restricted to the 46 communities chosen for our study
+(\cref{fig:pairwise-comm-sim}).
+
+
+\subsection{Procrustes (JP)}
+
+%    Sketch "procrustes" problem, explain what it yields. (Also what kind of similarity one gets with random input)
+
+
+\subsection{Results}
+
+%    Results:
+%      - Correlation between Kumar2018 and best LSTM
+%      - Correlation between Kumar2018 and best Transformer 
+%      - Correlation between Transformer and LSTM
+%      - Concatenations ???
+
 
 \begin{figure*}[t]
 \begin{tikzpicture}
@@ -626,51 +662,13 @@ suggesting that the embedding space learned by the model is meaningful.
     \legend{General interest,Videogames,Technology,Sports,Female-focused,Other}
   \end{groupplot}
 \end{tikzpicture}
-\caption{Community embedding PCA of an LSTM (left, $c=1$) and transformer (right, $c=3$) model.}
+\caption{Plot of embeddings along the 2 principal dimensions of correlation between .... TODO of an LSTM (left, $c=1$) and transformer (right, $c=3$) model.
+Color correspond the 5-means clustering of .... TODO}
 \label{fig:comm-pca}
 \end{figure*}
 
-As a quantitative assessment, we compare the CCLM-learned community
-embedding with the community embedding created by \citet{Kumar2018},
-who generated them using using a negative-sampling optimization
-algorithm and the message-community co-occurrence matrix as ground
-truth, using data which spans January 2014 to April 2017.
-We refer the reader
-to \citet{Kumar2018}
-for details, but the important point is that no linguistic
-information is used to create these embeddings: they only depend on
-whether a given user participates in a given
-community. In sharp contrasts, CCLM community embeddings depend in no
-way on which user is the author of any given message: we only use the
-contents of messages, not authorship data.
-%
-We correlate the pairwise cosine similarity of the
-CCLM embeddings with the same metric on the membership embedding,
-restricted to the 46 communities chosen for our study
-(\cref{fig:pairwise-comm-sim}).
 
-\begin{figure}
-  \pairwisecommsim{snap_cos_sim}{lstm-3-1_cos_sim} 
-  \caption{Pairwise cosine similarity between community vectors for 
-    the membership-based embedding (x-axis) and
-  the LSTM CCLM embedding with $c=1$ (y-axis). 
-  Pairs from the same category are colored according to \cref{fig:comm-pca}.
-  We also mark pairs from different categories (\texttimes) and pairs where one or both
-  communities belong to the ``Other'' category (\textbigcircle).
-  }
-  \label{fig:pairwise-comm-sim}
-\end{figure}
 
-\begin{table}
-  \small
-  \centering
-  \input{floats/comm_sim.tex}
-  \caption{Pearson's $r$ between the pairwise similarity of community vectors
-  in the CCLM models and the membership-based embedding of \citet{Kumar2018}.
-  ($p<0.001$ for all models).
-  }
-  \label{tab:pairwise-comm-sim}
-\end{table}
 
 \section{Related work}
 
