@@ -1,16 +1,5 @@
 \usepackage{lmodern}
 
-\newcommand{\commscatter}[3][\community]{%
-  \addplot[
-  scatter, only marks,
-  font=\tiny,
-  scatter src=explicit symbolic,
-  nodes near coords*={#1},
-  nodes near coords align={vertical},
-  every node near coord/.append style={font=\sffamily\tiny},
-  visualization depends on={value \thisrow{community} \as \community},
-  ] table [x={#2}, y={#3}] {floats/comm.csv};
-}
 
 \newcommand{\confusionplot}[1]{%
   \addplot[

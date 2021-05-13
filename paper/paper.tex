@@ -415,9 +415,10 @@ where $M_j$ is the set of messages originating from community $c_j$
 We observe a lot of variation in baseline perplexity
 across communities, with $\Ppl_{M_j}$ ranging from \num{3.67} to
 \num{93.58} for the best LSTM model . %TODO make long table
-While the performance ($\Ppl_{M_j}$) of the LSTM models is better,
-we find that the best transformer CCLM has higher information gain 
-than the best LSTM.
+While the absolute performance ($\Ppl_{M_j}$) of the LSTM models is better,
+we jhat the best transformer models have somewhat higher information gain
+than their LSTM counterparts.
+
 
 \newcommand{\modelboxplot}[3]{
   \addplot+[
@@ -426,12 +427,12 @@ than the best LSTM.
     area legend] 
     table [y=#1] {floats/comm.csv};
 }
-
 \begin{figure}[t]
 \begin{tikzpicture}
   \begin{axis}[name=ig,
     height=7cm,width=8cm,
     boxplot/draw direction=x, axis x line*=bottom, axis y line*=left,y axis line style={opacity=0},
+    %xmax=1.6,
     ylabel=$l_c$, xlabel=$\IG_{M_j}$,
     legend style={font=\tiny,at={(1,1)},anchor=north east}, legend columns=2
     ]
@@ -443,7 +444,7 @@ than the best LSTM.
     }
   \end{axis}
   \begin{axis}[name=ppl,
-    anchor=north west,at={($(ig.south west)-(0,1cm)$)},
+    anchor=north west,at={($(ig.south west)-(0,1.1cm)$)},
     width=8cm, height=2.5cm, 
     boxplot/draw direction=x, axis x line*=bottom, hide y axis,
     xlabel=$\Ppl_{M_j}$,
@@ -460,36 +461,39 @@ than the best LSTM.
 \label{fig:comm-stratified-box}
 \end{figure}
 
-
 The conditioned models also perform differently across different communities---%
-for some communities, $\IG_{M_j}$ is around \num{1}, or even slightly lower,
-meaning that the CCLM has no advantage over the unconditioned baseline.
-For other communities it is much higher, meaning that the CCLM performs better 
+even among the best models, some communities have $\IG_{M_j} < 1$,
+meaning that the CCLM performs worse than the unconditioned baseline for 
+messages from that community.
+For other communities $\IG_{M_j}$ is much higher, meaning that the CCLM performs better  
 (\cref{fig:comm-info-gain}).\footnote{
   Some of the outlier communities with consistently high $IG_{M_j}$ 
   across all models are primarily non-English.}
 
+The variation in information gain across communities is not 
+related to perplexity, however (\cref{fig:ppl-info-gain}).
 
-This variation in information gain across communities is not 
-related to perplexity, however. 
-Some of the most linguistically complex communities benefit a lot
-from community conditioning, while others do not benefit at all. 
-Similarly, among the less linguistically complex communities 
-there some have high information gain, and some have information
-gain of \num{1} or less (\cref{fig:ppl-info-gain}).
-
-%\begin{figure}
-%\begin{tikzpicture}
-%\begin{axis}
-%\commscatter[]{lstm-3-1_ppl}{lstm-3-1_ig}
-%\end{axis}
-%\end{tikzpicture}
-%\caption{
-  %Average community perplexity (x-axis) versus information gain (y-axis)
-  %for the LSTM model with $l_c = 1$ (colors based on \cref{fig:comm-pca}).
-%}
-%\label{fig:ppl-info-gain}
-%\end{figure}
+\begin{figure}
+\begin{tikzpicture}
+\begin{axis}[%
+    axis x line*=bottom, axis y line*=left,
+    xlabel=$\Ppl_{M_j}$, ylabel=$\IG_{M_j}$,
+    width=7cm,
+  ]
+  \addplot+[%
+    only marks,
+    mark=*,
+    mark options={scale=0.35, solid, color=violet!80, fill=violet},
+    font=\tiny,
+  ] table [x={lstm-3_ppl}, y={lstm-3-3_ig}] {floats/comm.csv};
+\end{axis}
+\end{tikzpicture}
+\caption{
+  Average community perplexity (x-axis) versus information gain (y-axis)
+  for the best LSTM model ($l_c = 1$).
+}
+\label{fig:ppl-info-gain}
+\end{figure}
 
 As an informal observation, we note that across all the models we
 tested, communities where conditioning has the least effect tend to be
@@ -502,8 +506,7 @@ team, or subculture.  This makes sense intuitively, since communities
 with more niche topics would tend to have more specialized vocabulary
 and other linguistic patterns.
 
-
-\subsection{Latent language model-based community classifiers}
+\section{Latent language model-based community classifiers}
 
 The perplexity of a CCLM gives us a measure of linguistic complexity,
 but it is not a measure of how linguistically \emph{specific} the
