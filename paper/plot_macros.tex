@@ -5,19 +5,11 @@
   scatter, only marks,
   font=\tiny,
   scatter src=explicit symbolic,
-  scatter/classes={
-    general-interest={mark=*, blue},
-    videogames={mark=*, red},
-    technology={mark=*, green},
-    sports={mark=*, cyan},
-    female-focused={mark=*, magenta},
-    other={mark=o, black}%
-  },
   nodes near coords*={#1},
   nodes near coords align={vertical},
   every node near coord/.append style={font=\sffamily\tiny},
   visualization depends on={value \thisrow{community} \as \community},
-  ] table [x={#2}, y={#3}, meta=category] {floats/comm.csv};
+  ] table [x={#2}, y={#3}] {floats/comm.csv};
 }
 
 \newcommand{\confusionplot}[1]{%
@@ -78,16 +70,7 @@
         scatter, only marks,
         font=\tiny,
         scatter src=explicit symbolic,
-        scatter/classes={
-          general-interest={mark=*, blue},
-          videogames={mark=*, red},
-          technology={mark=*, green},
-          sports={mark=*, cyan},
-          female-focused={mark=*, magenta},
-          other={mark=o, black},
-          different={mark=x}
-        },
-        ] table [x=#1, y=#2, meta=category] {floats/comm_comm.csv};
+        ] table [x=#1, y=#2] {floats/comm_comm.csv};
     \end{axis}
   \end{tikzpicture}
 }
@@ -109,36 +92,24 @@
     ]
   \nextgroupplot
   \addplot+[boxplot,draw=blue,mark=*,solid]
-  table [y=lstm-3-0_info_gain] {floats/comm.csv};
+  table [y=lstm-3-0_ig] {floats/comm.csv};
   \addplot+[boxplot,draw=blue,mark=*,solid]
-  table [y=lstm-3-1_info_gain] {floats/comm.csv};
+  table [y=lstm-3-1_ig] {floats/comm.csv};
   \addplot+[boxplot,draw=blue,mark=*,solid]
-  table [y=lstm-3-2_info_gain] {floats/comm.csv};
+  table [y=lstm-3-2_ig] {floats/comm.csv};
   \addplot+[boxplot,draw=blue,mark=*,solid]
-  table [y=lstm-3-3_info_gain] {floats/comm.csv};
+  table [y=lstm-3-3_ig] {floats/comm.csv};
   \nextgroupplot
   \addplot+[boxplot,draw=red,mark=*,solid]
-  table [y=transformer-3-0_info_gain] {floats/comm.csv};
+  table [y=transformer-3-0_ig] {floats/comm.csv};
   \addplot+[boxplot,draw=red,mark=*,solid]
-  table [y=transformer-3-1_info_gain] {floats/comm.csv};
+  table [y=transformer-3-1_ig] {floats/comm.csv};
   \addplot+[boxplot,draw=red,mark=*,solid]
-  table [y=transformer-3-2_info_gain] {floats/comm.csv};
+  table [y=transformer-3-2_ig] {floats/comm.csv};
   \addplot+[boxplot,draw=red,mark=*,solid]
-  table [y=transformer-3-3_info_gain] {floats/comm.csv};
+  table [y=transformer-3-3_ig] {floats/comm.csv};
   \end{groupplot}
 }
 
 % https://tex.stackexchange.com/questions/183778/how-can-several-boxplots-be-combined-into-a-single-figure-as-groups/183856#183856
-\newcommand{\pplbycommbox}{
-  \begin{axis}
-    \addplot+[boxplot={draw position=-0.2, box extend=0.2}, draw=blue] table [y=lstm-3-0_ig] {floats/ig_by_comm.csv};
-    \addplot+[boxplot={draw position=0.2, box extend=0.2}, draw=red] table [y=transformer-3-0_ig] {floats/ig_by_comm.csv};
-    \addplot+[boxplot={draw position=.8, box extend=0.2}, draw=blue] table [y=lstm-3-1_ig] {floats/ig_by_comm.csv};
-    \addplot+[boxplot={draw position=1.2, box extend=0.2}, draw=red] table [y=transformer-3-1_ig] {floats/ig_by_comm.csv};
-    \addplot+[boxplot={draw position=1.8, box extend=0.2}, draw=blue] table [y=lstm-3-2_ig] {floats/ig_by_comm.csv};
-    \addplot+[boxplot={draw position=2.2, box extend=0.2}, draw=red] table [y=transformer-3-2_ig] {floats/ig_by_comm.csv};
-    \addplot+[boxplot={draw position=2.8, box extend=0.2}, draw=blue] table [y=lstm-3-3_ig] {floats/ig_by_comm.csv};
-    \addplot+[boxplot={draw position=3.2, box extend=0.2}, draw=red] table [y=transformer-3-3_ig] {floats/ig_by_comm.csv};
-  \end{axis}
-}
 

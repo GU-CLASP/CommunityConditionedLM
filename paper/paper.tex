@@ -50,6 +50,8 @@
 \newcommand\Ppl{\mathsf{Ppl}}
 \newcommand\IG{\mathsf{IG}}
 \newcommand\Ind{\mathsf{Ind}}
+\newcommand\LM{\mathrm{LM}}
+\newcommand\CCLM{\mathrm{CCLM}}
 \DeclareMathOperator*{\avg}{average}
 \newcommand\BibTeX{B\textsc{ib}\TeX}
 
@@ -239,7 +241,7 @@ To sum up, we test the following hypotheses:
   linguistically rich communities.
 \end{hypotheses}
 
-TODO: outline of the paper.
+%TODO: outline of the paper.
 
 \section{Community-conditioned language models}
 
@@ -247,30 +249,30 @@ We experiment with two kinds of model architecture: a simple
 unidirectional LSTM \citep{Hochreiter1997} and a Transformer
 \citep{Vaswani2017}.  In either case, the model is organized as a
 standard $n$-layer neural sequence encoder (we set $n=3$ for all
-models). As conventional, word tokens are first converted to vectors
-using a trainable embedding layer. At the other end, word tokens are
-predicted using a softmax projection layer. The set of word tokens is
-a pre-determined vocabulary.  These encoders form the core of the
-of our models, as such do not take community into account, and we call them
-unconditioned models.
+models). As is convention, a sequence of word tokens is first converted to 
+vectors using a trainable embedding layer over a pre-deterimend vocabulary.
+At the other end, word tokens are predicted using a softmax projection 
+layer. What we have described so far does not take community into account
+and as such we call them \emph{uncodnitioned models}, but the same
+encoder architecture also forms the core of our conditioned models.
 
-To condition the model (and obtain community-conditioned language
-models --- CCLM), we add a \emph{community embedding} parameter to the
-models.  This parameter is concatenated with the hidden layer of the
-sequence encoder, for some layer $l_c \leq n$, and passed through a
+To condition the model , we add a \emph{community embedding} parameter.
+This parameter is concatenated with the hidden layer of the
+sequence encoder, at some layer $l_c \leq n$, and passed through a
 linear layer which projects the resulting vector back to the original
 hidden layer size.  For $l_c = n$, the output of this linear layer is
 passed directly to the softmax function, just as the final hidden
 layer of the sequence encoder is in other models.  For $l_c=0$, the
 community embedding is concatenated with the token embedding.  For
 this reason, we set the hidden size of the sequence encoder and the
-size of the token to be embedding equal for all models.
+size of the token embedding to be equal for all models.
 
+%TODO: Diagram of model?
 
 \subsection{Data sets}
 
-We investigate linguistic variation across various communities present
-on the social media website Reddit.\footnote{Comments were obtained
+We investigate linguistic variation across various communities 
+from the social media website Reddit.\footnote{Comments were obtained
   from the archive at \url{https://pushshift.io/}.
   \cite{Baumgartner2020}.}
 %
@@ -295,27 +297,17 @@ leaving a total of \num{20.4}M messages for training.
 
 Messages were preprocessed as follows: 
 We excluded the content of block quotes, code blocks, and tables.
-We removed any markup (formatting) commands from the remaining text, extracting only rendered text.
-We tokenized the messages using the default English model for the SpaCy tokenizer Version 2.2.3 \citep{Honnibal2017}
-and lower-cased all tokens.
+We removed any markup (formatting) commands from the remaining text, 
+extracting only rendered text.
+We tokenized the messages using the default English model for the SpaCy tokenizer 
+Version 2.2.3 \citep{Honnibal2017}.
+
 
 \subsection{Training scheme}
 
-We combined the 46 community corpora and split the combined corpus,
-reserving 10\% for testing, 10\% for validation and the rest for training.
-Splits were stratified by community so that each community had \num{5000} examples
-for testing, \num{5000} for evaluation, and \num{40000} for training.
-
-In the remainder of the paper we use $M$ to refer to messages in the
-test set, and $M_j$ for the partition of the test set originating from
-community $c_j$.
-
 We use a vocabulary size of \num{40000} tokens, including a special
 out-of-vocabulary token.  The vocabulary consists of the most frequent
-tokens at the message level (across all communities), meaning that we
-only count each token once per message.  The main reason for this
-choice is to avoid over-counting otherwise rare tokens that were
-repeated many times in a single message.
+tokens across all communities.
 
 For the LSTM, we trained the models on a simple left-to-right language
 modeling task with cross-entropy loss over the vocabulary.  Because
@@ -344,29 +336,66 @@ We experimented with every possible value for $l_c$ in a three-layer model ($l_c
 We trained the models until the validation loss stopped decreasing for
 two epochs in a row, and used the weights from the epoch with the
 smallest validation loss for testing.  In general, transformer models
-trained for about half as long as the LSTM models (test epoch,
-\cref{tab:model-results}).
+trained for about half as long as the LSTM models (\cref{tab:model-results}, 
+test epoch).
 
 \subsection{Results and analysis}
 
-\subsubsection{Losses of CCLM}
+In this section, we report the performance of the conditioned and un-conditioned
+models on the test set.
+First, we define two performance metrics, perplexity and information gain.
+In the following, we use $M$ to refer to messages in the
+combined test set, and $M_j$ for the partition of the test set originating from 
+community $c_j$.
 
-We measure the perplexity of each message in the test set. 
-For this, we use the negative exponential of the mean cross-entropy loss 
-of the language model for a given message and average over a set of messages, $M$.
+\paragraph{Perplexity}
+
+For a given model let $H(m)$ be the model's cross-entropy loss,
+averaged over tokens in $m$.
+We define the perplexity on a set of messages, $M$,
+to be the exponential of the model's average cross-entropy loss:
 \[\Ppl_M = e^{\avg_{m\in M} H(m)}\]
-As one would expect, 
-the conditioned models have lower perplexity
-than their respective unconditioned baseline models (\cref{tab:model-results}),
-but this effect is different in magnitude
-for models with different community embedding depths.
-The best transformer model ($l_c=3$)
-incorporates the community information last,
-after all the sequence encoder layers.
+
+\paragraph{CCLM Information Gain}
+
+We also consider the information gain of each CCLM over its baseline
+un-conditioned counterpart with the same sequence encoder architecture.
+For a given message, information gain is defined as the difference
+between the cross-entropy of the unconditioned model and the conditioned model:
+\[H_{\mathrm{LM}}(m) - H_{\mathrm{CCLM}}(m)\]
+For a set of messages, $M$, we consider the average information gain
+in exponential space (as a ratio of perplexities):
+\[\IG_M = \frac{e^{\avg_M(H_{\mathrm{LM}}(m))}}{e^{\avg_M(H_{\mathrm{CCLM}}(m))}}\]
+%\jp{What we had before: average entropy gain is $H(m)-H_0(m)$, and
+  %then taking the average over all messages:
+  %$avg(H(m)-H_0(m)) = avg(H(m))-avg(H_0(m)) = H - H₀$. Taking the exponential
+  %gives a ratio of perplexity.  Here it seems that you have commuted
+  %exponential and average. It is rather weird to do average in the
+  %exponential space without normalising to a probability.
+  %Compare: $e^{avg(H(m))} / e^{avg(H_0(m))}$ with $avg \frac{e^{H(m)}}{e^{H₀(m)}}$.
+%}
+\bn{I think this is stated correctly now (not the average in exp space)} 
+
+
+\paragraph{}
+
+Unsurprisingly, the conditioned models mostly have lower perplexity 
+than their respective unconditioned baseline models, 
+meaning information gain above one (\cref{tab:model-results}).
+Overall, the LSTM models perform better than the transformers, 
+although the best transformer has higher information gain than the best LSTM.
+
+The effect of $l_c$, the depth of the community embedding,
+is also different across architectures.
 For the LSTM encoder, 
-the model that concatenates the community embedding after the first encoder layer ($l_c=1$),
-performs almost as well as the model with $l_c=3$, but that model is still the best.
-There is much less variation in performance across different values of $l_c$ for the LSTM.
+the best model concatenates the community embedding after the first encoder layer ($l_c=1$),
+but all of the conditioned models perform similarly well.
+For the transformer, the best model incorporates the community information
+first, concatenating it directly to the word vectors ($l_c=0$).
+It performs similarly to the model that only integrates the community information
+after all all the transformer layers ($l_c=3$),
+but the two middle-layer models actually perform worse than the unconditioned model
+(with $\IG_M < 1$).
 
 \begin{table}
   \small
@@ -379,51 +408,67 @@ There is much less variation in performance across different values of $l_c$ for
   \label{tab:model-results}
 \end{table}
 
-We also consider model performance stratified by community; that is,
-$\Ppl_{M_j}$, where $M_j$ is the test-set messages from community
-$c_j$.  We observe a lot of variation in baseline perplexity
-across communities, with $\Ppl_{M_j}$ ranging from \num{34.47} to
-\num{66.43} for the LSTM model (see table 1 in the supplementary materials).
-
-\subsection{Information gain of the CCLM}
-
-Next, we consider the \emph{information gain} of each CCLM over its baseline
-un-conditioned counterpart with the same sequence encoder architecture.
-For a given message, information gain is defined as the difference
-between the cross-entropy of the unconditioned model and the conditioned model:
-\[H_{LM}(m) - H_{CCLM}(m)\]
-For a set of messages, $M$, we consider the average information gain
-in exponential space (as a ratio of perplexities):
-\[\IG_M = \frac{e^{\avg_M(H_{LM}(m))}}{e^{\avg_M(H_{CCLM}(m))}}\]
-%\jp{What we had before: average entropy gain is $H(m)-H_0(m)$, and
-  %then taking the average over all messages:
-  %$avg(H(m)-H_0(m)) = avg(H(m))-avg(H_0(m)) = H - H₀$. Taking the exponential
-  %gives a ratio of perplexity.  Here it seems that you have commuted
-  %exponential and average. It is rather weird to do average in the
-  %exponential space without normalising to a probability.
-
-  %Compare: $e^{avg(H(m))} / e^{avg(H_0(m))}$ with $avg \frac{e^{H(m)}}{e^{H₀(m)}}$.
-%}
-
-While the absolute performance of the LSTM models is better,
+We also consider performance stratified by community; that is,
+$\Ppl_{M_j}$ and $\IG_{M_j}$, 
+where $M_j$ is the set of messages originating from community $c_j$ 
+(\cref{fig:comm-stratified-box}).
+We observe a lot of variation in baseline perplexity
+across communities, with $\Ppl_{M_j}$ ranging from \num{3.67} to
+\num{93.58} for the best LSTM model . %TODO make long table
+While the performance ($\Ppl_{M_j}$) of the LSTM models is better,
 we find that the best transformer CCLM has higher information gain 
-than the best LSTM (\cref{tab:model-results}).
+than the best LSTM.
 
-The conditioned models also perform differently across different communities---%
-for some communities, $\IG_{M_j}$ around \num{1}, or even slightly lower,
-meaning that the CCLM has no advantage over the unconditioned baseline for that community.
-For other communities it is higher, meaning that the CCLM performs better than 
-the baseline for those communities (\cref{fig:comm-info-gain}).
+\newcommand{\modelboxplot}[3]{
+  \addplot+[
+    boxplot={draw position=#3, box extend=0.3}, 
+    draw=#2, mark=*, mark options={fill=#2, scale=0.5}, solid, fill=#2!10,
+    area legend] 
+    table [y=#1] {floats/comm.csv};
+}
 
-\begin{figure}
+\begin{figure}[t]
 \begin{tikzpicture}
-  \pplbycommbox
+  \begin{axis}[name=ig,
+    height=7cm,width=8cm,
+    boxplot/draw direction=x, axis x line*=bottom, axis y line*=left,y axis line style={opacity=0},
+    ylabel=$l_c$, xlabel=$\IG_{M_j}$,
+    legend style={font=\tiny,at={(1,1)},anchor=north east}, legend columns=2
+    ]
+    \addplot[thin, red, samples=2] coordinates {(1,-0.5)(1,3.5)};
+    \foreach \lc in {0, ..., 3}{
+      \modelboxplot{lstm-3-\lc_ig}{violet}{\lc+0.2}
+      \modelboxplot{transformer-3-\lc_ig}{teal}{\lc-0.2}
+    \legend{,LSTM, Transformer}
+    }
+  \end{axis}
+  \begin{axis}[name=ppl,
+    anchor=north west,at={($(ig.south west)-(0,1cm)$)},
+    width=8cm, height=2.5cm, 
+    boxplot/draw direction=x, axis x line*=bottom, hide y axis,
+    xlabel=$\Ppl_{M_j}$,
+    ]
+    \modelboxplot{lstm-3_ppl}{violet}{0.2}
+    \modelboxplot{transformer-3_ppl}{teal}{-.2}
+  \end{axis}
 \end{tikzpicture}
 \caption{
-  Distribution of $\Ppl_{M_j}$ for each model architecture.
+   Average model performance by community. 
+   Also see table 1 in the supplementary materials
+   for a tabular version of these results with community names.
 }
-\label{fig:comm-info-gain}
+\label{fig:comm-stratified-box}
 \end{figure}
+
+
+The conditioned models also perform differently across different communities---%
+for some communities, $\IG_{M_j}$ is around \num{1}, or even slightly lower,
+meaning that the CCLM has no advantage over the unconditioned baseline.
+For other communities it is much higher, meaning that the CCLM performs better 
+(\cref{fig:comm-info-gain}).\footnote{
+  Some of the outlier communities with consistently high $IG_{M_j}$ 
+  across all models are primarily non-English.}
+
 
 This variation in information gain across communities is not 
 related to perplexity, however. 
@@ -433,18 +478,18 @@ Similarly, among the less linguistically complex communities
 there some have high information gain, and some have information
 gain of \num{1} or less (\cref{fig:ppl-info-gain}).
 
-\begin{figure}
-\begin{tikzpicture}
-\begin{axis}
-\commscatter[]{lstm-3-1_lm_ppl}{lstm-3-1_info_gain}
-\end{axis}
-\end{tikzpicture}
-\caption{
-  Average community perplexity (x-axis) versus information gain (y-axis)
-  for the LSTM model with $l_c = 1$ (colors based on \cref{fig:comm-pca}).
-}
-\label{fig:ppl-info-gain}
-\end{figure}
+%\begin{figure}
+%\begin{tikzpicture}
+%\begin{axis}
+%\commscatter[]{lstm-3-1_ppl}{lstm-3-1_ig}
+%\end{axis}
+%\end{tikzpicture}
+%\caption{
+  %Average community perplexity (x-axis) versus information gain (y-axis)
+  %for the LSTM model with $l_c = 1$ (colors based on \cref{fig:comm-pca}).
+%}
+%\label{fig:ppl-info-gain}
+%\end{figure}
 
 As an informal observation, we note that across all the models we
 tested, communities where conditioning has the least effect tend to be
@@ -484,14 +529,14 @@ $C$, defined by $C_{ij} = P(c=c_i \mid m)$ for a given (test set) message $m$
 from community $c_j$.
 \[C_{ij} = \avg_{m\in M_j}P(c=c_i \mid m)\]
 We observe that the diagonal dominates the matrix: the LMCC generally finds the right community for a message (\cref{fig:confusion}).
-%
-\begin{figure}
-\begin{tikzpicture}
-  \confusionsingleplot{lstm-3-1}
-\end{tikzpicture}
-\caption{LMCC confusion matrices for the LSTM model with $c=1$.}
-\label{fig:confusion}
-\end{figure}
+% TODO: new results
+%\begin{figure}
+%\begin{tikzpicture}
+  %\confusionsingleplot{lstm-3-1}
+%\end{tikzpicture}
+%\caption{LMCC confusion matrices for the LSTM model with $c=1$.}
+%\label{fig:confusion}
+%\end{figure}
 %
 But we want a more quantitative measure, corresponding to the ability of the LMCC to correctly
 recognize messages coming from a given community $c_j$. We could use
@@ -517,19 +562,19 @@ between the indiscernibility measures by every pair of models with
 Pearson's $r \geq 0.98$ and $p < 0.0001$ (see, for example,
 \cref{fig:indisc-corr}).
 %
-\begin{figure}
-  \begin{tikzpicture}
-    \begin{axis}
-    \commscatter{lstm-3-1_indisc}{transformer-3-3_indisc}
-    \end{axis}
-  \end{tikzpicture}
-  \caption{%
-    Correlation between indiscernibility for 
-    LSTM ($c = 1$) and transformer ($c = 3$) models
-    (Pearson's $r = 0.99$, $p < 0.0001$).
-  }
-  \label{fig:indisc-corr}
-\end{figure}
+%\begin{figure}
+  %\begin{tikzpicture}
+    %\begin{axis}
+    %\commscatter{lstm-3-1_indisc}{transformer-3-3_indisc}
+    %\end{axis}
+  %\end{tikzpicture}
+  %\caption{%
+    %Correlation between indiscernibility for 
+    %LSTM ($c = 1$) and transformer ($c = 3$) models
+    %(Pearson's $r = 0.99$, $p < 0.0001$).
+  %}
+  %\label{fig:indisc-corr}
+%\end{figure}
 %
 However, we observe that community-wise perplexity is only weakly (if at all) 
 correlated with community indiscernibility under the corresponding latent 
@@ -548,29 +593,29 @@ is a poor predictor of how distinctive its language is.
   \label{tab:ind-corrs}
 \end{table}
 %
-\begin{figure*}
-  \begin{tikzpicture}
-  \begin{groupplot}[
-    group style={group size=2 by 1},
-    legend style={anchor=north, legend columns=1, font=\tiny},
-    every node near coord/.append style={font=\sffamily\tiny}%
-  ]
-    \nextgroupplot
-    \commscatter[]{lstm-3-1_lm_ppl}{lstm-3-1_indisc}
-    \nextgroupplot
-    \commscatter[]{lstm-3-1_info_gain}{lstm-3-1_indisc}
-    \legend{General interest,Videogames,Technology,Sports,Female-focused,Other}
-  \end{groupplot}
-  \end{tikzpicture}
-  \caption{%
-    Average community indiscernibility (y-axis), 
-    in relationship to linguistic complexity (left) and 
-    CCLM information gain (right). Shown here for the LSTM
-    model with $l_c=1$. See \cref{tab:ind-corrs} for 
-    Pearson's r correlations for all models.
-  }
-  \label{fig:cclm-lmcc-ppl}
-\end{figure*}
+%\begin{figure*}
+  %\begin{tikzpicture}
+  %\begin{groupplot}[
+    %group style={group size=2 by 1},
+    %legend style={anchor=north, legend columns=1, font=\tiny},
+    %every node near coord/.append style={font=\sffamily\tiny}%
+  %]
+    %\nextgroupplot
+    %\commscatter[]{lstm-3-1_ppl}{lstm-3-1_indisc}
+    %\nextgroupplot
+    %\commscatter[]{lstm-3-1_ig}{lstm-3-1_indisc}
+    %\legend{General interest,Videogames,Technology,Sports,Female-focused,Other}
+  %\end{groupplot}
+  %\end{tikzpicture}
+  %\caption{%
+    %Average community indiscernibility (y-axis), 
+    %in relationship to linguistic complexity (left) and 
+    %CCLM information gain (right). Shown here for the LSTM
+    %model with $l_c=1$. See \cref{tab:ind-corrs} for 
+    %Pearson's r correlations for all models.
+  %}
+  %\label{fig:cclm-lmcc-ppl}
+%\end{figure*}
 
 
 % We could also check if communities are well-separated in the SNAP community encodings
@@ -693,24 +738,24 @@ resulting correlation coefficient.)
 %      - Concatenations ???
 
 
-\begin{figure*}[t]
-\begin{tikzpicture}
-  \begin{groupplot}[
-    group style={group size=2 by 1},
-    yticklabels={,,}, xticklabels={,,},
-    legend style={anchor=north, legend columns=1, font=\sffamily\tiny},
-  ]
-    \nextgroupplot
-    \commscatter{lstm-3-1_pca1}{lstm-3-1_pca2}
-    \nextgroupplot
-    \commscatter{transformer-3-3_pca1}{transformer-3-3_pca2}
-    \legend{General interest,Videogames,Technology,Sports,Female-focused,Other}
-  \end{groupplot}
-\end{tikzpicture}
-\caption{Plot of embeddings along the 2 principal dimensions of correlation between .... TODO of an LSTM (left, $c=1$) and transformer (right, $c=3$) model.
-Color correspond the 5-means clustering of .... TODO}
-\label{fig:comm-pca}
-\end{figure*}
+%\begin{figure*}[t]
+%\begin{tikzpicture}
+  %\begin{groupplot}[
+    %group style={group size=2 by 1},
+    %yticklabels={,,}, xticklabels={,,},
+    %legend style={anchor=north, legend columns=1, font=\sffamily\tiny},
+  %]
+    %\nextgroupplot
+    %\commscatter{lstm-3-1_pca1}{lstm-3-1_pca2}
+    %\nextgroupplot
+    %\commscatter{transformer-3-3_pca1}{transformer-3-3_pca2}
+    %\legend{General interest,Videogames,Technology,Sports,Female-focused,Other}
+  %\end{groupplot}
+%\end{tikzpicture}
+%\caption{Plot of embeddings along the 2 principal dimensions of correlation between .... TODO of an LSTM (left, $c=1$) and transformer (right, $c=3$) model.
+%Color correspond the 5-means clustering of .... TODO}
+%\label{fig:comm-pca}
+%\end{figure*}
 
 
 
