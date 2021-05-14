@@ -804,6 +804,19 @@ on messages from that community's test set
 Communities for which the language model benefits most from 
 the conditioned model are generally easier for the LMCC to classify.
 
+Finally, we note that, even though community-conditioning affects
+perplexity very little overall, it provides large benefits in term of
+the underlying Bayesian classifier. Indiscernibility is on average
+TODO with a standard deviation of TODO. Roughly speaking, this means
+that, while the linguistic variations does not allow our model to
+pinpoint the originating community of a message, it can often
+eliminate TODO (a percentatge?) of communities as possible locations
+for it. Further more, the information gain provided by
+community-conditioning is a good predictor of how specific the
+community is.
+
+
+
 % Finally, we investigate the correlation between the stability of a
 % community and the perplexity of the LMCC for it. Stability is defined as TODO.
 
@@ -975,6 +988,7 @@ modeled in an unsupervised way.
 
 \section{Discussion and Conclusion}
 
+\jp{I propose that most of the following analysis should be spread between the relevant sections, and only have a tiny summary here + future work.}
 We find that various communities exhibit widely varying levels of
 linguistic complexity \ref{hyp:varying-complexity}, with perplexity
 per-word ranging from less than 34 to more than 65 for the best model 
