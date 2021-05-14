@@ -467,8 +467,13 @@ meaning that the CCLM performs worse than the unconditioned baseline for
 messages from that community.
 For other communities $\IG_{M_j}$ is much higher, meaning that the CCLM performs better  
 (\cref{fig:comm-info-gain}).\footnote{
-  Some of the outlier communities with consistently high $IG_{M_j}$ 
-  across all models are primarily non-English.}
+  Some of the communities with consistently high $IG_{M_j}$ 
+  across all models are primarily non-English, 
+  but surprisingly, not the three most extreme
+  outliers. There are /r/counting, /r/friendsafari, and /r/Fireteams, 
+  the later two of which are places where people coordinate to play video games
+  together. The coordination has highly strucutred and regular formats, which 
+  are presumably conventional to these communities.}
 
 The variation in information gain across communities is not 
 related to perplexity, however (\cref{fig:ppl-info-gain}).
@@ -532,15 +537,16 @@ $C$, defined by $C_{ij} = P(c=c_i \mid m)$ for a given (test set) message $m$
 from community $c_j$.
 \[C_{ij} = \avg_{m\in M_j}P(c=c_i \mid m)\]
 We observe that the diagonal dominates the matrix: the LMCC generally finds the right community for a message (\cref{fig:confusion}).
-% TODO: new results
-%\begin{figure}
-%\begin{tikzpicture}
-  %\confusionsingleplot{lstm-3-1}
-%\end{tikzpicture}
-%\caption{LMCC confusion matrices for the LSTM model with $c=1$.}
-%\label{fig:confusion}
-%\end{figure}
-%
+
+\begin{figure}
+  \includegraphics[width=\linewidth]{floats/confusion_lstm-3-1}
+\caption{
+  Log-probability LMCC confusion matrices for the LSTM model with $l_c=1$. 
+  Communities are sorted by indiscernability.}
+\label{fig:confusion}
+\end{figure}
+
+
 But we want a more quantitative measure, corresponding to the ability of the LMCC to correctly
 recognize messages coming from a given community $c_j$. We could use
 something like an F-score, but we prefer to use a perplexity-like metric,
@@ -562,23 +568,8 @@ Indiscernibility of a given community is a robust measure: it is
 almost perfectly correlated across CCLMs (such as transformers, LSTM
 and various values of $l_c$).  In fact, we observe a correlation
 between the indiscernibility measures by every pair of models with
-Pearson's $r \geq 0.98$ and $p < 0.0001$ (see, for example,
-\cref{fig:indisc-corr}).
-%
-%\begin{figure}
-  %\begin{tikzpicture}
-    %\begin{axis}
-    %\commscatter{lstm-3-1_indisc}{transformer-3-3_indisc}
-    %\end{axis}
-  %\end{tikzpicture}
-  %\caption{%
-    %Correlation between indiscernibility for 
-    %LSTM ($c = 1$) and transformer ($c = 3$) models
-    %(Pearson's $r = 0.99$, $p < 0.0001$).
-  %}
-  %\label{fig:indisc-corr}
-%\end{figure}
-%
+Pearson's $r \geq 0.96$ and $p < 0.0001$. 
+
 However, we observe that community-wise perplexity is only weakly (if at all) 
 correlated with community indiscernibility under the corresponding latent 
 LMCC (see \cref{tab:ind-corrs} and, for example, \cref{fig:cclm-lmcc-ppl}).
@@ -595,30 +586,40 @@ is a poor predictor of how distinctive its language is.
     CCLM information gain on messages from $c_j$ ($\IG_{M_j}$).  }
   \label{tab:ind-corrs}
 \end{table}
-%
-%\begin{figure*}
-  %\begin{tikzpicture}
-  %\begin{groupplot}[
-    %group style={group size=2 by 1},
-    %legend style={anchor=north, legend columns=1, font=\tiny},
-    %every node near coord/.append style={font=\sffamily\tiny}%
-  %]
-    %\nextgroupplot
-    %\commscatter[]{lstm-3-1_ppl}{lstm-3-1_indisc}
-    %\nextgroupplot
-    %\commscatter[]{lstm-3-1_ig}{lstm-3-1_indisc}
-    %\legend{General interest,Videogames,Technology,Sports,Female-focused,Other}
-  %\end{groupplot}
-  %\end{tikzpicture}
-  %\caption{%
-    %Average community indiscernibility (y-axis), 
-    %in relationship to linguistic complexity (left) and 
-    %CCLM information gain (right). Shown here for the LSTM
-    %model with $l_c=1$. See \cref{tab:ind-corrs} for 
-    %Pearson's r correlations for all models.
-  %}
-  %\label{fig:cclm-lmcc-ppl}
-%\end{figure*}
+
+\begin{figure*}
+  \begin{tikzpicture}
+  \begin{groupplot}[
+    group style={group size=2 by 1},
+    legend style={anchor=north, legend columns=1, font=\tiny},
+    every node near coord/.append style={font=\sffamily\tiny},%
+    axis x line*=bottom, axis y line*=left,
+  ]
+  \nextgroupplot[xlabel=$\Ppl_{M_j}$, ylabel=$\Ind_j$]
+      \addplot+[%
+        only marks,
+        mark=*,
+        mark options={scale=0.35, solid, color=violet!80, fill=violet},
+        font=\tiny,
+      ] table [x={lstm-3-1_ppl}, y={lstm-3-1_indisc}] {floats/comm.csv};
+  \nextgroupplot[xlabel=$\IG_{M_j}$, ylabel=$\Ind_j$]
+      \addplot+[%
+        only marks,
+        mark=*,
+        mark options={scale=0.35, solid, color=violet!80, fill=violet},
+        font=\tiny,
+      ] table [x={lstm-3-1_ig}, y={lstm-3-1_indisc}] {floats/comm.csv};
+  \end{groupplot}
+  \end{tikzpicture}
+  \caption{%
+    Community indiscernibility (y-axis), 
+    in relationship to linguistic complexity (left) and 
+    CCLM information gain (right). Shown here for the LSTM
+    model with $l_c=1$. See \cref{tab:ind-corrs} for 
+    Pearson's r correlations for all models.
+  }
+  \label{fig:cclm-lmcc-ppl}
+\end{figure*}
 
 
 % We could also check if communities are well-separated in the SNAP community encodings
