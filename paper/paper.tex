@@ -10,6 +10,11 @@
 % Standard package includes
 \usepackage{times}
 \usepackage{latexsym}
+\usepackage{newunicodechar}
+\newunicodechar{Σ}{\ensuremath{\Sigma}} % 
+\newunicodechar{σ}{\ensuremath{\mathnormal{\sigma}}} % 
+\newunicodechar{μ}{\ensuremath{\mathnormal{\mu}}} % 
+\newunicodechar{×}{\ensuremath{\times}} % 
 
 % For proper rendering and hyphenation of words containing Latin characters (including in bib files)
 \usepackage[T1]{fontenc}
@@ -220,8 +225,9 @@ co-occurrence of users between communities and 2.\ if latent community
 classifiers based on the CCLM can accurately identify that a given
 message comes from a given community. Additionally, one may
 intuitively assume that linguistically poor communities are easier to
-recognize: the less linguistic diversity, the more specific the
-language becomes and the easier it is to identify.
+recognize: the less linguistic diversity, \jp{easiest it is to model computationally ...}
+% the more specific the language becomes and
+the easier it is to identify.
 
 To sum up, we test the following hypotheses:
 \begin{hypotheses}
@@ -541,8 +547,8 @@ We observe that the diagonal dominates the matrix: the LMCC generally finds the 
 \begin{figure}
   \includegraphics[width=\linewidth]{floats/confusion_lstm-3-1}
 \caption{
-  Log-probability LMCC confusion matrices for the LSTM model with $l_c=1$. 
-  Communities are sorted by indiscernability.}
+  Log-probability LMCC confusion matrix for the LSTM model with $l_c=1$. 
+  Communities are sorted by indiscernability. (The first communities predominantly use a language other than English, and are thus very discernable.)}
 \label{fig:confusion}
 \end{figure}
 
@@ -697,18 +703,17 @@ any orthogonal matrix \(\Omega\) applied to \(L\):
 
 Computing \(d(L,S)\) is known as the orthogonal Procrustes problem~\citep{Gower2004}. The
 solution is
-\[d(L,S) = \mathsf {Tr} Σ\] where the matrix \(Σ\) is obtained by the singular value
+\[d(L,S) = \mathsf {Tr} (Σ)\] where the matrix \(Σ\) is obtained by the singular value
 decomposition \(U^TΣV = LS^T\). Additionally the vectors of \(U\) and \(V\) give
 the directions of correlation respectively of \(L\) and \(S\). Each
-singular \(\sigma_i\) (elements of the diagonal matrix \(Σ\)), give a measure of how much
+singular value \(\sigma_i\) (the elements of the diagonal matrix \(Σ\)), give a measure of how much
 correlation there is between the directions \(U_i\) and \(V_i\).
 
-Further, we can apply a permutation to \(U\),\(V\) and \(Σ\) such that \(σ_i < σ_j\) iff \(i < j\). That
-is, the largest singular value \(σ_0\) then corresponds to the principal
+Further, we can apply a permutation to \(U\), \(V\) and \(Σ\) such that \(σ_i < σ_j\) iff \(i < j\). Doing so, the largest singular value \(σ_0\) corresponds to the principal
 directions of correlation (\(U_0\), \(V_0\)), \(σ_1\) to the second
 principal direction, etc. 
 
-The \(d(L,S)\) metric range from \(0\) (corresponding to perfect
+The \(d(L,S)\) metric ranges from \(0\) (corresponding to perfect
 independence) to \(n\) (corresponding to perfect correlation, obtained
 for example if \(L=S\)), where $n=510$ is the number of communities
 considered.
@@ -716,7 +721,7 @@ considered.
 To get a more precise sense of what value of \(d(L,S)\) indicates significant correlation,
 We have computed experimentally \(d(L,S)\) for 
 \(L\) and \(S\) chosen as random 16 dimensions. We find
-a mean of TODO and a standard deviation of TODO.
+a mean \(μ_d\)=TODO and a standard deviation \(σ_d\)=TODO.\jp{Unfortunate overloading}
 
 TODO: !!! we should take a 16 × 510 and a 300 × 510 matrix to test!!!
 
@@ -732,7 +737,7 @@ do so we will plot the projection of embeddings on along \(U_0\) and
 
 (Another idea may be to correlate the cosine similarity between
 \((S_i,S_j)\) and \((L_i,L_j)\). But this would yield one number for
-each pair of communities (510 * 509 / 2): too much data to deal with,
+each pair of communities \((510 × 509 / 2)\): too much data to deal with,
 and it is hard to get a sense of the statistical significance of the
 resulting correlation coefficient.)
 
