@@ -709,7 +709,8 @@ We can characterize the quality\jp{performance} of the LMCC with a confusion mat
 $C$, defined by $C_{ij} = P(c=c_i \mid m)$ for a given (test set) message $m$ 
 from community $c_j$.
 \[C_{ij} = \avg_{m\in M_j}P(c=c_i \mid m)\]
-We observe that the diagonal dominates the matrix: the LMCC generally finds the right community for a message (\cref{fig:confusion}).
+We observe that the diagonal is clearly above the rest: on average the LMCC generally
+picks assigns the highest probability to the community where a message originates (\cref{fig:confusion}).
 
 \begin{figure}
   \includegraphics[width=\linewidth]{floats/confusion_lstm-3-1}
