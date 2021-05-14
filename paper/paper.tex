@@ -695,33 +695,39 @@ any orthogonal matrix \(\Omega\) applied to \(L\):
 
 \[d(L,S) = \mathsf{argmin}_\Omega ||ΩL-S||_F\]
 
-Computing this distance is known as the orthogonal Procrustes problem~\citep{Gower2004}. Its
+Computing \(d(L,S)\) is known as the orthogonal Procrustes problem~\citep{Gower2004}. The
 solution is
 \[d(L,S) = \mathsf {Tr} Σ\] where the matrix \(Σ\) is obtained by the singular value
 decomposition \(U^TΣV = LS^T\). Additionally the vectors of \(U\) and \(V\) give
-the directions of correlation respectively of \(L\) and \(S\). The
-singular values \(\sigma_i\) (diagonal elements of \(Σ\)), say how much
+the directions of correlation respectively of \(L\) and \(S\). Each
+singular \(\sigma_i\) (elements of the diagonal matrix \(Σ\)), give a measure of how much
 correlation there is between the directions \(U_i\) and \(V_i\).
 
-Further, we can arrange the solution so that \(σ_i < σ_j\) iff \(i < j\). That
-is, the largest singular value \(σ_0\) corresponds to the principal
+Further, we can apply a permutation to \(U\),\(V\) and \(Σ\) such that \(σ_i < σ_j\) iff \(i < j\). That
+is, the largest singular value \(σ_0\) then corresponds to the principal
 directions of correlation (\(U_0\), \(V_0\)), \(σ_1\) to the second
 principal direction, etc. 
 
-The \(d(L,S)\) metric varies between \(0\) (perfect independence) and
-\(n\) (perfect correlation, obtained for example if \(L=S\)), where
-$n$ is the number of community embeddings considered.
+The \(d(L,S)\) metric range from \(0\) (corresponding to perfect
+independence) to \(n\) (corresponding to perfect correlation, obtained
+for example if \(L=S\)), where $n=510$ is the number of communities
+considered.
 
 To get a more precise sense of what value of \(d(L,S)\) indicates significant correlation,
 We have computed experimentally \(d(L,S)\) for 
-\(L\) and \(S\) chosen at random and 16 dimensions. We find
-a mean of \num{73.83} and a standard deviation of \num{1.89}.
+\(L\) and \(S\) chosen as random 16 dimensions. We find
+a mean of TODO and a standard deviation of TODO.
 
-Thus \(d(L,S)\) below \(μ-3σ\) (\num{68.15}) can be safely considered to indicate a \bn{above  \(μ+3σ\) (\num{79.50})?}
-statistically significant correlation between \(L\) and
+TODO: !!! we should take a 16 × 510 and a 300 × 510 matrix to test!!!
+
+
+Thus if \(d(L,S)\) is below \(μ-3σ\), we can safely assume that there \bn{above  \(μ+3σ\) (\num{79.50})?}
+is statistically significant correlation between \(L\) and
 \(S\). However, below, we will also give a sense of \emph{how} the
 correlation is manifested by analysis of the two principal components
-of correlation in the linguistic embeddings, \(U_0\) and \(U_1\).
+of correlation in the linguistic embeddings, \(U_0\) and \(U_1\). To
+do so we will plot the projection of embeddings on along \(U_0\) and
+\(U_1\), together with the corresponding singular values.
 
 
 (Another idea may be to correlate the cosine similarity between
