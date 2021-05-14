@@ -865,7 +865,7 @@ any orthogonal matrix \(\Omega\) applied to \(L\):
 
 Computing \(d(L,S)\) is known as the orthogonal Procrustes problem~\citep{Gower2004}. The
 solution is
-\[d(L,S) = \mathsf {Tr} (Σ)\] where the matrix \(Σ\) is obtained by the singular value
+\[d(L,S) = n - \mathsf {Tr} (Σ)\] where the matrix \(Σ\) is obtained by the singular value
 decomposition \(U^TΣV = LS^T\). Additionally the vectors of \(U\) and \(V\) give
 the directions of correlation respectively of \(L\) and \(S\). Each
 singular value \(\sigma_i\) (the elements of the diagonal matrix \(Σ\)), give a measure of how much
@@ -885,10 +885,10 @@ We have computed experimentally \(d(L,S)\) for
 \(L\) and \(S\) chosen as random 16 dimensions. We find
 a mean \(μ_d\)=TODO and a standard deviation \(σ_d\)=TODO.\jp{Unfortunate overloading}
 
-TODO: !!! we should take a 16 × 510 and a 300 × 510 matrix to test!!!
+TODO: !!! we should take the correlation of a random 16 × 510 with the web embeddings !!!
 
 
-Thus if \(d(L,S)\) is below \(μ-3σ\), we can safely assume that there \bn{above  \(μ+3σ\) (\num{79.50})?}
+Thus if \(d(L,S)\) is below \(μ-3σ\), we can safely assume that there % below, because we have a distance rather than correlation in this convention.
 is statistically significant correlation between \(L\) and
 \(S\). However, below, we will also give a sense of \emph{how} the
 correlation is manifested by analysis of the two principal components
