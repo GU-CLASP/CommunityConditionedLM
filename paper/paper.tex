@@ -231,7 +231,7 @@
 \newcommand\CCLM{\mathrm{CCLM}}
 \DeclareMathOperator*{\avg}{average}
 \newcommand\BibTeX{B\textsc{ib}\TeX}
-
+\newcommand\subreddit[1]{\texttt{/r/#1}}
 \newlist{hypotheses}{enumerate}{3}
 \setlist[hypotheses,1]{parsep=0pt,itemsep=1pt,font=\bfseries,label=(H\arabic*)}
 
@@ -363,7 +363,7 @@ macro-social categories), and use context-sensitive sequence models
 capable of capturing variation beyond the lexical level.
 %
 We do so by investigating two questions.  First, we are interested in
-variation in the level of linguistic complexity exhibited by different
+variation in the level of linguistic complexity\jp{maybe revise terminology? Perhaps define linguistic complexity as perplexity?} exhibited by different
 communities.
 %\jp{
   %Some examples (perhaps include if there is space):
@@ -418,7 +418,7 @@ To sum up, we test the following hypotheses:
   linguistically rich communities.
 \end{hypotheses}
 
-%TODO: outline of the paper.
+\jp{outline of the paper is important here}
 
 \section{Community-conditioned language models}
 
@@ -462,17 +462,17 @@ or appear as a reply to another comment.
 %
 Hereafter we refer to such comments as ``messages'', to match our
 convention in mathematical formulas: the letter $c$ stands for a
-community, and $m$ stands for a message.
+community, and $m$ stands for a message. \jp{what does \(p\) stand for?}
 
 Our dataset includes messages from \num{510} subreddits, 
-sampled from the set of all forums 
+sampled\jp{what is the size of the whole population? why 510?} from the set of all forums 
 with at least \num{5000} messages per month for each month
 of the year 2015.
 Each community corpus consist of \num{42000} randomly selected messages from the year 2015.
 For each community, we reserve \num{1000} messages each for development and testing,
 leaving a total of \num{20.4}M messages for training.
 
-Messages were preprocessed as follows: 
+Messages were preprocessed as follows. 
 We excluded the content of block quotes, code blocks, and tables.
 We removed any markup (formatting) commands from the remaining text, 
 extracting only rendered text.
@@ -486,14 +486,14 @@ We use a vocabulary size of \num{40000} tokens, including a special
 out-of-vocabulary token.  The vocabulary consists of the most frequent
 tokens across all communities.
 
-For the LSTM, we trained the models on a simple left-to-right language
-modeling task with cross-entropy loss over the vocabulary.  Because
+For the LSTM architecture, we trained the models on a simple left-to-right language
+modeling task with cross-entropy loss.  Because
 the transformer operates on all tokens in the sequence at once, the
 language modeling was achieved by masking and incrementally un-masking
 input tokens in a left-to-right fashion (so we have an
 auto-regressive model).  We used the AdamW
 \citep{Loshchilov2019} optimization algorithm, with an initial
-learning rate of \num{0.001}, without any extra control on the decay
+learning rate of \num{0.001}, with no extra control on the decay
 of learning rate.
 %
 We used a batch size of \num{256} and a maximum sequence length of
@@ -513,7 +513,7 @@ We experimented with every possible value for $l_c$ in a three-layer model ($l_c
 We trained the models until the validation loss stopped decreasing for
 two epochs in a row, and used the weights from the epoch with the
 smallest validation loss for testing.  In general, transformer models
-trained for about half as long as the LSTM models (\cref{tab:model-results}, 
+were trained for about half as long as the LSTM models (\cref{tab:model-results}, 
 test epoch).
 
 \subsection{Results and analysis}
@@ -535,8 +535,8 @@ to be the exponential of the model's average cross-entropy loss:
 
 \paragraph{CCLM Information Gain}
 
-We also consider the information gain of each CCLM over its baseline
-un-conditioned counterpart with the same sequence encoder architecture.
+We also consider the average information gain per token of the CCLM over its baseline
+un-conditioned counterpart, with the same sequence encoder architecture.
 For a given message, information gain is defined as the difference
 between the cross-entropy of the unconditioned model and the conditioned model:
 \[H_{\mathrm{LM}}(m) - H_{\mathrm{CCLM}}(m)\]
@@ -581,9 +581,9 @@ where $M_j$ is the set of messages originating from community $c_j$
 (\cref{fig:comm-stratified-box}).
 We observe a lot of variation in baseline perplexity
 across communities, with $\Ppl_{M_j}$ ranging from \num{3.67} to
-\num{93.58} for the best LSTM model . %TODO make long table
+\num{93.58} for the best LSTM model\jp{Is this the cclm or the baseline?}. %TODO make long table
 While the absolute performance ($\Ppl_{M_j}$) of the LSTM models is better,
-we jhat the best transformer models have somewhat higher information gain
+the best transformer models have somewhat higher information gain
 than their LSTM counterparts.
 
 
@@ -637,9 +637,9 @@ For other communities $\IG_{M_j}$ is much higher, meaning that the CCLM performs
   Some of the communities with consistently high $IG_{M_j}$ 
   across all models are primarily non-English, 
   but surprisingly, not the three most extreme
-  outliers. There are /r/counting, /r/friendsafari, and /r/Fireteams, 
+  outliers. There are \subreddit{counting}, \subreddit{friendsafari}, and \subreddit{Fireteams}, 
   the later two of which are places where people coordinate to play video games
-  together. The coordination has highly strucutred and regular formats, which 
+  together. The coordination has highly structured and regular formats, which 
   are presumably conventional to these communities.}
 
 The variation in information gain across communities is not 
@@ -669,8 +669,8 @@ related to perplexity, however (\cref{fig:ppl-info-gain}).
 
 As an informal observation, we note that across all the models we
 tested, communities where conditioning has the least effect tend to be
-more organized around more general interest topics, such as the
-\emph{relationships} and \emph{advice} subreddits, where the subject
+more organized around more general interest topics, such as 
+\subreddit{relationships} and \subreddit{advice}, where the subject
 matter is relevant to a broad range of people.  Conditioning the model
 on community has the most benefit for narrower special-interest
 subreddits, such as those organized around a certain videogame, sports
@@ -679,13 +679,18 @@ with more niche topics would tend to have more specialized vocabulary
 and other linguistic patterns.
 
 \section{Latent language model-based community classifiers}
-
-The perplexity of a CCLM gives us a measure of linguistic complexity,
+\jp{Perhaps use ``Latent Bayesian classifier'' instead.}
+The perplexity of a CCLM gives us a measure of linguistic complexity\jp{terminology?},
 but it is not a measure of how linguistically \emph{specific} the
 community is. However, the CCLM induces a latent classifier,
 which we call a language model-based community classifier
-(LMCC). Using the Bayes theorem, we can turn a
-CCLM into a LMCC: the probability that a given message $m$
+(LMCC).
+
+So far, we have only loaded the community embedding which corresponds
+to the actual community that the message originates from. By
+evaluating the model's loss (and thus probability) for each potential community,
+we can apply Bayesian reasoning to extract a latent community classifier for each message.
+The probability that a given message $m$
 belongs to a community $c_i$ is calculated as follows:
 \[P(c=c_i \mid m) = P(m | c_i)\frac {P(m)} {P(c=c_i)}\]
 In the above,
@@ -699,7 +704,7 @@ Since the test set is balanced across communities,
 we have an even prior for $P(c=c_i)$, giving us
 \[P(c=c_i\mid m) \propto  P(m\mid c_i).\]
 
-We can characterize the quality the LMCC with a confusion matrix
+We can characterize the quality\jp{performance} of the LMCC with a confusion matrix
 $C$, defined by $C_{ij} = P(c=c_i \mid m)$ for a given (test set) message $m$ 
 from community $c_j$.
 \[C_{ij} = \avg_{m\in M_j}P(c=c_i \mid m)\]
@@ -735,7 +740,7 @@ Indiscernibility of a given community is a robust measure: it is
 almost perfectly correlated across CCLMs (such as transformers, LSTM
 and various values of $l_c$).  In fact, we observe a correlation
 between the indiscernibility measures by every pair of models with
-Pearson's $r \geq 0.96$ and $p < 0.0001$. 
+Pearson's $r \geq 0.96$ and $Bp < 0.0001$. 
 
 However, we observe that community-wise perplexity is only weakly (if at all) 
 correlated with community indiscernibility under the corresponding latent 
@@ -815,7 +820,9 @@ the conditioned model are generally easier for the LMCC to classify.
 % established in a community, a member would tend not to do so.
 
 
-
+\jp{Conclusion: perplexity (linguistic complexity) is not correlated
+  to how recognisable a community is. Presumably (in general) some very specific
+  lexical items are characteristic of a community.}
 
 
 
@@ -825,7 +832,7 @@ the conditioned model are generally easier for the LMCC to classify.
 
 In this section we investigate whether (and how much) the community
 embeddings obtained from the CCLMs correlate with the community-member
-relationship on reddit.
+relationship on Reddit.
 
 To this end, we compare the CCLM-learned community
 embedding with the community embedding created by \citet{Kumar2018},
@@ -835,9 +842,9 @@ truth, using data which spans January 2014 to April 2017.
 We refer the reader
 to \citet{Kumar2018}
 for details, but the important point is that no linguistic
-information is used to create these embeddings: they only depend on
-whether a given user participates in a given
-community. In sharp contrast, CCLM community embeddings depend in no
+information is used to create these embeddings: they only reflect the social
+relationship between communities, via 
+the user-community membership relation. In contrast, CCLM community embeddings depend in no
 way on which user is the author of any given message: we only use the
 contents of messages, not authorship data.
 %
@@ -867,13 +874,14 @@ Computing \(d(L,S)\) is known as the orthogonal Procrustes problem~\citep{Gower2
 solution is
 \[d(L,S) = n - \mathsf {Tr} (Σ)\] where the matrix \(Σ\) is obtained by the singular value
 decomposition \(U^TΣV = LS^T\). Additionally the vectors of \(U\) and \(V\) give
-the directions of correlation respectively of \(L\) and \(S\). Each
+the directions of correlation respectively of \(L\) and \(S\). That is, each
 singular value \(\sigma_i\) (the elements of the diagonal matrix \(Σ\)), give a measure of how much
 correlation there is between the directions \(U_i\) and \(V_i\).
 
-Further, we can apply a permutation to \(U\), \(V\) and \(Σ\) such that \(σ_i < σ_j\) iff \(i < j\). Doing so, the largest singular value \(σ_0\) corresponds to the principal
-directions of correlation (\(U_0\), \(V_0\)), \(σ_1\) to the second
-principal direction, etc. 
+Further, we can apply a permutation to \(U\), \(V\) and \(Σ\) such
+that \(σ_i > σ_j\) iff \(i < j\). Doing so, the largest singular value
+\(σ_0\) corresponds to the principal directions of correlation
+(\(U_0\), \(V_0\)), \(σ_1\) to the second principal direction, etc.
 
 The \(d(L,S)\) metric ranges from \(0\) (corresponding to perfect
 independence) to \(n\) (corresponding to perfect correlation, obtained
@@ -888,7 +896,7 @@ a mean \(μ_d\)=TODO and a standard deviation \(σ_d\)=TODO.\jp{Unfortunate over
 TODO: !!! we should take the correlation of a random 16 × 510 with the web embeddings !!!
 
 
-Thus if \(d(L,S)\) is below \(μ-3σ\), we can safely assume that there % below, because we have a distance rather than correlation in this convention.
+Thus if \(d(L,S)\) is below \(μ_d-3σ_d\), we can safely assume that there % below, because we have a distance rather than correlation in this convention.
 is statistically significant correlation between \(L\) and
 \(S\). However, below, we will also give a sense of \emph{how} the
 correlation is manifested by analysis of the two principal components
@@ -900,8 +908,8 @@ do so we will plot the projection of embeddings on along \(U_0\) and
 (Another idea may be to correlate the cosine similarity between
 \((S_i,S_j)\) and \((L_i,L_j)\). But this would yield one number for
 each pair of communities \((510 × 509 / 2)\): too much data to deal with,
-and it is hard to get a sense of the statistical significance of the
-resulting correlation coefficient.)
+and it is hard to get a sense of the meaning, let alone statistical significance of the
+resulting correlation coefficient.)\jp{Not sure if this discussion has its place here.}
 
 
 
