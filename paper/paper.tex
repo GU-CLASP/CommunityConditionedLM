@@ -715,8 +715,10 @@ picks assigns the highest probability to the community where a message originate
 \begin{figure}
   \includegraphics[width=\linewidth]{floats/confusion_lstm-3-1}
 \caption{
-  Log-probability LMCC confusion matrix for the LSTM model with $l_c=1$. 
-  Communities are sorted by indiscernability. (The first communities predominantly use a language other than English, and are thus very discernable.)}
+  LMCC confusion matrix for the LSTM model with $l_c=1$, showing $\log(P(c_j\mid c_i))$, 
+  with $c_i$ on the x-axis and $c_j$ on the y-axis.
+  Communities are sorted by indiscernability.
+  (The first few communities predominantly use a language other than English, and are thus very discernable.)}
 \label{fig:confusion}
 \end{figure}
 
@@ -898,27 +900,50 @@ that \(σ_i > σ_j\) iff \(i < j\). Doing so, the largest singular value
 \(σ_0\) corresponds to the principal directions of correlation
 (\(U_0\), \(V_0\)), \(σ_1\) to the second principal direction, etc.
 
-The \(d(L,S)\) metric ranges from \(0\) (corresponding to perfect
-independence) to \(n\) (corresponding to perfect correlation, obtained
-for example if \(L=S\)), where $n=510$ is the number of communities
-considered.
+The \(d(L,S)\) metric ranges from \(0\) 
+(corresponding to perfect correlation, 
+obtained for example if \(L=S\)) 
+to \(n\) 
+(corresponding to perfect independence), 
+where $n=510$ is the number of communities considered.
 
 To get a more precise sense of what value of \(d(L,S)\) indicates significant correlation,
-We have computed experimentally \(d(L,S)\) for 
-\(L\) and \(S\) chosen as random 16 dimensions. We find
-a mean \(μ_d\)=TODO and a standard deviation \(σ_d\)=TODO.\jp{Unfortunate overloading}
+We have experimentally computed \(d(L,S)\) for five random  ``embeddings'' 
+with the same shape as the CCLM embeddings.
+We observed a mean of \(μ_d=431.39\) and a (Bessel's-corrected) 
+standard deviation \(s_d=3.94\) in their distance from the social embedding, \(S\). %\jp{Unfortunate overloading} luckily it seems that sample stdev is often written with an $s$ to differentiate from population stdev
 
-TODO: !!! we should take the correlation of a random 16 × 510 with the web embeddings !!!
 
-
-Thus if \(d(L,S)\) is below \(μ_d-3σ_d\), we can safely assume that there % below, because we have a distance rather than correlation in this convention.
+Thus if \(d(L,S)\) is below \(419.56\)
+($\mu_d - 3s_d$), 
+we can safely assume that there 
 is statistically significant correlation between \(L\) and
-\(S\). However, below, we will also give a sense of \emph{how} the
+\(S\). 
+Indeed, this is very clearly the case (\cref{tab:embedding-correlations}),
+meaning that the CCLM embedding capture some of the same information as the
+social-network embeddings.
+We also give a sense of \emph{how} the
 correlation is manifested by analysis of the two principal components
 of correlation in the linguistic embeddings, \(U_0\) and \(U_1\). To
-do so we will plot the projection of embeddings on along \(U_0\) and
+do so we plot the projection of embeddings on along \(U_0\) and
 \(U_1\), together with the corresponding singular values.
 
+\begin{table}
+\centering
+\begin{tabular}{llcc}
+\toprule
+                        &   & LSTM     & Transformer \\
+\midrule
+  \multirow{4}{*}{$l_c$}  & 0 &         254.06  (44.99) &         239.41  (49.09)  \\
+                          & 1 &         245.14  (47.25) & \textbf{232.18} (50.38)   \\
+                          & 2 &         249.17  (46.23) &         233.47  (50.21)  \\
+                          & 3 & \textbf{241.13} (48.27) &         237.74   (49.13) \\
+\bottomrule
+\end{tabular}
+\caption{Distance between CCLM embeddings and the social network-based embedding
+of \citet{Kumar2018}, as measured by $d(L,S)$. In parentheses is the number of standard deviations
+from the mean distance of our random embedding sample.} \label{tab:embedding-correlations}
+\end{table}
 
 (Another idea may be to correlate the cosine similarity between
 \((S_i,S_j)\) and \((L_i,L_j)\). But this would yield one number for
