@@ -460,9 +460,9 @@ or text, along with a \emph{comment} section.
 Comments are threaded: a comment can be made directly on a post,
 or appear as a reply to another comment.
 %
-Hereafter we refer to such comments as ``messages'', to match our
+Hereafter we refer to such comments as ``messages'', matching our
 convention in mathematical formulas: the letter $c$ stands for a
-community, and $m$ stands for a message. \jp{what does \(p\) stand for?}
+community, and $m$ stands for a message.
 
 Our dataset includes messages from \num{510} subreddits, 
 sampled\jp{what is the size of the whole population? why 510?} from the set of all forums 
@@ -693,7 +693,7 @@ evaluating the model's loss (and thus probability) for each potential community,
 we can apply Bayesian reasoning to extract a latent community classifier for each message.
 The probability that a given message $m$
 belongs to a community $c_i$ is calculated as follows:
-\[P(c=c_i \mid m) = P(m | c_i)\frac {P(m)} {P(c=c_i)}\]
+\[P(c=c_i \mid m) = P(m \mid c_i)\frac {P(m)} {P(c=c_i)}\]
 In the above,
 $P(c=c_i)$ is the frequency of community $c_i$ in the dataset, and
 $P(m \mid c_i)$ (the probability of a message $m$
