@@ -2,6 +2,7 @@ __pycache__
 .ipynb_checkpoints
 model/*
 embedding/*
+!embedding/random/*.txt
 *~
 scratch.py
 *.aux
