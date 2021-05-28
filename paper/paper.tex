@@ -911,10 +911,10 @@ To get a more precise sense of what value of \(d(L,S)\) indicates significant co
 We have experimentally computed \(d(L,S)\) for five random  ``embeddings'' 
 with the same shape as the CCLM embeddings.
 We observed a mean of \(μ_d=431.39\) and a (Bessel's-corrected) 
-standard deviation \(s_d=3.94\) in their distance from the social embedding, \(S\). %\jp{Unfortunate overloading} luckily it seems that sample stdev is often written with an $s$ to differentiate from population stdev
+standard deviation \(s_d=2.90\) in their distance from the social embedding, \(S\). %\jp{Unfortunate overloading} luckily it seems that sample stdev is often written with an $s$ to differentiate from population stdev
 
 
-Thus if \(d(L,S)\) is below \(419.56\)
+Thus if \(d(L,S)\) is below \(422.79\)
 ($\mu_d - 3s_d$), 
 we can safely assume that there 
 is statistically significant correlation between \(L\) and
@@ -934,15 +934,15 @@ do so we plot the projection of embeddings on along \(U_0\) and
 \toprule
                         &   & LSTM     & Transformer \\
 \midrule
-  \multirow{4}{*}{$l_c$}  & 0 &         254.06  (44.99) &         239.41  (49.09)  \\
-                          & 1 &         245.14  (47.25) & \textbf{232.18} (50.38)   \\
-                          & 2 &         249.17  (46.23) &         233.47  (50.21)  \\
-                          & 3 & \textbf{241.13} (48.27) &         237.74   (49.13) \\
+  \multirow{4}{*}{$l_c$}  & 0 &         254.06  (61.21) &         239.41  (66.79)  \\
+                          & 1 &         245.14  (64.29) & \textbf{232.18} (68.54)   \\
+                          & 2 &         249.17  (62.90) &         233.47  (68.32)  \\
+                          & 3 & \textbf{241.13} (65.67) &         237.74   (66.84) \\
 \bottomrule
 \end{tabular}
 \caption{Distance between CCLM embeddings and the social network-based embedding
 of \citet{Kumar2018}, as measured by $d(L,S)$. In parentheses is the number of standard deviations
-from the mean distance of our random embedding sample.} \label{tab:embedding-correlations}
+from the mean distance of our random embedding samples.} \label{tab:embedding-correlations}
 \end{table}
 
 (Another idea may be to correlate the cosine similarity between
