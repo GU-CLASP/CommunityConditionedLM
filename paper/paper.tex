@@ -340,14 +340,14 @@ very large, like speakers of English.  Because it is the source of
 linguistic convention, the \emph{speech community} is an important
 concept in the study of linguistic variation \citep{Gumperz1972}.
 
-Not only is linguistic variation an object of inquiry in its own
-right, but it is also important to consider it in the development of
-robust, equitable language technology.  Previous work has shown that
-by taking demographic information into account, models can achieve
-better performance on various standard NLP tasks
-\citep{Hovy2015,Yang2017}, 
-%
-However, most of the previous computational work on linguistic variation 
+% Not only is linguistic variation an object of inquiry in its own
+% right, but it is also important to consider it in the development of
+% robust, equitable language technology.  Previous work has shown that
+% by taking demographic information into account, models can achieve
+% better performance on various standard NLP tasks
+% \citep{Hovy2015,Yang2017}. \jp{Move this to related work so we can get to the point quicker.}
+=
+Most of the previous computational work on linguistic variation 
 has considered variation at the level of macro-social categories, such as gender
 \citep{Burger2011,Ciot2013,Bamman2014}, age \citep{Nguyen2013}, and
 geographic location \citep{Eisenstein2010,Bamman2014a}.
@@ -363,8 +363,9 @@ macro-social categories), and use context-sensitive sequence models
 capable of capturing variation beyond the lexical level.
 %
 We do so by investigating two questions.  First, we are interested in
-variation in the level of linguistic complexity\jp{maybe revise terminology? Perhaps define linguistic complexity as perplexity?} exhibited by different
-communities.
+variation in the level of linguistic complexity\jp{maybe revise
+  terminology? Perhaps define linguistic complexity as perplexity?}
+exhibited by different communities.
 %\jp{
   %Some examples (perhaps include if there is space):
   
@@ -386,9 +387,9 @@ linguistic complexity than others.  Here we want to quantify this
 phenomenon.  More precisely, we investigate if the degree of
 complexity can be captured in a computational model.  For this purpose
 define various Community Conditioned Language Models (CCLM for short),
-which can be modeled as an estimator $M$ of the degree to which a
-given message $m$ is acceptable in a given community $c$:
-\(P_M(m \mid c)\).
+which can be modeled as the degree to which a
+given message $m$ is acceptable in a given community $c$, by estimating the probability
+\(P(m \mid c)\).
 
 Second, we want to find out how, and how much, CCLMs are attuned to
 the specificity of communities. We test whether 1.\ the linguistic
@@ -397,8 +398,8 @@ co-occurrence of users between communities and 2.\ if latent community
 classifiers based on the CCLM can accurately identify that a given
 message comes from a given community. Additionally, one may
 intuitively assume that linguistically poor communities are easier to
-recognize: that is the easiest it is to model computationally
-the easier it is to identify.\jp{Do we actually do this?}
+recognize: that is, the easiest it is to model computationally
+the easier it is to identify.
 
 To sum up, we test the following hypotheses:
 \begin{hypotheses}
@@ -465,7 +466,7 @@ convention in mathematical formulas: the letter $c$ stands for a
 community, and $m$ stands for a message.
 
 Our dataset includes messages from \num{510} subreddits, 
-sampled\jp{what is the size of the whole population? why 510?} from the set of all forums 
+which all subreddits 
 with at least \num{5000} messages per month for each month
 of the year 2015.
 Each community corpus consist of \num{42000} randomly selected messages from the year 2015.
@@ -756,7 +757,7 @@ is a poor predictor of how distinctive its language is.
   \small
   \centering
   \input{floats/ind_corrs.tex}
-  \caption{ Pearson's $r$ correlation coefficient between community
+  \caption{ (TODO: missing data) Pearson's $r$ correlation coefficient between community
     indiscernibility ($\Ind_j$) and two different predictors: CCLM
     perplexity on messages from community $c_j$ ($\Ppl_{M_j}$), and
     CCLM information gain on messages from $c_j$ ($\IG_{M_j}$).  }
@@ -914,19 +915,16 @@ We observed a mean of \(μ_d=431.39\) and a (Bessel's-corrected)
 standard deviation \(s_d=2.90\) in their distance from the social embedding, \(S\). %\jp{Unfortunate overloading} luckily it seems that sample stdev is often written with an $s$ to differentiate from population stdev
 
 
-Thus if \(d(L,S)\) is below \(422.79\)
-($\mu_d - 3s_d$), 
-we can safely assume that there 
-is statistically significant correlation between \(L\) and
-\(S\). 
-Indeed, this is very clearly the case (\cref{tab:embedding-correlations}),
-meaning that the CCLM embedding capture some of the same information as the
-social-network embeddings.
-We also give a sense of \emph{how} the
-correlation is manifested by analysis of the two principal components
-of correlation in the linguistic embeddings, \(U_0\) and \(U_1\). To
-do so we plot the projection of embeddings on along \(U_0\) and
-\(U_1\), together with the corresponding singular values.
+Thus if \(d(L,S)\) is below the mean by several standard deviations, we can safely
+assume that there is statistically significant correlation between
+\(L\) and \(S\).  This is the case: we observe a difference between 61 and 68 standard deviations
+(\cref{tab:embedding-correlations}). Further, it is clear that the CCLM embedding
+capture some of the same information as the social-network embeddings.
+We also give a sense of \emph{how} the correlation is manifested by
+analysis of the two principal components of correlation in the
+linguistic embeddings, \(U_0\) and \(U_1\). To do so we plot the
+projection of embeddings on along \(U_0\) and \(U_1\), together with
+the corresponding singular values.\jp{TODO}
 
 \begin{table}
 \centering
@@ -945,13 +943,11 @@ of \citet{Kumar2018}, as measured by $d(L,S)$. In parentheses is the number of s
 from the mean distance of our random embedding samples.} \label{tab:embedding-correlations}
 \end{table}
 
-(Another idea may be to correlate the cosine similarity between
-\((S_i,S_j)\) and \((L_i,L_j)\). But this would yield one number for
-each pair of communities \((510 × 509 / 2)\): too much data to deal with,
-and it is hard to get a sense of the meaning, let alone statistical significance of the
-resulting correlation coefficient.)\jp{Not sure if this discussion has its place here.}
-
-
+% (Another idea may be to correlate the cosine similarity between
+% \((S_i,S_j)\) and \((L_i,L_j)\). But this would yield one number for
+% each pair of communities \((510 × 509 / 2)\): too much data to deal with,
+% and it is hard to get a sense of the meaning, let alone statistical significance of the
+% resulting correlation coefficient.)\jp{Not sure if this discussion has its place here.}
 
 
 \subsection{Results}
@@ -1015,37 +1011,36 @@ modeled in an unsupervised way.
 
 \section{Discussion and Conclusion}
 
-\jp{I propose that most of the following analysis should be spread between the relevant sections, and only have a tiny summary here + future work.}
-We find that various communities exhibit widely varying levels of
+
+% \jp{I propose that most of the following analysis should be spread between the relevant sections, and only have a tiny summary here + future work.}
+To sum up our findings, 
+we observed that various communities exhibit widely varying levels of
 linguistic complexity \ref{hyp:varying-complexity}, with perplexity
 per-word ranging from less than 34 to more than 65 for the best model 
 architecture.
 
 With indiscernibility values evenly ranging over the whole possible
-range (0 to 1), we find that CCLMs can be used to recognize certain
+range (1 to 510), we find that CCLMs can be used to recognize certain
 communities based on latent Bayesian classification
-\ref{hyp:LMCC-works}, but not all.  If generic communities exhibit
-distinctive linguistic patterns, none of our models is able to discern
-them. In contrast, the distinctive patterns of narrow-topic
-communities are just as recognizable by all our LSTM and Transformer
-models.
+\ref{hyp:LMCC-works}, but not all.  We cannot rule out that generic
+communities exhibit distinctive linguistic patterns, but none of our
+CCLMs are able to discern them. In contrast, the distinctive patterns
+of narrow-topic communities are just as recognizable by all our LSTM
+and Transformer models.
 
-We find no statistically significant correlation (\cref{tab:ind-corrs}) between the
-perplexity of the
-CCLM and the indiscernibility of the corresponding community
-\ref{hyp:rich-harder-to-identify}. Because we have relatively few, and
-only large communities in our test set, it is difficult to say if this
-finding generalizes. Regardless, this kind of correlation would suggest that
-community-specific complexity can be at least partially attributed to
-using more varied patterns. This is view is supported by the
-observation that, with an indiscernibility $> 0.9$, the most complex
-communities appear as an even mixture of the kind of language found in
-all communities, to our models.
+We find a mild correlation (\cref{tab:ind-corrs}) between the
+perplexity of the CCLM and the indiscernibility of the corresponding
+community \ref{hyp:rich-harder-to-identify}, with factors ranging from
+0.06 to 0.23. However, The trend is more clear when considering the
+correlation with information gain and indiscernibility (correlation
+from 0.39 to 0.46). So this means that, when trying to identify a
+community, it is not its absolute perplexity that matters, but rather
+the difference in perplexity with the baseline.
 
 We find that the layer at which the community embedding is taken into
-account in a CCLM influences its perplexity \ref{hyp:layer-effect},
+account in a CCLM influences its perplexity \ref{hyp:layer-effect},\jp{Delete this hypothesis?}
 albeit weakly. For LSTM models, the perplexity per word, averaged over
-messages from all communities, varies between \num{49.60} and \num{50.83}. (with \num{51.99} for the
+messages from all communities, varies between \num{49.60} and \num{50.83}. (with \num{51.99} for the\jp{update numbers?}
 unconditioned model) The perplexity per word is slightly higher for
 $l_c=0$, and has very little difference between the other models, with
 $l_c=3$ being the best.  For transformer models, it varies between 
@@ -1064,12 +1059,12 @@ Why was the LSTM able to take advantage of the community information
 for this community, where the transformer was not?  It would be
 interesting to investigate these differences in future work, since it
 could reveal differences in the kind of linguistic variation the
-different model architectures capture.
+different model architectures capture.\jp{update?}
 
 The representation of communities built by CCLM exhibits a clear
 correlation with user co-occurrence patterns
 \ref{hyp:extra-linguistic-correlation}. A natural
-question that may arise is how much this correlation can be explain by
+question that may arise is how much this correlation can be explained by
 user-specific linguistic patterns. We plan to control for this variable
 in future work, for example by building author-conditioned language
 models and testing if community vector embeddings can be determined by
