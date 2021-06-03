@@ -402,7 +402,7 @@ where $M_j$ is the set of messages originating from community $c_j$
 (\cref{fig:comm-stratified-box}).
 We observe a lot of variation in baseline perplexity
 across communities, with $\Ppl_{M_j}$ ranging from \num{3.67} to
-\num{93.58} for the best LSTM model\jp{Is this the cclm or the baseline?}. %TODO make long table
+\num{93.58} for the best conditional LSTM model. %TODO make long table
 While the absolute performance ($\Ppl_{M_j}$) of the LSTM models is better,
 the best transformer models have somewhat higher information gain
 than their LSTM counterparts.
@@ -420,7 +420,7 @@ than their LSTM counterparts.
   \begin{axis}[name=ig,
     height=7cm,width=8cm,
     boxplot/draw direction=x, axis x line*=bottom, axis y line*=left,y axis line style={opacity=0},
-    %xmax=1.6,
+    xmax=1.6,
     ylabel=$l_c$, xlabel=$\IG_{M_j}$,
     legend style={font=\tiny,at={(1,1)},anchor=north east}, legend columns=2
     ]
@@ -443,7 +443,7 @@ than their LSTM counterparts.
 \end{tikzpicture}
 \caption{
   Average model performance by community.
-  The boxes indicate 90 percent confidence intervals. Bars indicate ... TODO:. The outliers are shown as dots.
+  The boxes indicate upper and lower quartiles, while the whiskers are placed at the upper and lower maximum, with communities more than $1.5\times IQR$ (inter-quartile range) above the upper quartile considered outliers (represented as dots). The three most extreme outliers are excluded from this view (see \cref{fig:ppl-info-gain}).
    See also table 1 in the supplementary materials
    for a tabular version of these results with community names.
 }
@@ -484,7 +484,7 @@ related to perplexity, however (\cref{fig:ppl-info-gain}).
 \end{tikzpicture}
 \caption{
   Average community perplexity (x-axis) versus information gain (y-axis)
-  for the best LSTM model ($l_c = 1$). TODO: correlation factor
+  for the best LSTM model ($l_c = 1$). Pearson's r=$-0.61$ (p<0.001).
 }
 \label{fig:ppl-info-gain}
 \end{figure}
@@ -500,11 +500,10 @@ team, or subculture.  This makes sense intuitively, since communities
 with more niche topics would tend to have more specialized vocabulary
 and other linguistic patterns.
 
-\section{Latent language model-based community classifiers} \label{sec:lmcc}
-\jp{Perhaps use ``Latent Bayesian classifier'' instead.}
+\section{Latent Bayesian community classifiers} \label{sec:lmcc}
 The perplexity of a CCLM gives us a measure of linguistic complexity
 but it is not a measure of how linguistically \emph{specific} the
-community is. However, the CCLM induces a latent classifier,
+community is. However, the CCLM induces a latent Bayesian classifier,
 which we call a language model-based community classifier
 (LMCC).
 
@@ -526,7 +525,7 @@ Since the test set is balanced across communities,
 we have an even prior for $P(c=c_i)$, giving us
 \[P(c=c_i\mid m) \propto  P(m\mid c_i).\]
 
-We can characterize the quality\jp{performance} of the LMCC with a confusion matrix
+We can characterize the performance of the LMCC with a confusion matrix
 $C$, defined by $C_{ij} = P(c=c_i \mid m)$ for a given (test set) message $m$ 
 from community $c_j$.
 \[C_{ij} = \avg_{m\in M_j}P(c=c_i \mid m)\]
