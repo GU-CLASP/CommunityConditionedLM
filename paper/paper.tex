@@ -97,34 +97,15 @@
 \begin{document}
 \maketitle
 \begin{abstract}
-
-  TODO: fix this up.
-  % Context (Optional)
-
-  % Problem?
-
-  - Can community-level linguistic variation be captured by statistical models?
-  
-  - Is community-specific linguistic variation correlated with social
-    relationship between communities?
-  
-  % Why it's interesting
-
-
-  % Results
-
-
-  % What follows from results? (Optional)
-    
-  Community-Conditioned Language Models (CCLMs) are an under-researched tool for 
-  investigating community-level linguistic variation.
-  In this paper, we experiment with different neural CCLM architectures and
-  report empirical results from CCLMs trained on 510 online communities.
-  We find that the community embeddings learned by these models
-  correlate with representations based on non-linguistic features.
-  We define a metric of the linguistic \emph{indiscernability} of a community
-  and investigate the relationship between indiscernibility and other
-  linguistic properties of the community.
+  Community-level linguistic variation is a core concept in sociolinguistics,
+  but more tools are needed to study variation from a computational perspective.
+  In this paper, we use conditional language models to investigate linguistic variation
+  across 510 online communities.
+  We characterise communities with several different language model-based metrics
+  and report on the correlations between them. 
+  We also investigate the community representations learned by the conditional language model
+  and find that they are highly correlated with a social network-based 
+  representation that doesn't use any linguistic input.
 \end{abstract}
 
 
@@ -172,7 +153,6 @@ concept in the study of linguistic variation \citep{Gumperz1972}.
 % by taking demographic information into account, models can achieve
 % better performance on various standard NLP tasks
 % \citep{Hovy2015,Yang2017}. \jp{Move this to related work so we can get to the point quicker.}
-=
 Most of the previous computational work on linguistic variation 
 has considered variation at the level of macro-social categories, such as gender
 \citep{Burger2011,Ciot2013,Bamman2014}, age \citep{Nguyen2013}, and
@@ -185,10 +165,11 @@ same topic.
 In the present work, we investigate linguistic variation
 across different online communities. In contrast to previous work, we
 investigate variation across speech communities (rather than
-macro-social categories), and use context-sensitive sequence models
+macro-social categories) and use context-sensitive sequence models
 capable of capturing variation beyond the lexical level.
-%
-We do so by investigating two questions.  First, we are interested in
+We do this in two ways:
+
+First, we are interested in
 variation in the level of \emph{linguistic complexity}
 exhibited by different communities.\footnote{
   We will define linguistic complexity as language model perplexity.
@@ -199,13 +180,13 @@ exhibited by different communities.\footnote{
   is  different from \emph{a language} (i.e., \emph{langue}).}
 %\jp{
   %Some examples (perhaps include if there is space):
-  
+%  
   %(CFB)
   %It was against SMU in the 47-48 Cotton bowl. They had cancelled a
   %game the year before against Miami for the same reason. There's
   %debate on if that's really the origin for the phrase but the story
   %itself is true.
-
+%
   %(Videos)
   %Reminds me of Y2K computer bug. A lot of work went into
   %pre-emptively fixing it, and a lot of bugs were found and fixed,
@@ -215,22 +196,20 @@ exhibited by different communities.\footnote{
 %
 Indeed, it is folklore that certain communities tend to exhibit more predictable
 speech patterns than others.  Here we want to quantify this
-phenomenon.  More precisely, we investigate if the degree of
-complexity can be captured in a computational model.  For this purpose
-define various Community Conditioned Language Models (CCLM for short),
-which can be modeled as the degree to which a
+phenomenon.  For this purpose, we define various Community Conditioned Language Models 
+(CCLM for short), model the degree to which a
 given message $m$ is acceptable in a given community $c$, by estimating the probability
 \(P(m \mid c)\).
 
 Second, we want to find out how, and how much, CCLMs are attuned to
 the specificity of communities. We test whether 1.\ the linguistic
-models are correlated with a model of communities based only on
-co-occurrence of users between communities and 2.\ if latent community
-classifiers based on the CCLM can accurately identify that a given
-message comes from a given community. Additionally, one may
-intuitively assume that linguistically poor communities are easier to
-recognize: that is, the easiest it is to model computationally
-the easier it is to identify.
+models are correlated with a social network model of communities (based only on
+co-occurrence of users) and 2.\ if a latent community
+classifier based on the CCLM can accurately identify the community that a
+message comes from. Additionally, one may
+intuitively assume that linguistically complex communities are harder to
+recognize: that is, the easier it is to model the language produced by a community,
+the easier it is to identify messages coming from that community.
 
 To sum up, we test the following hypotheses:
 \begin{hypotheses}
@@ -238,7 +217,7 @@ To sum up, we test the following hypotheses:
   complexity
 \item \label{hyp:layer-effect} The layer at which the community embedding is taken into account
   in a CCLM influences its perplexity.
-\item \label{hyp:LMCC-works} CCLM can be used to recognize communities based on
+\item \label{hyp:LMCC-works} CCLMs can be used to recognize communities based on
   latent Bayesian classification.
 % \item \label{hyp:LMCC-works} The layer at which the community embedding is taken into account
 %   influences CCLM and its associated latent classifier.
@@ -250,9 +229,19 @@ To sum up, we test the following hypotheses:
   linguistically rich communities.
 \end{hypotheses}
 
-\jp{outline of the paper is important here}
+We proceed as follows: 
+First, we define the CCLM models used in the paper, as well as baseline un-conditioned madels.
+We describe how the models were trained and report on overall perplexity results, 
+as well as comparing the perplexity of the CCLM models to the baseline at the community level
+(\cref{sec:cclm}).
+Next, we define latent Bayesian community classifiers based on the CCLM. We define a measure
+of \emph{indiscernability} for communities and report on correlations between indiscernability and perplexity (\cref{sec:lmcc}).
+Then, we focus on the community embeddings learend by the CCLM,
+comparing them to a social network-based embedding (\cref{sec:embedding-analysis}).
+Finally, we give an overview of related work and discuss our findings in that context (\cref{sec:related-work,sec:discussion-conclusion}).
 
-\section{Community-conditioned language models}
+
+\section{Community-conditioned language models}\label{sec:cclm}
 
 We experiment with two kinds of model architecture: a simple
 unidirectional LSTM \citep{Hochreiter1997} and a Transformer
@@ -511,7 +500,7 @@ team, or subculture.  This makes sense intuitively, since communities
 with more niche topics would tend to have more specialized vocabulary
 and other linguistic patterns.
 
-\section{Latent language model-based community classifiers}
+\section{Latent language model-based community classifiers} \label{sec:lmcc}
 \jp{Perhaps use ``Latent Bayesian classifier'' instead.}
 The perplexity of a CCLM gives us a measure of linguistic complexity
 but it is not a measure of how linguistically \emph{specific} the
@@ -693,7 +682,7 @@ community is.
 
 
 
-\section{Social Analysis of CCLM community embeddings (TODO: better title)}
+  \section{Social Analysis of CCLM community embeddings (TODO: better title)}\label{sec:embedding-analysis}
 
 In this section we investigate whether (and how much) the community
 embeddings obtained from the CCLMs correlate with the community-member
@@ -828,7 +817,7 @@ from the mean distance of our random embedding samples.} \label{tab:embedding-co
 
 
 
-\section{Related work}
+\section{Related work}\label{sec:related-work}
 
 We have presented results using conditional neural language models
 to model variation between speech communities.
@@ -856,7 +845,7 @@ the structure (and variation) in the construction of sequences.  It
 does further suggest, however, that community-level variation can be
 modeled in an unsupervised way.
 
-\section{Discussion and Conclusion}
+\section{Discussion and Conclusion}\label{sec:discussion-conclusion}
 
 
 % \jp{I propose that most of the following analysis should be spread between the relevant sections, and only have a tiny summary here + future work.}
