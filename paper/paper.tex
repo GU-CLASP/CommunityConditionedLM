@@ -189,9 +189,14 @@ macro-social categories), and use context-sensitive sequence models
 capable of capturing variation beyond the lexical level.
 %
 We do so by investigating two questions.  First, we are interested in
-variation in the level of linguistic complexity\jp{maybe revise
-  terminology? Perhaps define linguistic complexity as perplexity?}
-exhibited by different communities.
+variation in the level of \emph{linguistic complexity}
+exhibited by different communities.\footnote{
+  We will define linguistic complexity as language model perplexity.
+  We do not intend to make any claim about the relationhip
+  between language model perplexity and other notions of linguistic
+  complexity \citep[cf.][]{Hawkins2014}. Furthermore, we note that 
+  language \emph{exhibited} by a speech community \citep[i.e., \emph{parole},][]{deSaussure2011}
+  is  different from \emph{a language} (i.e., \emph{langue}).}
 %\jp{
   %Some examples (perhaps include if there is space):
   
@@ -208,8 +213,8 @@ exhibited by different communities.
   %the work was successful, a lot of people now describe it as a waste
   %of time/money and a big deal made out of nothing.  }
 %
-Indeed, it is folklore that certain communities exhibit more
-linguistic complexity than others.  Here we want to quantify this
+Indeed, it is folklore that certain communities tend to exhibit more predictable
+speech patterns than others.  Here we want to quantify this
 phenomenon.  More precisely, we investigate if the degree of
 complexity can be captured in a computational model.  For this purpose
 define various Community Conditioned Language Models (CCLM for short),
@@ -508,7 +513,7 @@ and other linguistic patterns.
 
 \section{Latent language model-based community classifiers}
 \jp{Perhaps use ``Latent Bayesian classifier'' instead.}
-The perplexity of a CCLM gives us a measure of linguistic complexity\jp{terminology?},
+The perplexity of a CCLM gives us a measure of linguistic complexity
 but it is not a measure of how linguistically \emph{specific} the
 community is. However, the CCLM induces a latent classifier,
 which we call a language model-based community classifier
