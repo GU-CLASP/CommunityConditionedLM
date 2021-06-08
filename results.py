@@ -18,6 +18,7 @@ fields = data.load_fields(model_family_dir)
 comms = fields['community'].vocab.itos
 
 for architecture in ('lstm', 'transformer'):
+
     uncond_model_name = f'{architecture}-3'
     uncond_model_dir = model_family_dir/uncond_model_name
 
@@ -42,6 +43,7 @@ for architecture in ('lstm', 'transformer'):
         })
 
     for lc in range(4):
+
         model_name = f'{architecture}-3-{lc}'
         model_dir = model_family_dir/model_name
         print(model_name)
@@ -51,6 +53,7 @@ for architecture in ('lstm', 'transformer'):
         # not sure why, but one row had missing values in lstm-3-0. possibly csv i/o problem?
         # (example_id and length, unfortunately, so hard to replace...)
         # drop it, but ensure it really is a limited problem
+
         n = len(df)
         df.dropna(inplace=True)
         print(f"Dropped {n - len(df)} examples")

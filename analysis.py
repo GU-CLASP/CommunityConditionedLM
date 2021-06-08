@@ -8,8 +8,8 @@ from scipy.special import entr
 from itertools import combinations
 from sklearn.decomposition import PCA
 
-model_dir = 'model/reddit'
-floats_dir = 'paper/floats_new'
+model_dir = Path('model/reddit')
+floats_dir = Path('paper/floats_new')
 
 def add_columns(df, new, suffix=''):
     new = new.rename(lambda x: str(x) + suffix, axis=1)
@@ -34,42 +34,10 @@ def cos_sim(v1, v2):
 
 ##### Create community dataframe (with communities as rows)
 
-comms = torch.load(open(os.path.join(model_dir, 'community.field'), 'rb')).vocab.itos[1:]
+comms = torch.load(open(model_dir/'community.field', 'rb')).vocab.itos[1:]
 
 df_c = pd.DataFrame([], index=pd.Index(comms, name='community'))
 df_cc = pd.DataFrame([],index=pd.MultiIndex.from_tuples(combinations(comms, 2), names=['community1', 'community2']))
-
-# Manually assign communities to different types/subjects
-# NOTE this shouldn't really be a partition. Some communities clearly belong to multiple types, but we need a more sophisticated viz for that.
-comm_cats = {
-    'videogames': ['Warframe', 'eu4', 'GlobalOffensive', 'MaddenUltimateTeam', 'heroesofthestorm', 'EDH', 'KerbalSpaceProgram'],
-    'female-focused': ['xxfitness', 'femalefashionadvice', 'TwoXChromosomes', 'AskWomen', 'breakingmom', 'BabyBumps'],
-    'sports': ['MMA', 'reddevils', 'CFB', 'MLS'],
-    'general-interest': ['Advice', 'relationships', 'LifeProTips', 'explainlikeimfive', 'todayilearned'],
-    'technology': ['pcmasterrace', 'techsupport', 'jailbreak', 'oculus']
-    # Exclude categories with <3 comms
-    # 'gamergate': ['Kappa', 'KotakuInAction'],
-    # 'meme': ['justneckbeardthings', 'cringe'],
-    # 'photos': ['photography', 'EarthPorn'],
-    # 'support': ['stopdrinking', 'exjw'],
-    # fitness: ['xxfitness', 'bodybuilding']
-}
-comm_cats = {c:t for t in comm_cats for c in comm_cats[t]} # assumes one type/community
-comm_cats = pd.Series([comm_cats.get(c, 'other') for c in comms], index=comms)
-df_c['category'] = comm_cats
-
-# Take note if both communites are the same, different, or if one or both are 'other'
-def pair_cats(pair):
-    cat1, cat2 = map(dict(comm_cats).get, pair)
-    if cat1 == 'other' or cat2 == 'other':
-        return 'other'
-    elif cat1 == cat2:
-        return cat1
-    else:
-        return 'different'
-
-df_cc['category'] =  pd.Series(map(pair_cats, df_cc.index), index=df_cc.index)
-
 
 ##### Create model dataframe (indexed by model architecture)
 
@@ -91,15 +59,16 @@ df_m['best_epoch'] = best_epoch
 
 ##### Language model perplexity (CCLM & baseline)
 
-## Model perplexity on test examples
-lm_ppl = pd.read_pickle(os.path.join(model_dir, 'test_ppl.pickle'))
+for model in models:
+    ## Model perplexity on test examples
+    lm_ppl = pd.read_pickle(model_dir/models/'test_ppl.pickle')
 
-## Model entropy on test examples
-lm_entr = lm_ppl[models].apply(np.log)
-lm_entr['community'] = lm_ppl['community']
 
-## Mean language model perplexity
-df_m['lm_ppl'] = lm_entr[models].mean().apply(np.exp) 
+    ## Model entropy on test examples
+    lm_entr = lm_ppl[models].apply(np.log)
+    lm_entr['community'] = lm_ppl['community']
+    ## Mean language model perplexity
+    df_m['lm_ppl'] = lm_entr[models].mean().apply(np.exp) 
 
 ## Mean language model perplexity by community
 df_c = add_columns(df_c, lm_entr.groupby('community').mean().apply(np.exp), suffix='_lm_ppl')
