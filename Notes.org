@@ -129,3 +129,30 @@ Experiments:
     - Related to a method shalom used to quantify acceptability (subtracting out lexical frequency effects)
     - Quantify differences in indiscernibility for the different models: E.g., Are there communities that are much more discernable with the more complex models?
 
+
+* Unigram model
+
+
+Actual distrbution of unigrams for community.
+
+P(w) is the actual average frequency of the word w throughout the data
+
+P_c(w) is the actual average frequency of the word w in community c.
+
+P_m(w) is the actual average frequency of the word w in message m.
+
+Assuming m belongs to c, the predicted distribution for m is P_c.
+
+
+Let P_c'(w) = α P(w) + (1-α) P_c(w)            say α=0.01 (label smoothing)
+
+
+consider H(P_m,P_c) = -∑_w P_m(w) log P_c(w)        --> this be +∞ if P_c(w) = 0 and P_m(w) > 0; i.e. if the word occurs in the message but not in the community.
+
+We predict:
+P(m | c) = exp(-H(P_c,P_m))    --> this will be 0 in the same conditions
+
+P(m) = exp(-H(P,P_m))          --> never 0 (because the message is part of the 'training' data)
+
+P(c | m) ∝ P(m | c) P(m)
+  
