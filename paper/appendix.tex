@@ -134,7 +134,10 @@
   end table=\end{longtable},
 }
 \pgfplotstabletypeset[
-  columns={lstm-3-0-ppl,lstm-3-1-ppl,lstm-3-1-ig,lstm-3-1-indisc},
+  columns={community,lstm-3-0-ppl,lstm-3-1-ppl,lstm-3-1-ig,lstm-3-1-indisc,web-cluster},
+  %columns={lstm-3-0-ppl,lstm-3-1-ppl,lstm-3-1-ig,lstm-3-1-indisc},
+  columns/community/.style={verb string type},
+  columns/web-cluster/.style={verb string type},
   font=\small
 ]{floats/comm.csv}
 
