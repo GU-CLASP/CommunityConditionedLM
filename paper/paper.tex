@@ -1,17 +1,15 @@
 % This must be in the first 5 lines to tell arXiv to use pdfLaTeX, which is strongly recommended.
-%\pdfoutput=1
+\pdfoutput=1
 % In particular, the hyperref package requires pdfLaTeX in order to break URLs across lines.
 
 \documentclass[11pt]{article}
 
 % Remove the "review" option to generate the final version.
-\usepackage[review]{acl}
+\usepackage[review]{emnlp2021}
 
 % Standard package includes
 \usepackage{times}
 \usepackage{latexsym}
-\usepackage{newunicodechar}
-\input{unicode_symb}
 
 % For proper rendering and hyphenation of words containing Latin characters (including in bib files)
 \usepackage[T1]{fontenc}
@@ -27,11 +25,12 @@
 % and will typically save some space.
 \usepackage{microtype}
 
+
+
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{siunitx}
 \usepackage{booktabs}
-\usepackage{pgfplots}
 \usepackage{todonotes}
 \usepackage{enumitem}
 \usepackage{cleveref}
@@ -39,6 +38,10 @@
 \usepackage{makecell}
 \usepackage{multirow}
 
+\usepackage{newunicodechar}
+\input{unicode_symb}
+
+\usepackage{pgfplots}
 \usepgfplotslibrary{groupplots}
 \usepgfplotslibrary{statistics}
 \pgfplotsset{compat=1.16}
@@ -90,6 +93,7 @@
   \texttt{email@domain} \\}
 
 \date{}
+
 
 \begin{document}
 \maketitle
