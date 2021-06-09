@@ -1,5 +1,5 @@
 """ Use the trained models on test data, testing both CCLM and LMCC.
-    Produce results tabels that will be read by analysis.py to create plots, tables, etc.
+    Produce results tabels that will be read by results.py to create plots, tables, etc.
 """
 
 import util
