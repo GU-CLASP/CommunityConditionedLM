@@ -11,6 +11,7 @@
 \usepackage{times}
 \usepackage{latexsym}
 \usepackage{newunicodechar}
+\input{unicode_symb}
 
 % For proper rendering and hyphenation of words containing Latin characters (including in bib files)
 \usepackage[T1]{fontenc}
@@ -48,8 +49,6 @@
 \newcommand\jp[1]{\todo[backgroundcolor=blue!10]{JP: #1}}
 \newcommand\bn[1]{\todo[backgroundcolor=green!10]{BN: #1}}
 
-
-
 \newcommand\Ppl{\mathsf{Ppl}}
 \newcommand\IG{\mathsf{IG}}
 \newcommand\Ind{\mathsf{Ind}}
@@ -60,8 +59,6 @@
 \newcommand\subreddit[1]{\texttt{/r/#1}}
 \newlist{hypotheses}{enumerate}{3}
 \setlist[hypotheses,1]{parsep=0pt,itemsep=1pt,font=\bfseries,label=(H\arabic*)}
-
-\input{plot_macros}
 
 \title{Community-Conditioned Language Models}
 
@@ -152,7 +149,7 @@ concept in the study of linguistic variation \citep{Gumperz1972}.
 % robust, equitable language technology.  Previous work has shown that
 % by taking demographic information into account, models can achieve
 % better performance on various standard NLP tasks
-% \citep{Hovy2015,Yang2017}. % Move this to related work ?
+% \citep{Hovy2015,Yang2017}. \jp{Move this to related work so we can get to the point quicker.}
 Most of the previous computational work on linguistic variation 
 has considered variation at the level of macro-social categories, such as gender
 \citep{Burger2011,Ciot2013,Bamman2014}, age \citep{Nguyen2013}, and
@@ -178,7 +175,7 @@ exhibited by different communities.\footnote{
   complexity \citep[cf.][]{Hawkins2014}. Furthermore, we note that 
   language \emph{exhibited} by a speech community \citep[i.e., \emph{parole},][]{deSaussure2011}
   is  different from \emph{a language} (i.e., \emph{langue}).}
-%
+%\jp{
   %Some examples (perhaps include if there is space):
 %  
   %(CFB)
@@ -387,7 +384,24 @@ but the two middle-layer models actually perform worse than the unconditioned mo
 \begin{table}
   \small
   \centering
-  \input{floats/model_results.tex}
+  \begin{tabular}{llrrr}
+  \toprule
+                                 &       & \makecell{test \\ epoch} & $\Ppl_M$ & $\IG_M$     \\
+                                 & $l_c$ &         &                 &                   \\
+  \midrule
+  \multirow{5}{*}{LSTM}         & - &          12 &  68.74          &       -           \\
+                                & 0 &          13 &  66.16          &    1.039          \\
+                                & 1 &           7 &  \textbf{66.01} &    \textbf{1.041} \\
+                                & 2 &           4 &  66.19          &    1.039          \\
+                                & 3 &           4 &  66.35          &    1.036          \\
+  \midrule
+  \multirow{5}{*}{Transformer}  & - &           4 &  79.13          &        -          \\
+                                & 0 &           4 &  \textbf{75.66} &    \textbf{1.046} \\
+                                & 1 &           4 &  82.12          &    0.964          \\
+                                & 2 &           7 &  83.53          &    0.947          \\
+                                & 3 &           3 &  75.90          &    1.043          \\
+  \bottomrule
+  \end{tabular}
   \caption{
     Performance of baseline (first row for each encoder architecture)
     and CCLM models.  The scope of perplexity and information gain
@@ -726,49 +740,40 @@ any orthogonal matrix \(\Omega\) applied to \(L\):
 Computing \(d(L,S)\) is known as the orthogonal Procrustes problem~\citep{Gower2004}. The
 solution is
 \[d(L,S) = n - \mathsf {Tr} (Σ)\] where the matrix \(Σ\) is obtained by the singular value
-decomposition \(U^TΣV = LS^T\). This way, the vectors of \(U\) and \(V\) give
+decomposition \(U^TΣV = LS^T\). Additionally the vectors of \(U\) and \(V\) give
 the directions of correlation respectively of \(L\) and \(S\). That is, each
 singular value \(\sigma_i\) (the elements of the diagonal matrix \(Σ\)), give a measure of how much
 correlation there is between the directions \(U_i\) and \(V_i\).
-Additionally, assuming a test community \(c\) and a CCLM embedding $x_c$ for it, we can make a prediction
-of its social embedding to be $\hat y_c = V^TUx_c$ and expect a cosine similarity with the actual social embedding $y_c$ to be on average
-$1 - d(L,S) / n$. 
 
 Further, we can apply a permutation to \(U\), \(V\) and \(Σ\) such
 that \(σ_i > σ_j\) iff \(i < j\). Doing so, the largest singular value
 \(σ_0\) corresponds to the principal directions of correlation
 (\(U_0\), \(V_0\)), \(σ_1\) to the second principal direction, etc.
 
-The \(d(L,S)\) metric ranges from \(0\) (corresponding to perfect
-correlation, obtained for example if \(L=S\)) to \(n\) (corresponding
-to perfect independence), where $n=510$ is the number of communities
-considered.
-%
-For our various embiddings, we observe a distance \(d(L,S)\) between
-232 and 354, which corresponds to an expected cosine similarity beween
-0.5 and 0.54. This strongly suggests that much information is shared
-between social-network embeddings and linguistic embeddings.
+The \(d(L,S)\) metric ranges from \(0\) 
+(corresponding to perfect correlation, 
+obtained for example if \(L=S\)) 
+to \(n\) 
+(corresponding to perfect independence), 
+where $n=510$ is the number of communities considered.
 
-However, to get a more precise sense of whether this correlation is
-statistically significant, we have experimentally computed \(d(L,S)\)
-for 10 random ``embeddings'' with the same shape as the CCLM
-embeddings.  We observed a mean of \(μ_d=431.39\) and a
-(Bessel's-corrected) standard deviation \(s_d=2.90\) in their distance
-from the social embedding,
-\(S\). %sigma vs. s notation: it seems that sample stdev is often written with an $s$ to differentiate from population stdev
+To get a more precise sense of what value of \(d(L,S)\) indicates significant correlation,
+We have experimentally computed \(d(L,S)\) for five random  ``embeddings'' 
+with the same shape as the CCLM embeddings.
+We observed a mean of \(μ_d=431.39\) and a (Bessel's-corrected) 
+standard deviation \(s_d=2.90\) in their distance from the social embedding, \(S\). %\jp{Unfortunate overloading} luckily it seems that sample stdev is often written with an $s$ to differentiate from population stdev
 
-Because the value of \(d(L,S)\) that we get for actual embedding is
-between 61 and 68 standard deviations
-(\cref{tab:embedding-correlations}), we can safely conclude that there
-is statistically significant correlation between \(L\) and \(S\).
 
-% Further, it is clear that the CCLM embedding
-% capture some of the same information as the social-network embeddings.
-% We also give a sense of \emph{how} the correlation is manifested by
-% analysis of the two principal components of correlation in the
-% linguistic embeddings, \(U_0\) and \(U_1\). To do so we plot the
-% projection of embeddings on along \(U_0\) and \(U_1\), together with
-% the corresponding singular values.
+Thus if \(d(L,S)\) is below the mean by several standard deviations, we can safely
+assume that there is statistically significant correlation between
+\(L\) and \(S\).  This is the case: we observe a difference between 61 and 68 standard deviations
+(\cref{tab:embedding-correlations}). Further, it is clear that the CCLM embedding
+capture some of the same information as the social-network embeddings.
+We also give a sense of \emph{how} the correlation is manifested by
+analysis of the two principal components of correlation in the
+linguistic embeddings, \(U_0\) and \(U_1\). To do so we plot the
+projection of embeddings on along \(U_0\) and \(U_1\), together with
+the corresponding singular values.\jp{TODO}
 
 \begin{table}
 \centering
@@ -791,8 +796,7 @@ from the mean distance of our random embedding samples.} \label{tab:embedding-co
 % \((S_i,S_j)\) and \((L_i,L_j)\). But this would yield one number for
 % each pair of communities \((510 × 509 / 2)\): too much data to deal with,
 % and it is hard to get a sense of the meaning, let alone statistical significance of the
-% resulting correlation coefficient.)
-% (Useful to know, but may lead the reviewers astray)
+% resulting correlation coefficient.)\jp{Not sure if this discussion has its place here.}
 
 
 \subsection{Results}
