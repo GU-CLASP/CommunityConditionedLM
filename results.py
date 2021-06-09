@@ -7,8 +7,18 @@ import json
 def exp_normalize(x, axis):
     """ https://timvieira.github.io/blog/post/2014/02/11/exp-normalize-trick/ """
     b = x.max(axis=axis)
-    y = np.exp(x - b)
-    return y / y.sum(axis)
+    y = np.exp(x - np.expand_dims(b, axis=axis))
+    return y / np.expand_dims(y.sum(axis), axis=axis)
+
+def compute_confusion(nll_df):
+    nll_df = nll_df.sort_values(by=['community', 'example_id'])
+    nll = nll_df[comms].values * np.expand_dims(nll_df.length.values, axis=1)# -log(P(m|c)) // shape (m,c)
+    P_mc = -nll # -log(P(m|c)) // shape (m,c)
+    P_cm = exp_normalize(P_mc, axis=1) # P(c|m) // shape (m,c) 
+    P_cm_split = np.array(np.split(P_cm,510,axis=0)) # P(c_i|m_j from c_j) // shape (c_j, m_j, c_i)
+    P_cm_split_sum = P_cm_split.sum(axis=1) # sum_mj[P(c_i | m_j from c_j)] // shape (c_j, c_i)
+    confusion = P_cm_split_sum / P_cm_split_sum.sum(axis=1) # mean_mj[P(c_i | c_j)] // shape (c_j, c_i)
+    return confusion
 
 results_agg_ppl = []
 results_comm_ppl = []
@@ -50,19 +60,16 @@ for architecture in ('lstm', 'transformer'):
 
         # load conditioned NLLs (including off-community conditioning)
         df = pd.read_csv(model_dir/'nll.csv')
-        # not sure why, but one row had missing values in lstm-3-0. possibly csv i/o problem?
-        # (example_id and length, unfortunately, so hard to replace...)
-        # drop it, but ensure it really is a limited problem
 
-        n = len(df)
-        df.dropna(inplace=True)
-        print(f"Dropped {n - len(df)} examples")
-        df.example_id = df.example_id.astype(int)
-        df.length = df.length.astype(int)
         # repalce community indexes with names
         df['community'] = df['community'].apply(lambda x:comms[x])
         keys = ['community', 'example_id']
         df = pd.merge(df, uncond, left_on=keys, right_on=keys)
+
+        # compute the community confusion matrix 
+        confusion = pd.DataFrame(compute_confusion(df),
+                index=pd.Index(comms, name='community'), columns=comms)
+        confusion.to_csv(model_dir/'confusion.csv')
 
         # locate PPL for the "true" condition (the community the message was from)
         df['true_cond_entr'] = df.apply(lambda x: x[x['community']], axis=1)
@@ -81,13 +88,4 @@ for architecture in ('lstm', 'transformer'):
 
 pd.concat(results_comm_ppl, axis=1).to_csv(model_family_dir/'ppl_by_comm.csv')
 pd.DataFrame(results_agg_ppl).to_csv(model_family_dir/'ppl_aggregate.csv', index=False)
-
-
-P_cm = exp_normalize(df[comms].to_numpy().T, axis=0).T
-
-df[comms] = P_cm
-
-df.groupby('community')[comms].sum(axis=0)
-
-
 
