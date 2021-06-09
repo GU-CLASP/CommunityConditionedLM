@@ -1,5 +1,5 @@
 \documentclass[11pt]{article}
-\usepackage[review]{acl}
+\usepackage[review]{emnlp2021}
 \usepackage{times}
 \usepackage{latexsym}
 \usepackage{amsmath}
@@ -9,6 +9,7 @@
 \usepackage{xcolor}
 \usepackage{pgfplots}
 \usepackage{pgfplotstable}
+\usepackage{longtable}
 \usepackage{todonotes}
 \usepackage{enumitem}
 \usepackage{cleveref}
@@ -70,13 +71,16 @@
 %\bibliography{paper}
 %\bibliographystyle{acl_natbib}
 
+
+\section{Aligned community embeddings}
+
 \noindent\begin{minipage}{\textwidth}
     \centering
   \begin{tikzpicture}
     \begin{groupplot}[%
-      group style={group size=1 by 2},
+      group style={group size=1 by 2, vertical sep=1.5cm},
       width=\textwidth,
-      height=.6\textwidth,
+      height=.55\textwidth,
       scatter/classes={
         0={mark=x, blue},
         1={mark=+, orange},
@@ -88,7 +92,6 @@
       ]
       \nextgroupplot[
         xlabel=$U_0$, ylabel=$U_1$,
-        %legend entries={this, is, a, test, of, naming, these},
         legend cell align=left,
         legend style={font=\tiny},
         legend entries = {
@@ -105,20 +108,35 @@
         scatter, only marks,
         mark options={thick},
        scatter src=explicit symbolic,
-        ] table [x={web_PCA0}, y={web_PCA1}, meta={web_cluster}] {floats/comm.csv};
+        ] table [x={web-PCA0}, y={web-PCA1}, meta={web-cluster}] {floats/comm.csv};
       \nextgroupplot[xlabel=$V_0$, ylabel=$V_0$]
       \addplot[%
         scatter, only marks,
         mark options={thick},
        scatter src=explicit symbolic,
-        ] table [x={lstm-3-1_PCA0}, y={lstm-3-1_PCA1}, meta={web_cluster}] {floats/comm.csv};
+        ] table [x={lstm-3-1-PCA0}, y={lstm-3-1-PCA1}, meta={web-cluster}] {floats/comm.csv};
     \end{groupplot}
   \end{tikzpicture}
-  \captionof{figure}{First two components of the aligned linguistic (top) and web (bottom) embeddings,
+  \captionof{figure}{First two components of the aligned social (top) and linguistic (bottom) embeddings,
     where the lingusitic embedding is taken from the LTSM with $l_c=1$.
-    Correlation between these directions is given by $\sigma_0 = 53.4$ and $\sigma_1 = 35.6$.}
+    Correlation between these directions is given by $\sigma_0 = 53.4$ and $\sigma_1 = 35.6$.
+    Colors are assigned by k-means clustering of the social embedding. The legend shows the
+    closest 5 communites to each cluster centroid.}
   \label{fig:pca-aligned}
 \end{minipage}
+
+\onecolumn
+\newpage
+\section{Community-level statistics}
+
+\pgfplotstableset{
+  begin table=\begin{longtable},
+  end table=\end{longtable},
+}
+\pgfplotstabletypeset[
+  columns={lstm-3-0-ppl,lstm-3-1-ppl,lstm-3-1-ig,lstm-3-1-indisc},
+  font=\small
+]{floats/comm.csv}
 
 \end{document}
 
