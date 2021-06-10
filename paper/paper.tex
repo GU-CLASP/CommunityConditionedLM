@@ -363,8 +363,8 @@ between the cross-entropy of the unconditioned model and the conditioned model:
 \[H_{\mathrm{LM}}(m) - H_{\mathrm{CCLM}}(m)\]
 For a set of messages, $M$, we consider the average information gain
 in exponential space (as a ratio of perplexities):
-\[\IG_M = \frac{e^{\avg_M(H_{\mathrm{LM}}(m))}}{e^{\avg_M(H_{\mathrm{CCLM}}(m))}}\]
-\[\IG_M = {e^{\avg_{m∈M}(H_{\mathrm{LM}}(m) - H_{\mathrm{CCLM}}(m))}}\]
+\[\IG_M = \frac{e^{\avg_{m \in M}(H_{\mathrm{LM}}(m))}}{e^{\avg_{m \in M}(H_{\mathrm{CCLM}}(m))}}\]
+\[\IG_M = {e^{\avg_{m \in M}(H_{\mathrm{LM}}(m) - H_{\mathrm{CCLM}}(m))}}\]
 %
 Unsurprisingly, the conditioned models mostly have lower perplexity 
 than their respective unconditioned baseline models, 
@@ -473,7 +473,7 @@ even among the best models, some communities have $\IG_{M_j} < 1$,
 meaning that the CCLM performs worse than the unconditioned baseline for 
 messages from that community.
 For other communities $\IG_{M_j}$ is much higher, meaning that the CCLM performs better  
-(\cref{fig:comm-info-gain}).\footnote{
+(\cref{fig:comm-info-gain})\jp{missing label}.\footnote{
   Some of the communities with consistently high $IG_{M_j}$ 
   across all models are primarily non-English, 
   but surprisingly, not the three most extreme
@@ -481,7 +481,7 @@ For other communities $\IG_{M_j}$ is much higher, meaning that the CCLM performs
   the later two of which are places where people coordinate to play video games
   together. The coordination has highly structured and regular formats, which 
   are presumably conventional to these communities.}
-
+%
 The variation in information gain across communities is not 
 related to perplexity, however (\cref{fig:ppl-info-gain}).
 
@@ -507,7 +507,7 @@ related to perplexity, however (\cref{fig:ppl-info-gain}).
 \label{fig:ppl-info-gain}
 \end{figure}
 
-As an informal observation, we note that across all the models we
+We observe empirically that across all the models we
 tested, communities where conditioning has the least effect tend to be
 more organized around more general interest topics, such as 
 \subreddit{relationships} and \subreddit{advice}, where the subject
@@ -544,10 +544,10 @@ we have an even prior for $P(c=c_i)$, giving us
 \[P(c=c_i\mid m) \propto  P(m\mid c_i).\]
 
 We can characterize the performance of the LMCC with a confusion matrix
-$C$, defined by $C_{ij} = P(c=c_i \mid m)$ for a given (test set) message $m$ 
+$C$, defined by $C_{ij} = P(c=c_i \mid m)$ for a given (test) set of messages $m$ 
 from community $c_j$.
 \[C_{ij} = \avg_{m\in M_j}P(c=c_i \mid m)\]
-We observe that the diagonal is clearly above the rest: on average the LMCC generally
+We observe that the diagonal is clearly above the rest: the LMCC generally
 picks assigns the highest probability to the community where a message originates (\cref{fig:confusion}).
 
 \begin{figure}
@@ -570,7 +570,7 @@ noted $\Ind_j$.
 First, note that each row of $C$ is a probability distribution,
 since it is computed as the average of $P(c=c_i \mid m)$ for $m\in M_j$.
 The exponential of the entropy of the $j$th row of \(C\) is therefore a perplexity score,
-whose maximum is the total number of communities (46 for us).
+whose maximum is the total number of communities (510 for us).
 Thus we define $\Ind_j$ by scaling this perplexity by the number of communities:
 \[\Ind_j = \frac{e^{-\sum_i C_{ij} log(C_{ij})}}{|C_j|}\]
 This way $Ind_j=0$ means that the LMCC is completely certain of its
@@ -673,12 +673,12 @@ Finally, we note that, even though community conditioning affects
 perplexity very little overall, it provides large benefits in term of
 the underlying Bayesian classifier. Indiscernibility is on average
 \num{0.57} with a standard deviation of \num{0.22}. Roughly speaking, this means
-that, while the linguistic variations does not allow our model to
+that, while the linguistic variations do not allow our model to
 pinpoint the originating community of a message, it can often
-eliminate TODO (a percentatge?) of communities as possible locations \bn{43\%?}
-for it. Further more, the information gain provided by
+eliminate TODO (a percentatge?) of communities as possible origins \bn{43\%? JP: yes}
+for it. Furthermore, the information gain provided by
 community-conditioning is a good predictor of how specific the
-community is.
+community is.\jp{By empirical observation?}
 
 
 
@@ -732,45 +732,45 @@ equal to the Frobenius distance between \(L\) and \(S\):
 
 \[||L-S||_F = \sum_i (L_i - S_i)\]
 
-The problem with this approach is that the dimensions of \(L\) and \(S\) may
-not coincide. Applying a simple permutation of dimensions may widely
-change the correlation metric. To make the metric resilient to such
-effects, we can compute the minimum distance between \(L_i\) and \(S_i\), for
+The problem with this approach is that even if several dimensions of
+\(L\) and \(S\) are capture similar information, they will not
+coincide in the \emph{representation}. That is, applying a simple
+rotation (orthogonal transformation) on either matrix widely changes
+the correlation metric. To make the metric resilient to such effects,
+we can compute the minimum distance between \(L_i\) and \(S_i\), for
 any orthogonal matrix \(\Omega\) applied to \(L\):
 
 \[d(L,S) = \mathsf{argmin}_\Omega ||ΩL-S||_F\]
 
-Computing \(d(L,S)\) is known as the orthogonal Procrustes problem~\citep{Gower2004}. The
+The problem of computing \(d(L,S)\) is known as the orthogonal Procrustes problem~\citep{Gower2004}. The
 solution is
 \[d(L,S) = n - \mathsf {Tr} (Σ)\] where the matrix \(Σ\) is obtained by the singular value
-decomposition \(U^TΣV = LS^T\). Additionally the vectors of \(U\) and \(V\) give
+decomposition (SVD) \(U^TΣV = LS^T\). Additionally the vectors of \(U\) and \(V\) give
 the directions of correlation respectively of \(L\) and \(S\). That is, each
 singular value \(\sigma_i\) (the elements of the diagonal matrix \(Σ\)), give a measure of how much
 correlation there is between the directions \(U_i\) and \(V_i\).
 
-Further, we can apply a permutation to \(U\), \(V\) and \(Σ\) such
+As common when doing SVD, we can arrange \(U\), \(V\) and \(Σ\) such
 that \(σ_i > σ_j\) iff \(i < j\). Doing so, the largest singular value
 \(σ_0\) corresponds to the principal directions of correlation
 (\(U_0\), \(V_0\)), \(σ_1\) to the second principal direction, etc.
 
-The \(d(L,S)\) metric ranges from \(0\) 
-(corresponding to perfect correlation, 
-obtained for example if \(L=S\)) 
-to \(n\) 
-(corresponding to perfect independence), 
-where $n=510$ is the number of communities considered.
+The \(d(L,S)\) metric ranges from \(0\) (corresponding to perfect
+correlation, obtained for example if \(L=S\)) to \(n\) (corresponding
+to perfect orthogonality), where $n=510$ is the number of communities
+considered.
 
-To get a more precise sense of what value of \(d(L,S)\) indicates significant correlation,
-We have experimentally computed \(d(L,S)\) for five random  ``embeddings'' 
+To get a more precise sense of what value of \(d(L,S)\) indicates a significant correlation,
+We have experimentally computed \(d(L,S)\) for ten random  ``embeddings'' 
 with the same shape as the CCLM embeddings.
 We observed a mean of \(μ_d=431.39\) and a (Bessel's-corrected) 
-standard deviation \(s_d=2.90\) in their distance from the social embedding, \(S\). %\jp{Unfortunate overloading} luckily it seems that sample stdev is often written with an $s$ to differentiate from population stdev
+standard deviation \(s_d=2.90\) in their distance from the social embedding, \(S\). % luckily it seems that sample stdev is often written with an $s$ to differentiate from population stdev
 
 
 Thus if \(d(L,S)\) is below the mean by several standard deviations, we can safely
 assume that there is statistically significant correlation between
 \(L\) and \(S\).  This is the case: we observe a difference between 61 and 68 standard deviations
-(\cref{tab:embedding-correlations}). Further, it is clear that the CCLM embedding
+(\cref{tab:embedding-correlations}). Further, it is clear that the CCLM embeddings
 capture some of the same information as the social-network embeddings.
 We also give a sense of \emph{how} the correlation is manifested by
 analysis of the two principal components of correlation in the
@@ -803,7 +803,7 @@ from the mean distance of our random embedding samples.} \label{tab:embedding-co
 % resulting correlation coefficient.)\jp{Not sure if this discussion has its place here.}
 
 
-\subsection{Results}
+% \subsection{Results}
 
 %    Results:
 %      - Correlation between Kumar2018 and best LSTM
