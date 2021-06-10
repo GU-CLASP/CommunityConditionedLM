@@ -196,7 +196,7 @@ exhibited by different communities.\footnote{
 %
 Indeed, it is folklore that certain communities tend to exhibit more predictable
 speech patterns than others.  Here we want to quantify this
-phenomenon.  For this purpose, we define various Community Conditioned Language Models 
+phenomenon.  For this purpose, we define (\cref{sec:cclm}) various Community Conditioned Language Models 
 (CCLM for short), model the degree to which a
 given message $m$ is acceptable in a given community $c$, by estimating the probability
 \(P(m \mid c)\).
@@ -204,14 +204,15 @@ given message $m$ is acceptable in a given community $c$, by estimating the prob
 Second, we want to find out how, and how much, CCLMs are attuned to
 the specificity of communities. We test whether 1.\ the linguistic
 models are correlated with a social network model of communities (based only on
-co-occurrence of users) and 2.\ if a latent community
+co-occurrence of users) (\cref{sec:embedding-analysis}) and 2.\ if a latent community
 classifier based on the CCLM can accurately identify the community that a
-message comes from. Additionally, one may
+message comes from. (\cref{sec:lmcc}) Additionally, one may
 intuitively assume that linguistically complex communities are harder to
 recognize: that is, the easier it is to model the language produced by a community,
 the easier it is to identify messages coming from that community.
 
-To sum up, we test the following hypotheses:
+To sum up, we test the following hypotheses, which we review in our
+conclution (\cref{sec:discussion-conclusion}):
 \begin{hypotheses}
 \item \label{hyp:varying-complexity} Different communities have different levels of linguistic
   complexity
@@ -229,16 +230,16 @@ To sum up, we test the following hypotheses:
   linguistically rich communities.
 \end{hypotheses}
 
-We proceed as follows: 
-First, we define the CCLM models used in the paper, as well as baseline un-conditioned madels.
-We describe how the models were trained and report on overall perplexity results, 
-as well as comparing the perplexity of the CCLM models to the baseline at the community level
-(\cref{sec:cclm}).
-Next, we define latent Bayesian community classifiers based on the CCLM. We define a measure
-of \emph{indiscernability} for communities and report on correlations between indiscernability and perplexity (\cref{sec:lmcc}).
-Then, we focus on the community embeddings learend by the CCLM,
-comparing them to a social network-based embedding (\cref{sec:embedding-analysis}).
-Finally, we give an overview of related work and discuss our findings in that context (\cref{sec:related-work,sec:discussion-conclusion}).
+% We proceed as follows: 
+% First, we define the CCLM models used in the paper, as well as baseline un-conditioned madels.
+% We describe how the models were trained and report on overall perplexity results, 
+% as well as comparing the perplexity of the CCLM models to the baseline at the community level
+% .
+% Next, we define latent Bayesian community classifiers based on the CCLM. We define a measure
+% of \emph{indiscernability} for communities and report on correlations between indiscernability and perplexity .
+% Then, we focus on the community embeddings learend by the CCLM,
+% comparing them to a social network-based embedding .
+% Finally, we give an overview of related work and discuss our findings in that context .
 
 
 \section{Community-conditioned language models}\label{sec:cclm}
