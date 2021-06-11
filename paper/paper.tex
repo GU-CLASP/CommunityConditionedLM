@@ -475,7 +475,7 @@ even among the best models, some communities have $\IG_{M_j} < 1$,
 meaning that the CCLM performs worse than the unconditioned baseline for 
 messages from that community.
 For other communities $\IG_{M_j}$ is much higher, meaning that the CCLM performs better  
-(\cref{fig:comm-info-gain})\jp{missing label}.\footnote{
+(\cref{fig:comm-stratified-box}).\footnote{
   Some of the communities with consistently high $IG_{M_j}$ 
   across all models are primarily non-English, 
   but surprisingly, not the three most extreme
@@ -591,9 +591,9 @@ correlated with community indiscernibility under the corresponding latent
 LMCC (see \cref{tab:ind-corrs} and, for example, \cref{fig:cclm-lmcc-ppl}).
 In other words, the linguistic complexity of a given community
 is a poor predictor of how distinctive its language is.
-\jp{Conclusion: perplexity (linguistic complexity) is not correlated
-  to how recognisable a community is. Presumably (in general) some very specific
-  lexical items are characteristic of a community.}
+%\jp{Conclusion: perplexity (linguistic complexity) is not correlated
+  %to how recognisable a community is. Presumably (in general) some very specific
+  %lexical items are characteristic of a community.}
 %
 \begin{table}
   \small
@@ -674,13 +674,13 @@ and the easier it is to predict the content of the message if you know the commu
 Finally, we note that, even though community conditioning affects
 perplexity very little overall, it provides large benefits in term of
 the underlying Bayesian classifier. Indiscernibility is on average
-\num{0.57} with a standard deviation of \num{0.22}. Roughly speaking, this means
+\num{0.57} with a standard deviation of \num{0.22}. This means
 that, while the linguistic variations do not allow our model to
-pinpoint the originating community of a message, it can often
-eliminate TODO (a percentatge?) of communities as possible origins \bn{43\%? JP: yes}
+pinpoint the originating community of a message, it can on average
+eliminate 43\% of communities as possible origins 
 for it. Furthermore, the information gain provided by
-community-conditioning is a good predictor of how specific the
-community is.\jp{By empirical observation?}
+community-conditioning is a good predictor of how discernable the
+community is.
 
 
 
@@ -837,14 +837,13 @@ of how much and in what way they differ (see~\cref{fig:pca-aligned}).
         ] table [x={lstm-3-1-PCA0}, y={lstm-3-1-PCA1}, meta={web-cluster}] {floats/comm.csv};
     \end{groupplot}
   \end{tikzpicture}
-  \captionof{figure}{First two components of the aligned social (left) and linguistic (right) embeddings,
+  \caption{First two components of the aligned social (left) and linguistic (right) embeddings,
     where the lingusitic embedding is taken from the LTSM with $l_c=1$.
     Correlation between these directions is given by $\sigma_0 = 53.4$ and $\sigma_1 = 35.6$.
     Colors are assigned by k-means clustering of the social embedding.
     % The legend shows the closest 5 communites to each cluster centroid.
     % JP: commented out this sentence which does not seem to refer to something visible.
     % JP: If the legend shows in the supplementary material, then the whole figure should be repeated there.
-    
   }
   \label{fig:pca-aligned}
 \end{figure*}
