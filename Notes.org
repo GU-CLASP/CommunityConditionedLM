@@ -1,3 +1,26 @@
+
+* Possible Further work
+
+
+- supervised (LSTM-) community classifier.
+- Projection layer is a matrix L such that Lᵢ is a mapping from LSTM
+  features to predictor of a community. (So Lᵢ can be treated as a
+  community embedding.)
+- Maybe it's easier to do dependence over time? Dynamic processes can
+  be represented like so:
+
+  X = exp (tA)
+    = 1 + tA + (tA)²/2 + ... + (tA)ⁿ/n! + ...
+
+  Where t is time (say in [0..1]) and A is
+
+  Note that X = 1 for t=0, so this should probably be another layer on
+  top. The advantage of this treatment is that it cleanly separates
+  change over time to the baseline for t=0. Furthermore, there is a
+  standard wayone can to interpret tA as a transformation.
+  
+  See: https://www.youtube.com/watch?v=IZqwi0wJovM&list=PL49CF3715CB9EF31D&index=23
+
 * Paper outline
 
 ** Hypotheses to test 
