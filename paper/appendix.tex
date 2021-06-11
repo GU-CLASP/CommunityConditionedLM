@@ -7,8 +7,6 @@
 \usepackage{siunitx}
 \usepackage{booktabs}
 \usepackage{xcolor}
-\usepackage{pgfplots}
-\usepackage{pgfplotstable}
 \usepackage{longtable}
 \usepackage{todonotes}
 \usepackage{enumitem}
@@ -18,9 +16,12 @@
 \usepackage{multirow}
 \usepackage{capt-of}
 
+\usepackage{pgfplots}
+\usetikzlibrary{arrows}
 \usepgfplotslibrary{groupplots}
 \pgfplotsset{compat=1.16}
 \pgfplotsset{every tick label/.append style={font=\footnotesize}}
+\usepackage{pgfplotstable}
 
 \renewcommand{\UrlFont}{\ttfamily\small}
 
@@ -47,14 +48,6 @@
 \DeclareMathOperator*{\avg}{average}
 \newcommand\BibTeX{B\textsc{ib}\TeX}
 
-\definecolor{color0}{rgb}{0.5508,0.8242,0.7773}
-\definecolor{color1}{rgb}{0.9961,0.9961,0.6992}
-\definecolor{color2}{rgb}{0.7422,0.7266,0.8516}
-\definecolor{color3}{rgb}{0.9805,0.5000,0.4453}
-\definecolor{color4}{rgb}{0.5000,0.6914,0.8242}
-\definecolor{color5}{rgb}{0.9883,0.7031,0.3828}
-\definecolor{color6}{rgb}{0.6992,0.8672,0.4102}
-
 \newlist{hypotheses}{enumerate}{3}
 \setlist[hypotheses,1]{parsep=0pt,itemsep=1pt,font=\bfseries,label=(H\arabic*)}
 
@@ -71,8 +64,32 @@
 %\bibliography{paper}
 %\bibliographystyle{acl_natbib}
 
+\section{Projection of aligned embeddings}
+\input{floats/pca_aligned}
+\noindent\begin{minipage}{\textwidth}
+  \centering
+  \PCAAligned\\
+  \vspace{0.25cm}
+  \ref{pcalegend}
+\captionof{figure}{First two components of the aligned social (top) and linguistic (bottom) embeddings,
+  where the lingusitic embedding is taken from the LTSM with $l_c=1$.
+  Correlation between these directions is given by $\sigma_0 = 53.4$ and $\sigma_1 = 35.6$.
+  Colors are assigned by k-means clustering of the social embedding. The legend shows the
+  closest 5 communites to each cluster centroid.
+  The legend shows the closest 5 communites to each cluster centroid. 
+The cluster of each community is also available in \cref{sec:community-level-results} }
+\label{fig:pca-aligned}
+\end{minipage}
+
 \onecolumn
-\section{Community-level statistics}
+
+\section{Community-level results} \label{sec:community-level-results}
+
+The following table shows results at the community level. The baseline $\Ppl_{M_j}$ 
+is computed from the unconditioned LSTM and the CCLM results ($\Ppl_{M_j}$, $\IG_{M_j}$,
+and $\Ind_{M_j}$ use the LSTM with $l_c=1$). ``Social cluster'' is determined by 
+k-means clustering of the social embedding.
+
 \pgfplotstableset{
   begin table=\begin{longtable},
   end table=\end{longtable},

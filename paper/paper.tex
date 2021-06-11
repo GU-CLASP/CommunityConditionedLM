@@ -781,72 +781,20 @@ projection of each embedding along their first two principle components
 which, together with the corresponding singular values, gives an idea
 of how much and in what way they differ (see~\cref{fig:pca-aligned}).
 
+\input{floats/pca_aligned}
 \begin{figure*}[t]
     \centering
-  \begin{tikzpicture}
-    \begin{groupplot}[%
-      group style={
-        group size=2 by 1,
-        horizontal sep=0pt,
-      },
-      xmin=-1, xmax=1,
-      ymin=-1, ymax=1,
-      xtick={-0.5,0.5}, ytick={-0.5,0.5},
-      axis x line=middle,
-      axis y line=middle,
-      axis line style={(-)},
-      axis on top=true,
-      width=0.55\textwidth,
-      height=0.55\textwidth,
-      scatter/classes={
-        0={mark=x, blue},
-        1={mark=+, orange},
-        2={mark=o, green},
-        3={mark=triangle, gray},
-        4={mark=star, magenta},
-        5={mark=diamond, red}
-      },
-      ]
-      \nextgroupplot[
-        %xlabel=$U_0$, ylabel=$U_1$,
-        legend cell align=left,
-        legend style={font=\tiny},
-        legend entries = {
-          offmychest confession relationships relationship\_advice SuicideWatch, 
-          TrueReddit China europe nyc socialism,
-          frugalmalefashion running MechanicAdvice personalfinance Flipping,
-          darksouls skyrimmods dragonage Xcom MonsterHunter,
-          amiugly Rateme ladybonersgw SchoolIdolFestival GoneWildPlus,
-          facepalm CrappyDesign mildlyinfuriating cringepics oddlysatisfying,
-        },
-        %legend pos=outer south east
-        legend to name=pcalegend
-      ]
-      \addplot[%
-        scatter, only marks,
-        mark options={thick, scale=0.75},
-       scatter src=explicit symbolic,
-        ] table [x={web-PCA0}, y={web-PCA1}, meta={web-cluster}] {floats/comm.csv};
-      \nextgroupplot[
-      %xlabel=$V_0$, ylabel=$V_0$
-      ]
-      \addplot[%
-        scatter, only marks,
-        mark options={thick, scale=0.75},
-       scatter src=explicit symbolic,
-        ] table [x={lstm-3-1-PCA0}, y={lstm-3-1-PCA1}, meta={web-cluster}] {floats/comm.csv};
-    \end{groupplot}
-  \end{tikzpicture}
+    \PCAAligned 
   \caption{First two components of the aligned social (left) and linguistic (right) embeddings,
     where the lingusitic embedding is taken from the LTSM with $l_c=1$.
     Correlation between these directions is given by $\sigma_0 = 53.4$ and $\sigma_1 = 35.6$.
-    Colors are assigned by k-means clustering of the social embedding.
-    % The legend shows the closest 5 communites to each cluster centroid.
-    % JP: commented out this sentence which does not seem to refer to something visible.
-    % JP: If the legend shows in the supplementary material, then the whole figure should be repeated there.
+    Colors are assigned by k-means clustering of the social embedding. 
+    This figure is reproduced in the supplementary materials with a legend that helps 
+    characterise the clusters.
   }
   \label{fig:pca-aligned}
 \end{figure*}
+
 
 
 \begin{table}
