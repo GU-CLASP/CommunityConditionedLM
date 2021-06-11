@@ -837,11 +837,15 @@ of how much and in what way they differ (see~\cref{fig:pca-aligned}).
         ] table [x={lstm-3-1-PCA0}, y={lstm-3-1-PCA1}, meta={web-cluster}] {floats/comm.csv};
     \end{groupplot}
   \end{tikzpicture}
-  \captionof{figure}{First two components of the aligned social (top) and linguistic (bottom) embeddings,
+  \captionof{figure}{First two components of the aligned social (left) and linguistic (right) embeddings,
     where the lingusitic embedding is taken from the LTSM with $l_c=1$.
     Correlation between these directions is given by $\sigma_0 = 53.4$ and $\sigma_1 = 35.6$.
-    Colors are assigned by k-means clustering of the social embedding. The legend shows the
-    closest 5 communites to each cluster centroid.}
+    Colors are assigned by k-means clustering of the social embedding.
+    % The legend shows the closest 5 communites to each cluster centroid.
+    % JP: commented out this sentence which does not seem to refer to something visible.
+    % JP: If the legend shows in the supplementary material, then the whole figure should be repeated there.
+    
+  }
   \label{fig:pca-aligned}
 \end{figure*}
 
