@@ -71,10 +71,16 @@ k-means clustering of the social embedding.
   end table=\end{longtable},
 }
 \pgfplotstabletypeset[
-  columns={community,lstm-3-0-ppl,lstm-3-1-ppl,lstm-3-1-ig,lstm-3-1-indisc,web-cluster},
-  %columns={lstm-3-0-ppl,lstm-3-1-ppl,lstm-3-1-ig,lstm-3-1-indisc},
-  columns/community/.style={verb string type},
-  columns/web-cluster/.style={verb string type},
+  column type=r,
+  every head row/.style={before row=\toprule,after row=\midrule\endhead}, 
+  every last row/.style={after row=\bottomrule},
+  columns={community,lstm-3-ppl,lstm-3-1-ppl,lstm-3-1-ig,lstm-3-1-indisc,web-cluster},
+  columns/community/.style={column name={Subredddit}, verb string type},
+  columns/lstm-3-ppl/.style={column name={baseline $\Ppl_{M_j}$}},
+  columns/lstm-3-1-ppl/.style={column name={CCLM $\Ppl_{M_j}$}},
+  columns/lstm-3-1-ig/.style={column name={$\IG_{M_j}$}},
+  columns/lstm-3-1-indisc/.style={column name={$\Ind_{M_j}$}, precision=3, fixed},
+  columns/web-cluster/.style={column name={Social embed. cluster}},
   font=\small
 ]{floats/comm.csv}
 
