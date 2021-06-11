@@ -25,43 +25,7 @@
 % and will typically save some space.
 \usepackage{microtype}
 
-
-
-\usepackage{amsmath}
-\usepackage{amssymb}
-\usepackage{siunitx}
-\usepackage{booktabs}
-\usepackage{todonotes}
-\usepackage{enumitem}
-\usepackage{cleveref}
-\usepackage{array}
-\usepackage{makecell}
-\usepackage{multirow}
-
-\usepackage{newunicodechar}
-\input{unicode_symb}
-\usepackage{pgfplots}
-\usetikzlibrary{arrows}
-\usepgfplotslibrary{groupplots}
-\usepgfplotslibrary{statistics}
-\pgfplotsset{compat=1.16}
-\pgfplotsset{every tick label/.append style={font=\tiny}}
-
-\renewcommand{\UrlFont}{\ttfamily\small}
-
-\newcommand\jp[1]{\todo[backgroundcolor=blue!10]{JP: #1}}
-\newcommand\bn[1]{\todo[backgroundcolor=green!10]{BN: #1}}
-
-\newcommand\Ppl{\mathsf{Ppl}}
-\newcommand\IG{\mathsf{IG}}
-\newcommand\Ind{\mathsf{Ind}}
-\newcommand\LM{\mathrm{LM}}
-\newcommand\CCLM{\mathrm{CCLM}}
-\DeclareMathOperator*{\avg}{average}
-\newcommand\BibTeX{B\textsc{ib}\TeX}
-\newcommand\subreddit[1]{\texttt{/r/#1}}
-\newlist{hypotheses}{enumerate}{3}
-\setlist[hypotheses,1]{parsep=0pt,itemsep=1pt,font=\bfseries,label=(H\arabic*)}
+\input{preamble}
 
 \title{Community-Conditioned Language Models}
 
