@@ -122,10 +122,11 @@ Most of the previous computational work on linguistic variation
 has considered variation at the level of macro-social categories, such as gender
 \citep{Burger2011,Ciot2013,Bamman2014}, age \citep{Nguyen2013}, and
 geographic location \citep{Eisenstein2010,Bamman2014a}.
-An exception is \citet{DelTredici2017} who use the modified
-skip-gram model of \citet{Bamman2014a} to show that lexical semantic
-variation occurs across different communities organized around the
-same topic.
+Some recent exceptions are \citet{DelTredici2017} who use a modified
+skip-gram model to show that lexical semantic variation occurs across 
+different communities organised around the same topic and 
+\citet{Lucy2021}, who use contextualised word representations to
+investigate community-level variation in word sense distributions.
 
 In the present work, we investigate linguistic variation
 across different online communities. In contrast to previous work, we
@@ -137,11 +138,13 @@ We do this in two ways:
 First, we are interested in
 variation in the level of \emph{linguistic complexity}
 exhibited by different communities.\footnote{
-  We will define linguistic complexity as language model perplexity.
-  We do not intend to make any claim about the relationhip
+  We define linguistic complexity as language model perplexity
+  (i.e., as the inverse of predictability, for a given language model).
+  We do not intend to make any claim about the relationship
   between language model perplexity and other notions of linguistic
   complexity \citep[cf.][]{Hawkins2014}. Furthermore, we note that 
-  language \emph{exhibited} by a speech community \citep[i.e., \emph{parole},][]{deSaussure2011}
+  language \emph{exhibited} by a speech community \citep[i.e., \emph{parole},][]{deSaussure2011},
+  which is at issue here,
   is  different from \emph{a language} (i.e., \emph{langue}).}
 %\jp{
   %Some examples (perhaps include if there is space):
@@ -161,8 +164,9 @@ exhibited by different communities.\footnote{
 %
 Indeed, it is folklore that certain communities tend to exhibit more predictable
 speech patterns than others.  Here we want to quantify this
-phenomenon.  For this purpose, we define (\cref{sec:cclm}) various Community Conditioned Language Models 
-(CCLM for short), model the degree to which a
+phenomenon.  For this purpose, we define (\cref{sec:cclm}) 
+various Community Conditioned Language Models 
+(CCLM for short), and model the degree to which a
 given message $m$ is acceptable in a given community $c$, by estimating the probability
 \(P(m \mid c)\).
 
@@ -173,17 +177,17 @@ co-occurrence of users) (\cref{sec:embedding-analysis}) and 2.\ if a latent comm
 classifier based on the CCLM can accurately identify the community that a
 message comes from. (\cref{sec:lmcc}) Additionally, one may
 intuitively assume that linguistically complex communities are harder to
-recognize: that is, the easier it is to model the language produced by a community,
+recognise: that is, the easier it is to model the language produced by a community,
 the easier it is to identify messages coming from that community.
 
 To sum up, we test the following hypotheses, which we review in our
-conclution (\cref{sec:discussion-conclusion}):
+conclusion (\cref{sec:discussion-conclusion}):
 \begin{hypotheses}
 \item \label{hyp:varying-complexity} Different communities have different levels of linguistic
   complexity
 \item \label{hyp:layer-effect} The layer at which the community embedding is taken into account
   in a CCLM influences its perplexity.
-\item \label{hyp:LMCC-works} CCLMs can be used to recognize communities based on
+\item \label{hyp:LMCC-works} CCLMs can be used to recognise communities based on
   latent Bayesian classification.
 % \item \label{hyp:LMCC-works} The layer at which the community embedding is taken into account
 %   influences CCLM and its associated latent classifier.
@@ -211,10 +215,10 @@ conclution (\cref{sec:discussion-conclusion}):
 
 We experiment with two kinds of model architecture: a simple
 unidirectional LSTM \citep{Hochreiter1997} and a Transformer
-\citep{Vaswani2017}.  In either case, the model is organized as a
+\citep{Vaswani2017}.  In either case, the model is organised as a
 standard $n$-layer neural sequence encoder (we set $n=3$ for all
 models). As is convention, a sequence of word tokens is first converted to 
-vectors using a trainable embedding layer over a pre-deterimend vocabulary.
+vectors using a trainable embedding layer over a pre-determined vocabulary.
 At the other end, word tokens are predicted using a softmax projection 
 layer. What we have described so far does not take community into account
 and as such we call them \emph{uncodnitioned models}, but the same
@@ -241,7 +245,7 @@ from the social media website Reddit.\footnote{Comments were obtained
   \cite{Baumgartner2020}.}
 %
 Reddit is divided into forums called \textit{subreddits}, 
-which are typically organized around a topic of interest. 
+which are typically organised around a topic of interest. 
 Users create \textit{posts}, which consist of a link, image, 
 or text, along with a \emph{comment} section. 
 Comments are threaded: a comment can be made directly on a post,
@@ -252,9 +256,11 @@ convention in mathematical formulas: the letter $c$ stands for a
 community, and $m$ stands for a message.
 
 Our dataset includes messages from \num{510} subreddits, 
-which all subreddits 
+the set of all subreddits 
 with at least \num{5000} messages per month for each month
 of the year 2015.
+Most but not all of these communities (with about 10 exceptions) 
+are mostly English-language.
 Each community corpus consist of \num{42000} randomly selected messages from the year 2015.
 For each community, we reserve \num{1000} messages each for development and testing,
 leaving a total of \num{20.4}M messages for training.
@@ -279,7 +285,7 @@ the transformer operates on all tokens in the sequence at once, the
 language modeling was achieved by masking and incrementally un-masking
 input tokens in a left-to-right fashion (so we have an
 auto-regressive model).  We used the AdamW
-\citep{Loshchilov2019} optimization algorithm, with an initial
+\citep{Loshchilov2019} optimisation algorithm, with an initial
 learning rate of \num{0.001}, with no extra control on the decay
 of learning rate.
 %
@@ -428,8 +434,8 @@ than their LSTM counterparts.
 \caption{
   Average model performance by community.
   The boxes indicate upper and lower quartiles, while the whiskers are placed at the upper and lower maximum, with communities more than $1.5\times IQR$ (inter-quartile range) above the upper quartile considered outliers (represented as dots). The three most extreme outliers are excluded from this view (see \cref{fig:ppl-info-gain}).
-   See also table 1 in the supplementary materials
-   for a tabular version of these results with community names.
+   %See also table 1 in the supplementary materials % not very useful for this actually since we sort by indisc and it's only one model anyway.
+   %for a tabular version of these results with community names.
 }
 \label{fig:comm-stratified-box}
 \end{figure}
@@ -475,13 +481,13 @@ related to perplexity, however (\cref{fig:ppl-info-gain}).
 
 We observe empirically that across all the models we
 tested, communities where conditioning has the least effect tend to be
-more organized around more general interest topics, such as 
+more organised around more general interest topics, such as 
 \subreddit{relationships} and \subreddit{advice}, where the subject
 matter is relevant to a broad range of people.  Conditioning the model
 on community has the most benefit for narrower special-interest
-subreddits, such as those organized around a certain videogame, sports
+subreddits, such as those organised around a certain videogame, sports
 team, or subculture.  This makes sense intuitively, since communities
-with more niche topics would tend to have more specialized vocabulary
+with more niche topics would tend to have more specialised vocabulary
 and other linguistic patterns.
 
 \section{Latent Bayesian community classifiers} \label{sec:lmcc}
@@ -509,7 +515,7 @@ Since the test set is balanced across communities,
 we have an even prior for $P(c=c_i)$, giving us
 \[P(c=c_i\mid m) \propto  P(m\mid c_i).\]
 
-We can characterize the performance of the LMCC with a confusion matrix
+We can characterise the performance of the LMCC with a confusion matrix
 $C$, defined by $C_{ij} = P(c=c_i \mid m)$ for a given (test) set of messages $m$ 
 from community $c_j$.
 \[C_{ij} = \avg_{m\in M_j}P(c=c_i \mid m)\]
@@ -528,7 +534,7 @@ picks assigns the highest probability to the community where a message originate
 
 
 But we want a more quantitative measure, corresponding to the ability of the LMCC to correctly
-recognize messages coming from a given community $c_j$. We could use
+recognise messages coming from a given community $c_j$. We could use
 something like an F-score, but we prefer to use a perplexity-like metric,
 which is has stronger information-theoretic grounds.
 To this end, we define the \emph{linguistic indiscernibility} of community $c_j$, 
@@ -855,7 +861,7 @@ perplexity per-word ranges from less than \num{4} to more than \num{93}
 (but with only 25\% of communities under 63).
 
 With indiscernibility, values are distributed evenly over the whole possible
-range (1 to 510). We find that CCLMs can be used to recognize certain
+range (1 to 510). We find that CCLMs can be used to recognise certain
 communities based on latent Bayesian classification
 \ref{hyp:LMCC-works}, but not all.  In general, we observe that the least
 discernible communities all have a very conversational, general-interest
