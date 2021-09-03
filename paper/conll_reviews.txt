@@ -247,9 +247,7 @@
 > paper investigates the relationship between the learned community
 > embeddings from CCLM and the one learned from user membership-based
 > social graphs. Their analyses show that the CCLM embeddings are
-> significantly more correlated with social graphs than rand!
-> 
->  om vectors.
+> significantly more correlated with social graphs than random vectors.
 > 
 > ---------------------------------------------------------------------------
 > 
