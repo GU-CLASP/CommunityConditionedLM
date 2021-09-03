@@ -1,0 +1,346 @@
+> ============================================================================
+> 
+>                             REVIEWER #1
+> 
+> ============================================================================
+> 
+>  
+> 
+> What is this paper about?
+> 
+> ---------------------------------------------------------------------------
+> 
+> This paper uses Reddit subcommunities to investigate the correlation
+> between communities (as opposed to individuals) and linguistic
+> usage. It compares two major techniques and defines a set of metrics,
+> explaining these in detail.
+> 
+>  
+> 
+> The metrics and comparison are very clearly laid out and are one of
+> the strengths of the paper. This level of explanatory rigor is often
+> missing. It would be good to call out sooner the similarities to topic
+> modeling, where each subcommunity can be considered a topic. This does
+> not show up until the related work section, but the analogy would help
+> readers to understand the problem space.
+> 
+>  
+> 
+> The authors should make clear throughout the paper how much the
+> differences are in the vocabulary (words used) vs. in the syntax
+> (e.g. length of sentences, use of subordinate and relative clauses,
+> style of agreement, double negation). Since they use "complexity",
+> this sounds like it should be syntax. However, most of the description
+> looks like it is in the vocabulary (not just unigrams but also
+> ngrams). It would be much more interesting, and novel, to consider
+> both types of complexity and how they correlate to different
+> subcommunities (e.g. to distinguish one from another) and correlations
+> among subcommunities (e.g. more general topics vs more specific ones).
+> 
+>  
+> 
+> There should be an ethics statement. There is nothing unethical with
+> what the paper did. However there is potential for misuse of the
+> models and for misinterpretation of the term "complexity" (e.g. a
+> group whose style was less complex could feel they were being
+> stereotyped as uneducated or stupid).
+> 
+> ---------------------------------------------------------------------------
+> 
+>  
+> 
+>  
+> 
+> Strengths
+> 
+> ---------------------------------------------------------------------------
+> 
+> - nice use of existing data source
+> 
+> - detailed comparison of models
+> 
+> - extremely clear and detailed explanation of techniques and metrics
+> 
+> ---------------------------------------------------------------------------
+> 
+>  
+> 
+>  
+> 
+> Weaknesses
+> 
+> ---------------------------------------------------------------------------
+> 
+> - not clear that complexity of vocabulary and syntax are untangled
+> 
+> - needs more examples to make the problem easier to understand
+> 
+> - no qualitative error analysis (this links to making the task space
+>   easier to understand)
+> 
+> - needs an ethics statement
+> 
+> ---------------------------------------------------------------------------
+> 
+>  
+> 
+>  
+> 
+> Additional Feedback
+> 
+> ---------------------------------------------------------------------------
+> 
+> It would help to provide some examples (e.g. sentences from
+> discussions) showing the language used in different communities.  This
+> is particularly important for understanding what the authors mean by
+> "complexity" and whether this is just about size of vocabulary or also
+> syntax and/or semantics.
+> 
+> ---------------------------------------------------------------------------
+> 
+>  
+> 
+>  
+> 
+> ---------------------------------------------------------------------------
+> 
+> Reviewer's Scores
+> 
+> ---------------------------------------------------------------------------
+> 
+>                     Recommendation (1-5): 3
+> 
+>  
+> 
+>  
+> 
+> ============================================================================
+> 
+>                             REVIEWER #2
+> 
+> ============================================================================
+> 
+>  
+> 
+> What is this paper about?
+> 
+> ---------------------------------------------------------------------------
+> 
+> This paper builds conditioned language models that incorporate aL
+> community embedding as part of their neural architectures. The authors
+> show that conditioning in this way leads to overall lower perplexity
+> than not conditioning. The also note that language models can be used
+> to discriminate between communities (via Bayes rule) and that success
+> varies depending on how general the community is. Finally, they show
+> that the similarity relationships between communities captured by
+> language models are correlated with similarities captured by user
+> overlap ('social embeddings').
+> 
+> ---------------------------------------------------------------------------
+> 
+>  
+> 
+>  
+> 
+> Strengths
+> 
+> ---------------------------------------------------------------------------
+> 
+> The paper is fairly clearly written, and covers a thorough range of
+> experimental conditions. Some interesting ideas and analysis for how
+> community embeddings can be included in a neural language model (e.g.,
+> at what layer).
+> 
+> ---------------------------------------------------------------------------
+> 
+>  
+> 
+>  
+> 
+> Weaknesses
+> 
+> ---------------------------------------------------------------------------
+> 
+> The findings are not necessarily surprising. We would expect (larger?)
+> communities covering general topics to differ less. In addition,
+> similar communities would be expected to attract more of the same
+> users (e.g., a fan of one board game probably likes other board games
+> as well, and is more likely to be active on their subreddits).
+> 
+> ---------------------------------------------------------------------------
+> 
+>  
+> 
+>  
+> 
+> Additional Feedback
+> 
+> ---------------------------------------------------------------------------
+> 
+> -Could the fact that the LSTM models show less information gain than
+>  the Transformer models be a ceiling effect? That is, there's less
+>  additional information to be gained by the LSTM because perplexity is
+>  already as low as it can be before conditioning?
+> 
+>  
+> 
+> -When comparing CCLM and social embeddings, the authors not that
+>  simple index-wise comparison doesn't make sense, and note that they
+>  need to solve the orthogonal Procrustes problem. However, is that
+>  just equivalent find the lowest-error linear mapping between the two
+>  sets of embeddings (which can be solved by something like least
+>  squares, as I think is done for when building multilingual
+>  embeddings)? The exposition could be simplified.
+> 
+>  
+> 
+> -Why is linguistic indiscernability better than F1, besides being more
+>  'information-theoretic'?
+> 
+>  
+> 
+> -Line 255 seem to be cut off (', however (fig 2)'). In general, figure
+>  2 is odd because any correlation seems to be entirely driven by
+>  outliers.
+> 
+> ---------------------------------------------------------------------------
+> 
+>  
+> 
+>  
+> 
+> ---------------------------------------------------------------------------
+> 
+> Reviewer's Scores
+> 
+> ---------------------------------------------------------------------------
+> 
+>                     Recommendation (1-5): 4
+> 
+>  
+> 
+>  
+> 
+> ============================================================================
+> 
+>                             REVIEWER #3
+> 
+> ============================================================================
+> 
+>  
+> 
+> What is this paper about?
+> 
+> ---------------------------------------------------------------------------
+> 
+> This paper presents language models, referred to as CCLM, where each
+> text is conditioned by its speech community information. The model
+> proposed in the paper suggests appending community embedding into the
+> model input, and shows that doing so reduces the overall
+> perplexity. The empirical results show that communities exhibit
+> different levels of linguistic complexity represented by the resulting
+> perplexity of each community. The paper then defines a new measure,
+> linguistic indiscernibility, which indicates how each community is
+> discernible from others based on their text. The results show that the
+> linguistic indiscernibility and the linguistic complexity of
+> communities are mildly (but not strongly) correlated. Finally, this
+> paper investigates the relationship between the learned community
+> embeddings from CCLM and the one learned from user membership-based
+> social graphs. Their analyses show that the CCLM embeddings are
+> significantly more correlated with social graphs than rand!
+> 
+>  om vectors.
+> 
+> ---------------------------------------------------------------------------
+> 
+>  
+> 
+>  
+> 
+> Strengths
+> 
+> ---------------------------------------------------------------------------
+> 
+> - Experiments are driven by hypotheses that are focused on exploring
+>   interesting questions in sociolinguistics. As such, the motivation
+>   of each experiment is clear and the paper is easy-to-follow. Also
+>   the paper provides many interesting analyses.
+> 
+> - This work proposes a novel extension of LMs, CCLM, and studies
+>   various measures based on the proposed model.
+> 
+> - Furthermore, not only limiting the scope of the paper to linguistic
+>   variations and measures, they also investigate the relationship
+>   between embeddings learned from texts and social graphs.
+> 
+> ---------------------------------------------------------------------------
+> 
+>  
+> 
+>  
+> 
+> Weaknesses
+> 
+> ---------------------------------------------------------------------------
+> 
+> - While the work has looked into various metrics, it lacks in-depth
+>   analyses to understand *where the information gain is coming
+>   from. It was mentioned that since the perplexity improvement
+>   is not correlated with the baseline perplexity score, it suggests
+>   that the scope of the topic and frequent vocabulary of the community
+>   might be the key factors. However, there is no further analysis or
+>   experiments to prove this, which I found disappointing.
+> 
+> - The part about relating social and lexical community embeddings
+>   (Section 4) was not fully convincing. I believe this is mainly due
+>   to the fact that we do not fully understand either of these
+>   embeddings. Therefore, although the result shows some correlations
+>   between the two, It's hard to figure out how to correctly
+>   interpret this result.
+> 
+> ---------------------------------------------------------------------------
+> 
+>  
+> 
+>  
+> 
+> Additional Feedback
+> 
+> ---------------------------------------------------------------------------
+> 
+> Regarding analyses to understand why the community information helped,
+> I see two options: 1) do some qualitative analysis over the examples
+> that showed significant information gain and see if you can find any
+> consistent patterns, and 2) design ablation studies to disentangle the
+> topic and lexical choices or come up with measures that can capture
+> community's topic range or rare vocabulary (could be OOV ratio or
+> average log-odds ratio or top K words). This will provide more
+> insights as to why and when CCLMs are effective.
+> 
+>  
+> 
+> Regarding Section 4, instead (or on top of) social embeddings, maybe
+> consider using other more interpretable and straightforward
+> measures. For example, the correlation between % user overlap
+> between the two communities and the distance between the two
+> communities' embeddings could be interesting and be
+> interpreted as how much user overlap can explain the lexical
+> similarity between communities. Also, another suggestion would be
+> looking at the difference between the lexical and social
+> embeddings. What information is encoded in one but not the other?
+> 
+> ---------------------------------------------------------------------------
+> 
+>  
+> 
+>  
+> 
+> ---------------------------------------------------------------------------
+> 
+> Reviewer's Scores
+> 
+> ---------------------------------------------------------------------------
+> 
+>                     Recommendation (1-5): 3
+> 
+>  
