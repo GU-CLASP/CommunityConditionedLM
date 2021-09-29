@@ -13,7 +13,7 @@ def gen_examples(data_dir, fields, split, max_seq_len, file_limit, lower_case):
         tokens = text.split(' ')[:max_seq_len]
         yield tt.data.Example.fromlist([community, tokens, i], fields)
 
-def build_fields(data_dir, vocab_size):
+def build_fields(data_dir, vocab_size, lower_case=True):
 
     fields = OrderedDict([
         ('community', tt.data.Field(sequential=False, pad_token=None, unk_token=None)),
@@ -21,7 +21,7 @@ def build_fields(data_dir, vocab_size):
         ('example_id', tt.data.Field(sequential=False, use_vocab=False))
     ])
 
-    data = tt.data.Dataset(list(gen_examples(data_dir, fields, 'train', None, None)),
+    data = tt.data.Dataset(list(gen_examples(data_dir, fields, 'train', None, None, lower_case)),
             fields=fields)
     fields['community'].build_vocab(data)
     token_counts = Counter()

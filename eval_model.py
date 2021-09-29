@@ -31,8 +31,7 @@ def batch_nll(lm, batch, pad_idx, comm=None):
     vocab_size = y_hat.shape[-1]
     nll_seq = F.nll_loss(y_hat.view(-1,vocab_size), y.view(-1), 
             reduction='none', ignore_index=pad_idx).view(y.shape).sum(axis=0)
-    nll_seq_per_word = nll_seq / lengths.float()
-    return nll_seq_per_word
+    return nll_seq 
 
 @click.command()
 @click.argument('model_family_dir', type=click.Path(exists=False))
@@ -69,9 +68,6 @@ def cli(model_family_dir, model_name, data_dir, batch_size, max_seq_len, file_li
     lm.eval()
     log.debug(str(lm))
 
-    if not lm.use_community:
-        comms = ['nll'] # dummy label since there's only one nll value per row
-
     test_iterator = tt.data.BucketIterator(
         test_data,
         device=device,
@@ -86,12 +82,13 @@ def cli(model_family_dir, model_name, data_dir, batch_size, max_seq_len, file_li
 
     with torch.no_grad(), open(model_dir/'nll.csv', 'w') as f:
         meta_fields = ['community', 'example_id', 'length']
-        writer = csv.DictWriter(f, fieldnames=meta_fields+comms)
+        data_fields = comms if lm.use_community else ['nll']
+        writer = csv.DictWriter(f, fieldnames=meta_fields+data_fields)
         writer.writeheader()
         for i, batch in enumerate(test_iterator):
             nlls_batch = [
                 dict(zip(meta_fields, meta_values)) for meta_values in zip(
-                    batch.community.tolist(),
+                    [comms[i] for i in batch.community.tolist()],
                     batch.example_id.tolist(),
                     batch.text[1].tolist()
                 )
@@ -106,7 +103,6 @@ def cli(model_family_dir, model_name, data_dir, batch_size, max_seq_len, file_li
                     nlls_batch[j][comm] = nll.item()
             writer.writerows(nlls_batch)
             log.info(f"Completed {i+1}/{len(test_iterator)}")
-
 
 if __name__ == '__main__':
     cli(obj={})
