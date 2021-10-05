@@ -1,3 +1,26 @@
+
+* Possible Further work
+
+
+- supervised (LSTM-) community classifier.
+- Projection layer is a matrix L such that Lᵢ is a mapping from LSTM
+  features to predictor of a community. (So Lᵢ can be treated as a
+  community embedding.)
+- Maybe it's easier to do dependence over time? Dynamic processes can
+  be represented like so:
+
+  X = exp (tA)
+    = 1 + tA + (tA)²/2 + ... + (tA)ⁿ/n! + ...
+
+  Where t is time (say in [0..1]) and A is
+
+  Note that X = 1 for t=0, so this should probably be another layer on
+  top. The advantage of this treatment is that it cleanly separates
+  change over time to the baseline for t=0. Furthermore, there is a
+  standard wayone can to interpret tA as a transformation.
+  
+  See: https://www.youtube.com/watch?v=IZqwi0wJovM&list=PL49CF3715CB9EF31D&index=23
+
 * Paper outline
 
 ** Hypotheses to test 
@@ -133,26 +156,28 @@ Experiments:
 * Unigram model
 
 
-Actual distrbution of unigrams for community.
+Actual distribution of unigrams for community.
 
-P(w) is the actual average frequency of the word w throughout the data
+P(w) is the actual unigram frequency of the word w throughout the data
 
-P_c(w) is the actual average frequency of the word w in community c.
+P_c(w) is the actual unigram frequency of the word w in community c.
 
-P_m(w) is the actual average frequency of the word w in message m.
+P_m(w) is the actual unigram frequency of the word w in message m.
 
-Assuming m belongs to c, the predicted distribution for m is P_c.
+Assuming m belongs to c, the predicted distribution for m is given P_c
 
 
 Let P_c'(w) = α P(w) + (1-α) P_c(w)            say α=0.01 (label smoothing)
 
 
-consider H(P_m,P_c) = -∑_w P_m(w) log P_c(w)        --> this be +∞ if P_c(w) = 0 and P_m(w) > 0; i.e. if the word occurs in the message but not in the community.
+consider H(P_m,P_c) = -∑_w P_m(w) log P_c(w)
+   --> this be +∞ if P_c(w) = 0 and P_m(w) > 0; i.e. if the word occurs in the message but not in the community.
 
 We predict:
-P(m | c) = exp(-H(P_c,P_m))    --> this will be 0 in the same conditions
+P(m | c) = exp(-H(P_m,P_c))    --> this will be 0 in the same conditions
 
-P(m) = exp(-H(P,P_m))          --> never 0 (because the message is part of the 'training' data)
+P(m) = exp(-H(P_m,P))          --> never 0 (because the message is part of the 'training' data, the above conditions never occur)
+
 
 P(c | m) ∝ P(m | c) P(m)
   

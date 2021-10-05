@@ -1,53 +1,31 @@
+% This must be in the first 5 lines to tell arXiv to use pdfLaTeX, which is strongly recommended.
+%\pdfoutput=1
+% In particular, the hyperref package requires pdfLaTeX in order to break URLs across lines.
+
 \documentclass[11pt]{article}
-\usepackage[review]{acl}
+
+% Remove the "review" option to generate the final version.
+\usepackage[review]{emnlp2021}
+
+% Standard package includes
 \usepackage{times}
 \usepackage{latexsym}
-\usepackage{amsmath}
-\usepackage{amssymb}
-\usepackage{siunitx}
-\usepackage{booktabs}
-\usepackage{pgfplots}
-\usepackage{todonotes}
-\usepackage{enumitem}
-\usepackage{cleveref}
-\usepackage{array}
-\usepackage{makecell}
-\usepackage{multirow}
 
-\usepgfplotslibrary{groupplots}
-\pgfplotsset{compat=1.16}
-\pgfplotsset{every tick label/.append style={font=\footnotesize}}
+% For proper rendering and hyphenation of words containing Latin characters (including in bib files)
+\usepackage[T1]{fontenc}
+% For Vietnamese characters
+% \usepackage[T5]{fontenc}
+% See https://www.latex-project.org/help/documentation/encguide.pdf for other character sets
 
-\renewcommand{\UrlFont}{\ttfamily\small}
-
-\newcommand\jp[1]{\todo[backgroundcolor=blue!10]{JP: #1}}
-\newcommand\bn[1]{\todo[backgroundcolor=green!10]{BN: #1}}
+% This assumes your files are encoded as UTF8
+\usepackage[utf8]{inputenc}
 
 % This is not strictly necessary, and may be commented out,
 % but it will improve the layout of the manuscript,
 % and will typically save some space.
 \usepackage{microtype}
 
-%\aclfinalcopy % Uncomment this line for the final submission
-%\def\aclpaperid{***} %  Enter the acl Paper ID here
-
-%\setlength\titlebox{5cm}
-% You can expand the titlebox if you need extra space
-% to show all the authors. Please do not make the titlebox
-% smaller than 5cm (the original size); we will check this
-% in the camera-ready version and ask you to change it back.
-
-\newcommand\Ppl{\mathsf{Ppl}}
-\newcommand\IG{\mathsf{IG}}
-\newcommand\Ind{\mathsf{Ind}}
-\DeclareMathOperator*{\avg}{average}
-\newcommand\BibTeX{B\textsc{ib}\TeX}
-
-\newlist{hypotheses}{enumerate}{3}
-\setlist[hypotheses,1]{parsep=0pt,itemsep=1pt,font=\bfseries,label=(H\arabic*)}
-
-
-\input{plot_macros}
+\input{preamble}
 
 \title{Community-Conditioned Language Models\\ \emph{Supplementary material}}
 
@@ -58,25 +36,53 @@
 \begin{document}
 \maketitle
 
-
+\appendix
 %\bibliography{paper}
 %\bibliographystyle{acl_natbib}
 
-\section{Community-level information gain}
-
-\begin{table*}
-  \small
+\section{Projection of aligned embeddings}
+\input{floats/pca_aligned}
+\noindent\begin{minipage}{\textwidth}
   \centering
-  \input{floats/community_results.tex}
-  \caption{
-    Absolute perplexity 
-    of the baseline models and information gain of the CCLMs,
-    relative to the baseline.
-    Rows are sorted by the perplexity of the baseline
-    LSTM model.
+  \PCAAligned\\
+  \vspace{0.25cm}
+  \ref{pcalegend}
+\captionof{figure}{First two components of the aligned social (top) and linguistic (bottom) embeddings,
+  where the lingusitic embedding is taken from the LTSM with $l_c=1$.
+  Correlation between these directions is given by $\sigma_0 = 53.4$ and $\sigma_1 = 35.6$.
+  Colors are assigned by k-means clustering of the social embedding. The legend shows the
+  closest 5 communites to each cluster centroid.
+  The legend shows the closest 5 communites to each cluster centroid. 
+The cluster of each community is also available in \cref{sec:community-level-results} }
+\label{fig:pca-aligned}
+\end{minipage}
+
+\onecolumn
+
+\section{Community-level results} \label{sec:community-level-results}
+
+The following table shows results at the community level. The baseline $\Ppl_{M_j}$ 
+is computed from the unconditioned LSTM and the CCLM results ($\Ppl_{M_j}$, $\IG_{M_j}$,
+and $\Ind_{M_j}$ use the LSTM with $l_c=1$). ``Social cluster'' is determined by 
+k-means clustering of the social embedding.
+
+\pgfplotstableset{
+  begin table=\begin{longtable},
+  end table=\end{longtable},
 }
-  \label{tab:community-results}
-\end{table*}
+\pgfplotstabletypeset[
+  column type=r,
+  every head row/.style={before row=\toprule,after row=\midrule\endhead}, 
+  every last row/.style={after row=\bottomrule},
+  columns={community,lstm-3-ppl,lstm-3-1-ppl,lstm-3-1-ig,lstm-3-1-indisc,web-cluster},
+  columns/community/.style={column name={Subredddit}, verb string type},
+  columns/lstm-3-ppl/.style={column name={baseline $\Ppl_{M_j}$}},
+  columns/lstm-3-1-ppl/.style={column name={CCLM $\Ppl_{M_j}$}},
+  columns/lstm-3-1-ig/.style={column name={$\IG_{M_j}$}},
+  columns/lstm-3-1-indisc/.style={column name={$\Ind_{M_j}$}, precision=3, fixed},
+  columns/web-cluster/.style={column name={Social embed. cluster}},
+  font=\small
+]{floats/comm.csv}
 
 \end{document}
 

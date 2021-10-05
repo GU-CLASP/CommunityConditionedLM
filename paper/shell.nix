@@ -1,6 +1,6 @@
 # Non-reproducible "current" version:
 # with (import <nixpkgs> {});
-with import (fetchTarball https://github.com/NixOS/nixpkgs/archive/nixos-20.09.tar.gz) {};
+with import (fetchTarball https://github.com/NixOS/nixpkgs/archive/nixos-21.05.tar.gz) {};
 
 
 let orgEmacs = emacsWithPackages (with emacsPackagesNg; [org]);
