@@ -66,9 +66,7 @@
   but more tools are needed to study variation from a computational perspective.
   In this paper, we use conditional language models to investigate linguistic variation
   across 510 online communities.
-  We characterise communities with several different language model-based metrics
-  and report on the correlations between them. 
-  We also investigate the community representations learned by the conditional language model
+  We investigate the community representations learned by the conditional language model
   and find that they are highly correlated with a social network-based 
   representation that doesn't use any linguistic input.
 \end{abstract}
@@ -131,21 +129,9 @@ investigate community-level variation in word sense distributions.
 In the present work, we investigate linguistic variation
 across different online communities. In contrast to previous work, we
 investigate variation across speech communities (rather than
-macro-social categories) and use context-sensitive sequence models
-capable of capturing variation beyond the lexical level.
-We do this in two ways:
+macro-social categories).
 
-First, we are interested in
-variation in the level of \emph{linguistic complexity}
-exhibited by different communities.\footnote{
-  We define linguistic complexity as language model perplexity
-  (i.e., as the inverse of predictability, for a given language model).
-  We do not intend to make any claim about the relationship
-  between language model perplexity and other notions of linguistic
-  complexity \citep[cf.][]{Hawkins2014}. Furthermore, we note that 
-  language \emph{exhibited} by a speech community \citep[i.e., \emph{parole},][]{deSaussure2011},
-  which is at issue here,
-  is  different from \emph{a language} (i.e., \emph{langue}).}
+
 %\jp{
   %Some examples (perhaps include if there is space):
 %  
@@ -162,42 +148,40 @@ exhibited by different communities.\footnote{
   %the work was successful, a lot of people now describe it as a waste
   %of time/money and a big deal made out of nothing.  }
 %
-Indeed, it is folklore that certain communities tend to exhibit more predictable
-speech patterns than others.  Here we want to quantify this
-phenomenon.  For this purpose, we define (\cref{sec:cclm}) 
+% Indeed, it is folklore that certain communities tend to exhibit more predictable
+% speech patterns than others.  Here we want to quantify this
+% phenomenon.
+
+For this purpose, we define (\cref{sec:cclm}) 
 various Community Conditioned Language Models 
-(CCLM for short), and model the degree to which a
-given message $m$ is acceptable in a given community $c$, by estimating the probability
-\(P(m \mid c)\).
+(CCLM for short).
+% , and model the degree to which a
+% given message $m$ is acceptable in a given community $c$, by estimating the probability
+% \(P(m \mid c)\).
 
-Second, we want to find out how, and how much, CCLMs are attuned to
-the specificity of communities. We test whether 1.\ the linguistic
+We want to find out how, and how much, CCLMs are attuned to
+In practice, we test whether the linguistic
 models are correlated with a social network model of communities (based only on
-co-occurrence of users) (\cref{sec:embedding-analysis}) and 2.\ if a latent community
-classifier based on the CCLM can accurately identify the community that a
-message comes from. (\cref{sec:lmcc}) Additionally, one may
-intuitively assume that linguistically complex communities are harder to
-recognise: that is, the easier it is to model the language produced by a community,
-the easier it is to identify messages coming from that community.
+co-occurrence of users) (\cref{sec:embedding-analysis})
 
-To sum up, we test the following hypotheses, which we review in our
-conclusion (\cref{sec:discussion-conclusion}):
-\begin{hypotheses}
-\item \label{hyp:varying-complexity} Different communities have different levels of linguistic
-  complexity
-\item \label{hyp:layer-effect} The layer at which the community embedding is taken into account
-  in a CCLM influences its perplexity.
-\item \label{hyp:LMCC-works} CCLMs can be used to recognise communities based on
-  latent Bayesian classification.
-% \item \label{hyp:LMCC-works} The layer at which the community embedding is taken into account
-%   influences CCLM and its associated latent classifier.
-  % This is more of a justification for studying the latent classifier than a real "user-facing" hypothesis.
-\item \label{hyp:extra-linguistic-correlation} The CCLM representation of communities are correlated with
-  co-occurrence of users between communities.
-% \item Community stability is correlated with language complexity
-\item \label{hyp:rich-harder-to-identify} Linguistically poor communities are easier to identify than
-  linguistically rich communities.
-\end{hypotheses}
+% To sum up, we test the following hypotheses, which we review in our
+% conclusion (\cref{sec:discussion-conclusion}):
+% \begin{hypotheses}
+% \item \label{hyp:varying-complexity} Different communities have different levels of linguistic
+%   complexity
+% \item \label{hyp:layer-effect} The layer at which the community embedding is taken into account
+%   in a CCLM influences its perplexity.
+% \item \label{hyp:LMCC-works} CCLMs can be used to recognise communities based on
+%   latent Bayesian classification.
+% % \item \label{hyp:LMCC-works} The layer at which the community embedding is taken into account
+% %   influences CCLM and its associated latent classifier.
+%   % This is more of a justification for studying the latent classifier than a real "user-facing" hypothesis.
+% \item \label{hyp:extra-linguistic-correlation} The CCLM representation of communities are correlated with
+%   co-occurrence of users between communities.
+% % \item Community stability is correlated with language complexity
+% \item \label{hyp:rich-harder-to-identify} Linguistically poor communities are easier to identify than
+%   linguistically rich communities.
+% \end{hypotheses}
 
 % We proceed as follows: 
 % First, we define the CCLM models used in the paper, as well as baseline un-conditioned madels.
@@ -652,31 +636,32 @@ modeled in an unsupervised way.
 
 
 % \jp{I propose that most of the following analysis should be spread between the relevant sections, and only have a tiny summary here + future work.}
-To sum up our findings, 
-we observed that various communities exhibit widely varying levels of
-linguistic complexity \ref{hyp:varying-complexity}. For the best model architecture,
-perplexity per-word ranges from less than \num{4} to more than \num{93} 
-(but with only 25\% of communities under 63).
 
-With indiscernibility, values are distributed evenly over the whole possible
-range (1 to 510). We find that CCLMs can be used to recognise certain
-communities based on latent Bayesian classification
-\ref{hyp:LMCC-works}, but not all.  In general, we observe that the least
-discernible communities all have a very conversational, general-interest
-premise. We cannot rule out that these more generic
-communities exhibit distinctive linguistic patterns, but none of our
-CCLMs are able to discern them. In contrast, the distinctive patterns
-of narrow-topic communities are just as recognizable by all our LSTM
-and Transformer models.
+% To sum up our findings, 
+% we observed that various communities exhibit widely varying levels of
+% linguistic complexity \ref{hyp:varying-complexity}. For the best model architecture,
+% perplexity per-word ranges from less than \num{4} to more than \num{93} 
+% (but with only 25\% of communities under 63).
 
-We find a mild correlation (\cref{tab:ind-corrs}) between the
-perplexity of the CCLM and the indiscernibility of the corresponding
-community \ref{hyp:rich-harder-to-identify}, with factors ranging from
-0.06 to 0.23. However, The trend is more clear when considering the
-correlation with information gain and indiscernibility (correlation
-from 0.39 to 0.46). So this means that, when trying to identify a
-community, it is not its absolute perplexity that matters, but rather
-the difference in perplexity with the baseline.
+% With indiscernibility, values are distributed evenly over the whole possible
+% range (1 to 510). We find that CCLMs can be used to recognise certain
+% communities based on latent Bayesian classification
+% \ref{hyp:LMCC-works}, but not all.  In general, we observe that the least
+% discernible communities all have a very conversational, general-interest
+% premise. We cannot rule out that these more generic
+% communities exhibit distinctive linguistic patterns, but none of our
+% CCLMs are able to discern them. In contrast, the distinctive patterns
+% of narrow-topic communities are just as recognizable by all our LSTM
+% and Transformer models.
+
+% We find a mild correlation (\cref{tab:ind-corrs}) between the
+% perplexity of the CCLM and the indiscernibility of the corresponding
+% community \ref{hyp:rich-harder-to-identify}, with factors ranging from
+% 0.06 to 0.23. However, The trend is more clear when considering the
+% correlation with information gain and indiscernibility (correlation
+% from 0.39 to 0.46). So this means that, when trying to identify a
+% community, it is not its absolute perplexity that matters, but rather
+% the difference in perplexity with the baseline.
 
 We find that the layer at which the community embedding is taken into
 account ($l_c$) has a weak effect on the perplexity of the CCLM
