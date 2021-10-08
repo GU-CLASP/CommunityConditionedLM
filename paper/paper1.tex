@@ -473,29 +473,71 @@ way on which user is the author of any given message: we only use the
 contents of messages, not authorship data.
 %
 
-\subsection{Comparing embeddings: method}
+\subsection{Comparing embeddings: anecdotal evidence}
+\label{sec:storytelling}
+TODO: BILL
+
+\subsection{Comparing embeddings: statistical evidence}
+
+The anecdotal evidence suggests that for some communities, proximity
+in linguistic patterns do match social proximity… and for others it
+does not. Unfortunately, it seems hard, if not impossible, to draw a
+general conclusion from this way. In this section, we propose a
+systematic approach thanks to which we can quantify the correlation
+between social proximity and linguistic proximity, and measure its
+statistical significance.
+
+Let us call \(L\) the matrix of (normed) linguistic embeddings and
+\(S\) the matrix of (normed) social embeddings. Thus \(L_i\) and
+\(S_i\) are the linguistic and social embeddings for community \(i\).
+%
+A straightforward, but ultimately flawed, generalization of the
+methodology used to collect data in \cref{sec:storytelling} is to
+consider each pair of communities \((i,j)\), and compute the
+correlation between the cosine similarities of both embeddings. That
+is, compute the Pearson correlation factor of the data set:
+
+\[\C = {(x = L_i · L_j, y = S_i · S_j) \text {~for~} i,j ∈ [1,512]\}\]
+
+One could then use a standard statistical test to verify to obtain a
+p-value for the correlation [TODO: what do we get?].  The flaw of
+this methodology is that the number of pairs grows with the square
+of the number of communities. With 510 communities, we have 129795
+pairs, and standard statistical tests on Pearson correlation will
+assure that we have a statistically significant correlation in all
+but the weakest correlation. A further flaw is that the distribution of data points
+of \(C\) are \emph{not} independent. Far from it, the are generated
+from 1/510 independent variables. We consider this last flaw fatal, and take the following
+approach instead.
+
+
 % Explain the problem (idea: comparing cosine similarities --> too much data, again)
 
-Let us call \(L\) the matrix of (normed) linguistic embeddings and \(S\) the matrix
-of (normed) social embeddings. Thus \(L_i\) and \(S_i\) are the linguistic and
-social embeddings for community \(i\).
+Instead of comparing embedding pairs, we will compare embeddings
+community by community.
 
-To compare embeddings, one might naively think that it suffices to
+At this stage, one might naively think that it would suffice to
 calculate the distance between two embeddings index-wise, which is
 equal to the Frobenius distance between \(L\) and \(S\):
 
 \[||L-S||_F = \sum_i (L_i - S_i)\]
 
 The problem with this approach is that even if several dimensions of
-\(L\) and \(S\) are capture similar information, they will not
-coincide in the \emph{representation}. That is, applying a simple
-rotation (orthogonal transformation) on either matrix widely changes
-the correlation metric. To make the metric resilient to such effects,
-we can compute the minimum distance between \(L_i\) and \(S_i\), for
-any orthogonal matrix \(\Omega\) applied to \(L\):
+\(L\) and \(S\) are correlated, they will not coincide in the
+\emph{representation}. That is, applying a simple rotation (orthogonal
+transformation) on either matrix widely changes the \(||L-S||_F\)
+correlation metric. Another way to consider the same problem is that,
+applying such a rotation does not change the cosine similarities
+considered in the previous section.
+
+To make the metric independent of the representation (up to orthogonal
+transformations), we compute the \emph{minimum} distance between
+\(L_i\) and \(S_i\), for any orthogonal matrix \(\Omega\) applied to
+\(L\):
 
 \[d(L,S) = \mathsf{argmin}_\Omega ||ΩL-S||_F\]
 
+Here, the orthogonal matrix \(Ω\) gives a map from linguistic embeddings to social embeddings.
 The problem of computing \(d(L,S)\) is known as the orthogonal Procrustes problem~\citep{Gower2004}. The
 solution is
 \[d(L,S) = n - \mathsf {Tr} (Σ)\] where the matrix \(Σ\) is obtained by the singular value
@@ -514,19 +556,37 @@ correlation, obtained for example if \(L=S\)) to \(n\) (corresponding
 to perfect orthogonality), where $n=510$ is the number of communities
 considered.
 
-To get a more precise sense of what value of \(d(L,S)\) indicates a significant correlation,
-We have experimentally computed \(d(L,S)\) for ten random  ``embeddings'' 
-with the same shape as the CCLM embeddings.
-We observed a mean of \(μ_d=431.39\) and a (Bessel's-corrected) 
-standard deviation \(s_d=2.90\) in their distance from the social embedding, \(S\). % luckily it seems that sample stdev is often written with an $s$ to differentiate from population stdev
+Now, to test if \(d(L,S)\) corresponds to a significant correlation,
+it suffices to check if its value is significantly larger than it
+value for random linguistic embeddings \(L\). Even though this is the
+distribution of \(d(L,S)\) for random embeddings is difficult to
+compute analytically, one can instead evaluate it using a Monte Carlo
+method.
+
+Doing so, we observed that \(d(L,S)\) exhibits a mean of
+\(μ_d=431.39\) and a (Bessel's-corrected) standard deviation
+\(s_d=2.90\) in their distance from the social embedding,
+\(S\). % luckily it seems that sample stdev is often written with an $s$ to differentiate from population stdev
 
 
-Thus if \(d(L,S)\) is below the mean by several standard deviations, we can safely
-assume that there is statistically significant correlation between
-\(L\) and \(S\).  This is the case: we observe a difference between 61 and 68 standard deviations
-(\cref{tab:embedding-correlations}). Further, it is clear that the CCLM embeddings
-capture some of the same information as the social-network embeddings.
-We also give a sense of \emph{how} the correlation is manifested by
+Thus if the real \(d(L,S)\) is below the mean by several standard
+deviations, we can safely assume that there is statistically
+significant correlation between \(L\) and \(S\). A 4-sigma difference
+has less than one percent chance of occurring randomly. In our case:
+we observe a difference between 61 and 68 standard deviations
+(\cref{tab:embedding-correlations}). This definitely indicates a
+significant correlation.  Furthermore, by coming back to the
+definition of \(d(L,S)\), we know that, on average, the cosine
+similarity between \(ΩL\) and \(S\) is \(510 - 232.18 / 510\).  It
+further means that if we obtain a linguistic embedding \(L_k\) for a
+new community $k$, we can estimate its social embedding by \(ΩL_k\),
+and the cosine similarity with its true social embedding \(S_k\) is
+expected to be \((431.39 - 232.18) / 510\) --- accounting for
+over-fitting effects by taking the average distance rather than the
+maximum. % JP: TODO is the number from the table. this should probably be rewritten
+In sum, it is clear that the CCLM embeddings predict some aspect the social-network embeddings--- but far from all of it.
+
+To finish, we also give a sense of \emph{how} the correlation is manifested overall, by
 analysis of the two principal components of correlation in the
 linguistic embeddings, \(U_0\) and \(U_1\). To do so we plot the
 projection of each embedding along their first two principle components
