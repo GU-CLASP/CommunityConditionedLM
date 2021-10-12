@@ -41,7 +41,7 @@ def iter_data(data_dir, split, file_limit=None):
     communities = get_communities(data_dir)
     for community in communities:
         filename = data_filename(data_dir, split, community)
-        print(filename)
+        # print(filename)
         for i, line in enumerate(iter_file(filename)):
             yield community, line, i
             if file_limit and i >= file_limit:

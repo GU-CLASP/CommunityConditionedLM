@@ -15,26 +15,28 @@ def exp_normalize(x, axis):
     y = np.exp(x - np.expand_dims(b, axis=axis))
     return y / np.expand_dims(y.sum(axis), axis=axis)
 
-def compute_confusion(nll_df): # TODO per_word switch
-    nll_df = nll_df.sort_values(by=['community', 'example_id'])
-    nll = nll_df[comms].values * np.expand_dims(nll_df.length.values, axis=1)# -log(P(m|c)) // shape (m,c)
+def lmcc_probs(nll_df): 
+    nll = nll_df[comms].values # -log(P(m|c)) // shape (m,c)
     P_mc = -nll # -log(P(m|c)) // shape (m,c)
     P_cm = exp_normalize(P_mc, axis=1) # P(c|m) // shape (m,c) 
-    P_cm_split = np.array(np.split(P_cm,510,axis=0)) # P(c_i|m_j from c_j) // shape (c_j, m_j, c_i)
-    P_cm_split_sum = P_cm_split.sum(axis=1) # sum_mj[P(c_i | m_j from c_j)] // shape (c_j, c_i)
-    confusion = P_cm_split_sum / P_cm_split_sum.sum(axis=1) # mean_mj[P(c_i | c_j)] // shape (c_j, c_i)
-    return confusion
+    lmcc_df = pd.DataFrame(P_cm, columns=comms, index=nll_df.index)
+    lmcc_df = pd.merge(nll_df[['community', 'example_id']], lmcc_df, left_index=True, right_index=True)
+    return lmcc_df
+
+def lmcc_confusion(lmcc_df):
+    total_probs = lmcc_df.groupby('community')[comms].sum()
+    return total_probs / total_probs.sum(axis=1)
 
 if __name__ == '__main__':
 
     results_agg_ppl = []
     results_comm_ppl = []
 
-    uncond_models = ['lstm-3', 'transformer-3', 'unigram' ]
+    uncond_models = ['unigram', 'lstm-3', 'transformer-3']
     cond_models = [
-            [f'lstm-3-{i}' for i in range(1)], 
-            [f'transformer-3-{i}' for i in range(1)],
-            ['unigram-cond']
+            ['unigram-cond'],
+            [f'lstm-3-{i}' for i in range(4)], 
+            [f'transformer-3-{i}' for i in range(4)]
     ]
 
     for uncond_model_name, cond_models in zip(uncond_models, cond_models): 
@@ -45,18 +47,16 @@ if __name__ == '__main__':
 
         # load the unconditioned model NLLs
         uncond = pd.read_csv(uncond_model_dir/'nll.csv')\
-                .rename(columns={'nll': 'uncond_entr'})\
-                .drop('length', 1)
+                .rename(columns={'nll': 'uncond_entr'})
 
-        # repalce community indexes with names
-        if not uncond_model_name == 'unigram':
-            uncond['community'] = uncond['community'].apply(lambda x:comms[x])
-            test_epoch = int(open(uncond_model_dir/'saved-epoch.txt').read())
+        if uncond_model_name == 'unigram':
+            test_epoch = None
         else:
-            test_epoch = None 
+            test_epoch = int(open(uncond_model_dir/'saved-epoch.txt').read())
 
-        uncond_ppl = np.exp(uncond.uncond_entr.mean())
-        uncond_ppl_by_comm = uncond.groupby('community').uncond_entr.mean().apply(np.exp)
+        uncond['entr_per_word'] = uncond.uncond_entr / uncond.length
+        uncond_ppl = np.exp(uncond.entr_per_word.mean())
+        uncond_ppl_by_comm = uncond.groupby('community').entr_per_word.mean().apply(np.exp)
         uncond_ppl_by_comm.name = uncond_model_name
 
 
@@ -76,29 +76,30 @@ if __name__ == '__main__':
             # load conditioned NLLs (including off-community conditioning)
             df = pd.read_csv(model_dir/'nll.csv')
 
-            # repalce community indexes with names
-            if not uncond_model_name == 'unigram':
-                df['community'] = df['community'].apply(lambda x:comms[x])
-                test_epoch = int(open(model_dir/'saved-epoch.txt').read())
+            if uncond_model_name == 'unigram':
+                test_epoch = None
             else:
-                test_epoch = None 
+                test_epoch = int(open(model_dir/'saved-epoch.txt').read())
 
             keys = ['community', 'example_id']
-            df = pd.merge(df, uncond, left_on=keys, right_on=keys)
+            df = pd.merge(df, uncond.drop('length', axis=1), 
+                    left_on=keys, right_on=keys, validate='one_to_one')
 
-            if not os.path.exists(model_dir/'confusion.csv'):
-                # compute the community confusion matrix 
-                confusion = pd.DataFrame(compute_confusion(df),
-                        index=pd.Index(comms, name='community'), columns=comms)
-                confusion.to_csv(model_dir/'confusion.csv')
+
+            # if not os.path.exists(model_dir/'confusion.csv'):
+            # compute LMCC probabilities 
+            lmcc = pd.DataFrame(lmcc_probs(df))
+                    # index=pd.Index(comms, name='community'), columns=comms)
+            lmcc.to_csv(model_dir/'lmcc_probs.csv', index=False)
+            lmcc_confusion(lmcc).to_csv(model_dir/'confusion.csv')
 
             # locate PPL for the "true" condition (the community the message was from)
-            df['true_cond_entr'] = df.apply(lambda x: x[x['community']], axis=1)
-            ppl = np.exp(df.true_cond_entr.mean())
-
-            ppl_by_comm = df.groupby('community').true_cond_entr.mean().apply(np.exp)
+            df['true_cond_entr_per_word'] = df.apply(lambda x: x[x['community']], axis=1) / df.length
+            ppl = np.exp(df.true_cond_entr_per_word.mean())
+            ppl_by_comm = df.groupby('community').true_cond_entr_per_word.mean().apply(np.exp)
             ppl_by_comm.name = model_name
             results_comm_ppl.append(ppl_by_comm)
+
 
             results_agg_ppl.append({
                     'model': model_name,

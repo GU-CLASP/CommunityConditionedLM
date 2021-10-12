@@ -49,9 +49,18 @@ def cross_entropy(p, q):
     sum_ = 0
     for word in p:
         if not word in q:
-            return -np.inf
+            return np.inf
         else:
             sum_ += p[word] * np.log(q[word])
+    return -sum_
+
+def cross_entropy_message(m, q):
+    sum_ = 0
+    for word in m:
+        if not word in q:
+            return np.inf
+        else:
+            sum_ += np.log(q[word])
     return -sum_
 
 def word_freq_in_message(m):
@@ -75,12 +84,12 @@ with open(cond_file, 'w') as f_cond, open(ucond_file, 'w') as f_ucond:
             print(f'{i}/{len(test_data)}', end='\r')
         m = [w if w in vocab else '<unk>' for w in ex.text]
         message_len = len(m)
-        m_word_freq = word_freq_in_message(m)
+        # m_word_freq = word_freq_in_message(m)
         row = {'community': ex.community, 'example_id': ex.example_id, 'length': message_len}
-        row['nll'] = cross_entropy(m_word_freq, unigram_freqs['<comm_totals>']) 
+        row['nll'] = cross_entropy_message(m, unigram_freqs['<comm_totals>']) 
         out = writer_ucond.writerow(row)
         del row['nll']
         for c in comms:
-            row[c] = cross_entropy(m_word_freq, unigram_freqs[c]) 
+            row[c] = cross_entropy_message(m, unigram_freqs[c]) 
         out = writer_cond.writerow(row)
 
