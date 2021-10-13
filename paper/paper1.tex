@@ -458,7 +458,12 @@ embeddings obtained from the CCLMs correlate with the community-member
 relationship on Reddit.
 
 To this end, we compare the CCLM-learned community
-embedding with the community embedding created by \citet{Kumar2018},
+embeddings\footnote{
+  In this section, we only consider the embeddings from 
+  the \emph{best} (highest informaiton gain) CCLM from each architecture family; 
+  that is, the LSTM with $l_c=1$ and the Transformer with $l_c=0$, however we
+  observed similar results for other values of $l_c$.}
+with the community embedding created by \citet{Kumar2018},
 which were generated using using a negative-sampling optimization
 algorithm, with the message author-community co-occurrence matrix as ground
 truth, using data from January 2014 to April 2017.
@@ -475,9 +480,116 @@ contents of messages, not authorship data.
 \subsection{Comparing embeddings: anecdotal evidence}
 \label{sec:storytelling}
 
-To get a handle on the relationship between the linguistic and social embeddigs
+\begin{figure*}[ht]
+\begin{tikzpicture}
+  \begin{groupplot}[group style={
+      group size=2 by 1,
+      horizontal sep=1cm,
+    },
+    height=5cm,width=8cm,
+    axis x line*=bottom, axis y line*=left,x axis line style={opacity=0},
+    ymin=-0.35, ymax=1.00,
+    xtick=data,
+    xticklabel style={align=left, anchor=east, rotate=60},
+    minor tick length=1ex,
+    ]
+    \nextgroupplot[ybar,
+      bar width=0.25cm,
+      xticklabels from table={floats/low_soc_high_ling.csv}{comms-label},
+      ylabel={cosine similarity},
+    ]
+    \addplot[draw=violet,fill=violet!10] table [y=lstm-sim] {floats/low_soc_high_ling.csv};
+    \addplot[draw=teal,fill=teal!10] table [y=transformer-sim] {floats/low_soc_high_ling.csv};
+    \addplot[draw=red,fill=red!10] table [y=social-sim] {floats/low_soc_high_ling.csv};
+    \nextgroupplot[ybar,
+      bar width=0.25cm,
+      xticklabels from table={floats/low_ling_high_soc.csv}{comms-label},
+      legend style={font=\tiny,at={(1,1)},anchor=south east}, legend columns=3
+    ]
+    \addplot[draw=violet,fill=violet!10] table [y=lstm-sim] {floats/low_ling_high_soc.csv};
+    \addplot[draw=teal,fill=teal!10] table [y=transformer-sim] {floats/low_ling_high_soc.csv};
+    \addplot[draw=red,fill=red!10] table [y=social-sim] {floats/low_ling_high_soc.csv};
+    \legend{LSTM, Transformer, Social}
+  \end{groupplot}
+\end{tikzpicture}
+\caption{
+  Communities with high linguistic similarity but low social similarity (left) and \textit{vice versa} (right). 
+  Linguistic similarity is measured with the embeddings from the best LSTM ($l_c=1$) and Transformer ($l_c=0$)
+  models and social similarity is measured with the embedding from \citet{Kumar2018}.
+}
+\label{fig:embedding-differences-examples}
+\end{figure*}
+
+Let us call \(L\) the matrix of (normed) linguistic embeddings and
+\(S\) the matrix of (normed) social embeddings. Thus \(L_i\) and
+\(S_i\) are the linguistic and social embeddings for community \(i\).
+
+A straightforward, but ultimately flawed, way to measure 
+how similar the two spaces are is to
+consider each pair of communities \((i,j)\), and compute the
+correlation between the cosine similarities of both embeddings. That
+is, compute the Pearson correlation factor of the data set:
+\[C = \{(x = L_i · L_j, y = S_i · S_j) \text {~for~} i,j ∈ [1,510]\}\] % BN: changed \C to C. Definition for \C may be missing 
+
+Indeed, $C$ shows positive correlation for both the LSTM ($r=0.438$)
+and transformer ($r=0.452$) linguistic embeddings.\footnote{
+  By comparison, the correlation between the two linguistic embeddings is \num{0.759}.}
+The correlations are significant with $p<0.001$ in all cases;
+however, we note that the number of pairs grows with the square
+of the number of communities (with 510 communities, we have 129795)
+pairs), meaning that standard statistical tests on Pearson correlation will
+assure us of statistical significance in all
+but the weakest of correlations. A further flaw is that the data points in 
+\(C\) are \emph{not} distributed independently---far from it since each data point is generated 
+from \num{2} of \num{510} independent variables. We consider this last flaw fatal, 
+and take a different approach for computing the correlation between community
+embeddings (\cref{sec:statistical-evidence}).
+
+We can, however, use cosine similarity to find pairs of communities
+that are similar in one embedding but different in the other. 
+This gives us a way of characterizing the differences between the two kinds of
+community representation.
+The examples shown in \cref{fig:embedding-differences-examples} were selected by taking the \num{5} 
+most linguistically similar (in the LSTM embedding) pairs of communities that had below median social similarity 
+(and \textit{vice versa}).\footnote{
+Median similarity among pairs of communities was \num{0.177} for the social embedding and
+\num{0.010} and \num{0.012} for the LSTM and transformer linguistic embeddings, respectively.}
+
+As one would expect, it seems that the communities with similar linguistic embeddings
+but dissimilar social embeddings (\cref{fig:embedding-differences-examples}, left) share a similar
+topic, mode of interaction, or language variety, but for various reasons, may attract a quite
+different set of members.
+For example, \subreddit{hiphopheads} and \subreddit{Monstercat} are both topically related to music,
+but the music genres are different, and the later has a more geographically local focus (Monstercat is an 
+independent electronic music label based in Vancouver).
+While both \subreddit{MLPLounge} and \subreddit{CasualConversation} are oriented towards casual general-topic conversation,
+the former is geared towards members of a niche internet sub-culture. % adult fans of the television show My Little Pony. There are other subreddits (mentioned in r/MLPLounge's "about") that are for on-topic discussion of MLP
+Both \subreddit{rocketbeans} and \subreddit{de} are primarily German-language subreddits, but the former is comprised of 
+fans of a computer gaming-related YouTube channel, while the later is more general-interest. 
+
+Differences at the other end of the spectrum (\cref{fig:embedding-differences-examples}, right)
+are somewhat harder to interpret.
+It is mostly easy to see why these communities would have different linguistic embeddings---%
+in all cases the topics are quite different.
+The reason they have similar social embeddings is less obvious,
+but we can discern some trends in how the communities are premised.
+The \subreddit{progresspics} and \subreddit{TalesFromRetail} are premised, in part,
+on seeking support from other people with similar experiences;
+\subreddit{legaladvice}, \subreddit{Cooking}, and \subreddit{loseit}
+all have a knowledge-sharing component to them;
+\subreddit{running} and \subreddit{Coffee} are hobby-focused;
+and \subreddit{self} (often) and \subreddit{askscince} (by premise) are
+places people ask and answer questions.
+It may be that there are different patterns in the \emph{social function}
+that people attribute to this particular social media website---%
+people who use Reddit in one way are more likely
+to belong to communities that are premised on the same kind of social function,
+even if the topics (and indeed language) of those communities are quite different.
+Testing this hypothesis would require a more focused study design and 
+ideally consider communities from multiple social networks (online or otherwise).
 
 \subsection{Comparing embeddings: statistical evidence}
+\label{sec:statistical-evidence}
 
 The anecdotal evidence suggests that for some communities, proximity
 in linguistic patterns do match social proximity… and for others it
@@ -487,36 +599,11 @@ systematic approach thanks to which we can quantify the correlation
 between social proximity and linguistic proximity, and measure its
 statistical significance.
 
-Let us call \(L\) the matrix of (normed) linguistic embeddings and
-\(S\) the matrix of (normed) social embeddings. Thus \(L_i\) and
-\(S_i\) are the linguistic and social embeddings for community \(i\).
-%
-A straightforward, but ultimately flawed, generalization of the
-methodology used to collect data in \cref{sec:storytelling} is to
-consider each pair of communities \((i,j)\), and compute the
-correlation between the cosine similarities of both embeddings. That
-is, compute the Pearson correlation factor of the data set:
-
-\[C = \{(x = L_i · L_j, y = S_i · S_j) \text {~for~} i,j ∈ [1,512]\}\] % BN: changed \C to C. Definition for \C may be missing 
-
-One could then use a standard statistical test to verify to obtain a
-p-value for the correlation [TODO: what do we get?].  The flaw of
-this methodology is that the number of pairs grows with the square
-of the number of communities. With 510 communities, we have 129795
-pairs, and standard statistical tests on Pearson correlation will
-assure that we have a statistically significant correlation in all
-but the weakest correlation. A further flaw is that the distribution of data points
-of \(C\) are \emph{not} independent. Far from it, the are generated
-from 1/510 independent variables. We consider this last flaw fatal, and take the following
-approach instead.
-
-
 % Explain the problem (idea: comparing cosine similarities --> too much data, again)
 
-Instead of comparing embedding pairs, we will compare embeddings
-community by community.
-
-At this stage, one might naively think that it would suffice to
+Instead of comparing embedding pairs, as in \cref{sec:storytelling}, 
+we will compare embeddings community by community.
+A naive approach would be to 
 calculate the distance between two embeddings index-wise, which is
 equal to the Frobenius distance between \(L\) and \(S\):
 
@@ -527,7 +614,7 @@ The problem with this approach is that even if several dimensions of
 \emph{representation}. That is, applying a simple rotation (orthogonal
 transformation) on either matrix widely changes the \(||L-S||_F\)
 correlation metric. Another way to consider the same problem is that,
-applying such a rotation does not change the cosine similarities
+applying such a rotation does \emph{not} change the cosine similarities
 considered in the previous section.
 
 To make the metric independent of the representation (up to orthogonal
@@ -538,8 +625,9 @@ transformations), we compute the \emph{minimum} distance between
 \[d(L,S) = \mathsf{argmin}_\Omega ||ΩL-S||_F\]
 
 Here, the orthogonal matrix \(Ω\) gives a map from linguistic embeddings to social embeddings.
-The problem of computing \(d(L,S)\) is known as the orthogonal Procrustes problem~\citep{Gower2004}. The
-solution is
+The problem of computing \(d(L,S)\) is known as the orthogonal Procrustes problem~\citep{Gower2004}.\footnote{
+This approach has also been used to compare word embeddings across representations \citep[e.g.,][]{Hamilton2016}.}
+The solution is
 \[d(L,S) = n - \mathsf {Tr} (Σ)\] where the matrix \(Σ\) is obtained by the singular value
 decomposition (SVD) \(U^TΣV = LS^T\). Additionally the vectors of \(U\) and \(V\) give
 the directions of correlation respectively of \(L\) and \(S\). That is, each
@@ -602,7 +690,7 @@ of how much and in what way they differ (see~\cref{fig:pca-aligned}).
     Correlation between these directions is given by $\sigma_0 = 53.4$ and $\sigma_1 = 35.6$.
     Colors are assigned by k-means clustering of the social embedding. 
     This figure is reproduced in the supplementary materials with a legend that helps 
-    characterise the clusters.
+    to characterise the clusters.
   }
   \label{fig:pca-aligned}
 \end{figure*}

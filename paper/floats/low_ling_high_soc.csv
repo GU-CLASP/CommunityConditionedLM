@@ -1,0 +1,6 @@
+i	lstm-sim	transformer-sim	social-sim	comms-label
+0	-0.1726	-0.0010	 0.8354	\subreddit{progresspics}\\\subreddit{TalesFromRetail}
+1	-0.0368	-0.0924	 0.7951	\subreddit{legaladvice}\\\subreddit{Cooking}
+2	-0.2220	-0.2561	 0.7900	\subreddit{loseit}\\\subreddit{legaladvice}
+3	-0.0543	 0.0090	 0.7891	\subreddit{running}\\\subreddit{Coffee}
+4	-0.2125	-0.3103	 0.7780	\subreddit{self}\\\subreddit{askscience}

@@ -1,0 +1,6 @@
+i	lstm-sim	transformer-sim	social-sim	comms-label
+0	 0.9062	 0.9159	 0.0668	\subreddit{rocketbeans}\\\subreddit{de}
+1	 0.8693	 0.8458	 0.1092	\subreddit{hiphopheads}\\\subreddit{Monstercat}
+2	 0.8021	 0.8868	 0.0955	\subreddit{exmormon}\\\subreddit{Catholicism}
+3	 0.7833	 0.6669	 0.1331	\subreddit{MLPLounge}\\\subreddit{CasualConversation}
+4	 0.7740	 0.7760	 0.0770	\subreddit{battlefield\_4}\\\subreddit{ApocalypseRising}
