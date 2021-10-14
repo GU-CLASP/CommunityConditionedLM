@@ -477,7 +477,7 @@ way on which user is the author of any given message: we only use the
 contents of messages, not authorship data.
 %
 
-\subsection{Comparing embeddings: anecdotal evidence}
+\subsection{Comparing embeddings: cosine similarities}
 \label{sec:storytelling}
 
 \begin{figure*}[ht]
@@ -520,76 +520,103 @@ contents of messages, not authorship data.
 \label{fig:embedding-differences-examples}
 \end{figure*}
 
-Let us call \(L\) the matrix of (normed) linguistic embeddings and
-\(S\) the matrix of (normed) social embeddings. Thus \(L_i\) and
-\(S_i\) are the linguistic and social embeddings for community \(i\).
+A difficulty is that the social embeddings and linguistic embeddings
+range over completely unrelated spaces, so one cannot use the usual
+cosine similarity metric \emph{across} this boundary. One can,
+however, use cosine similarity between \emph{pairs} of communities,
+and verify the similarities correlated between linguistic to social
+embeddings.  This gives us a way of characterizing the differences
+between the two kinds of community representation. To get a more
+concrete sense of what this method yields, we first survey some of the
+most salient community pairs.
 
-A straightforward, but ultimately flawed, way to measure 
-how similar the two spaces are is to
-consider each pair of communities \((i,j)\), and compute the
-correlation between the cosine similarities of both embeddings. That
-is, compute the Pearson correlation factor of the data set:
-\[C = \{(x = L_i · L_j, y = S_i · S_j) \text {~for~} i,j ∈ [1,510]\}\] % BN: changed \C to C. Definition for \C may be missing 
+\todo{insert some examples with very high correlation}
 
-Indeed, $C$ shows positive correlation for both the LSTM ($r=0.438$)
-and transformer ($r=0.452$) linguistic embeddings.\footnote{
-  By comparison, the correlation between the two linguistic embeddings is \num{0.759}.}
-The correlations are significant with $p<0.001$ in all cases;
-however, we note that the number of pairs grows with the square
-of the number of communities (with 510 communities, we have 129795)
-pairs), meaning that standard statistical tests on Pearson correlation will
-assure us of statistical significance in all
-but the weakest of correlations. A further flaw is that the data points in 
-\(C\) are \emph{not} distributed independently---far from it since each data point is generated 
-from \num{2} of \num{510} independent variables. We consider this last flaw fatal, 
-and take a different approach for computing the correlation between community
-embeddings (\cref{sec:statistical-evidence}).
+The examples shown in \cref{fig:embedding-differences-examples} were
+selected by taking the \num{5} most linguistically similar (in the
+LSTM embedding) pairs of communities that had below median social
+similarity (and \textit{vice versa}).\footnote{ Median similarity
+  among pairs of communities was \num{0.177} for the social embedding
+  and \num{0.010} and \num{0.012} for the LSTM and transformer
+  linguistic embeddings, respectively.}
 
-We can, however, use cosine similarity to find pairs of communities
-that are similar in one embedding but different in the other. 
-This gives us a way of characterizing the differences between the two kinds of
-community representation.
-The examples shown in \cref{fig:embedding-differences-examples} were selected by taking the \num{5} 
-most linguistically similar (in the LSTM embedding) pairs of communities that had below median social similarity 
-(and \textit{vice versa}).\footnote{
-Median similarity among pairs of communities was \num{0.177} for the social embedding and
-\num{0.010} and \num{0.012} for the LSTM and transformer linguistic embeddings, respectively.}
+As one would expect, it seems that the communities with similar
+linguistic embeddings but dissimilar social embeddings
+(\cref{fig:embedding-differences-examples}, left) share a similar
+topic, mode of interaction, or language variety, but for various
+reasons, may attract a quite different set of members.  For example,
+\subreddit{hiphopheads} and \subreddit{Monstercat} are both topically
+related to music, but the music genres are different, and the later
+has a more geographically local focus (Monstercat is an independent
+electronic music label based in Vancouver).  While both
+\subreddit{MLPLounge} and \subreddit{CasualConversation} are oriented
+towards casual general-topic conversation, the former is geared
+towards members of a niche internet
+sub-culture. % adult fans of the television show My Little Pony. There are other subreddits (mentioned in r/MLPLounge's "about") that are for on-topic discussion of MLP
+Both \subreddit{rocketbeans} and \subreddit{de} are primarily
+German-language subreddits, but the former is comprised of fans of a
+computer gaming-related YouTube channel, while the later is more
+general-interest.
 
-As one would expect, it seems that the communities with similar linguistic embeddings
-but dissimilar social embeddings (\cref{fig:embedding-differences-examples}, left) share a similar
-topic, mode of interaction, or language variety, but for various reasons, may attract a quite
-different set of members.
-For example, \subreddit{hiphopheads} and \subreddit{Monstercat} are both topically related to music,
-but the music genres are different, and the later has a more geographically local focus (Monstercat is an 
-independent electronic music label based in Vancouver).
-While both \subreddit{MLPLounge} and \subreddit{CasualConversation} are oriented towards casual general-topic conversation,
-the former is geared towards members of a niche internet sub-culture. % adult fans of the television show My Little Pony. There are other subreddits (mentioned in r/MLPLounge's "about") that are for on-topic discussion of MLP
-Both \subreddit{rocketbeans} and \subreddit{de} are primarily German-language subreddits, but the former is comprised of 
-fans of a computer gaming-related YouTube channel, while the later is more general-interest. 
+Differences at the other end of the spectrum
+(\cref{fig:embedding-differences-examples}, right) are somewhat harder
+to interpret.  It is mostly easy to see why these communities would
+have different linguistic embeddings---%
+in all cases the topics are quite different.  The reason they have
+similar social embeddings is less obvious, but we can discern some
+trends in how the communities are premised.  The
+\subreddit{progresspics} and \subreddit{TalesFromRetail} are premised,
+in part, on seeking support from other people with similar
+experiences; \subreddit{legaladvice}, \subreddit{Cooking}, and
+\subreddit{loseit} all have a knowledge-sharing component to them;
+\subreddit{running} and \subreddit{Coffee} are hobby-focused; and
+\subreddit{self} (often) and \subreddit{askscience} (by premise) are
+places people ask and answer questions.  It may be that there are
+different patterns in the \emph{social function} that people attribute
+to this particular social media website---%
+people who use Reddit in one way are more likely to belong to
+communities that are premised on the same kind of social function,
+even if the topics (and indeed language) of those communities are
+quite different.  Testing this hypothesis would require a more focused
+study design and ideally consider communities from multiple social
+networks (online or otherwise).
 
-Differences at the other end of the spectrum (\cref{fig:embedding-differences-examples}, right)
-are somewhat harder to interpret.
-It is mostly easy to see why these communities would have different linguistic embeddings---%
-in all cases the topics are quite different.
-The reason they have similar social embeddings is less obvious,
-but we can discern some trends in how the communities are premised.
-The \subreddit{progresspics} and \subreddit{TalesFromRetail} are premised, in part,
-on seeking support from other people with similar experiences;
-\subreddit{legaladvice}, \subreddit{Cooking}, and \subreddit{loseit}
-all have a knowledge-sharing component to them;
-\subreddit{running} and \subreddit{Coffee} are hobby-focused;
-and \subreddit{self} (often) and \subreddit{askscince} (by premise) are
-places people ask and answer questions.
-It may be that there are different patterns in the \emph{social function}
-that people attribute to this particular social media website---%
-people who use Reddit in one way are more likely
-to belong to communities that are premised on the same kind of social function,
-even if the topics (and indeed language) of those communities are quite different.
-Testing this hypothesis would require a more focused study design and 
-ideally consider communities from multiple social networks (online or otherwise).
+We simultaneously have examples of high correlation between social and
+linguistic embeddings, but also of low correlation. This is
+essentially anecdotal evidence: we must resort to statistical tools to
+extract the general trends.
+A straightforward, but ultimately flawed,
+way to measure how similar the two spaces are is to consider each pair
+of communities \((i,j)\), and compute the correlation between the
+cosine similarities of both embeddings.
 
-\subsection{Comparing embeddings: statistical evidence}
+That is, we can compute the Pearson correlation factor of the data set:
+\[C = \{(x = L_i · L_j, y = S_i · S_j) \text {~for~} i,j ∈
+  [1,510]\}\] % BN: changed \C to C. Definition for \C may be missing
+where \(L_i\) and \(S_i\) are the linguistic and social embeddings for
+community \(i\).  (Thus \(L\) is the matrix of (normed) linguistic
+embeddings and \(S\) the matrix of (normed) social embeddings.)
+
+The analysis shows positive correlation for both the LSTM ($r=0.438$)
+and transformer ($r=0.452$) linguistic embeddings.\footnote{ By
+  comparison, the correlation between the two linguistic embeddings is
+  \num{0.759}.}  The correlations are significant with $p<0.001$ in
+all cases.  However, we note that the number of pairs grows with the
+square of the number of communities (with 510 communities, we have
+129795) pairs), meaning that standard statistical tests on Pearson
+correlation will assure us of statistical significance in all but the
+weakest of correlations. A further flaw is that the data points in
+\(C\) are \emph{not} distributed independently---far from it in fact,
+since each data point is generated from \num{2} of \num{510}
+independent variables. We consider this last flaw fatal, and take a
+different approach for computing the correlation between community
+embeddings in the next section.
+
+
+\subsection{Comparing embeddings: procrustes method}
 \label{sec:statistical-evidence}
+
+
 
 The anecdotal evidence suggests that for some communities, proximity
 in linguistic patterns do match social proximity… and for others it
