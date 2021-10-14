@@ -810,37 +810,15 @@ modeled in an unsupervised way.
 \section{Discussion and Conclusion}\label{sec:discussion-conclusion}
 
 
-% \jp{I propose that most of the following analysis should be spread between the relevant sections, and only have a tiny summary here + future work.}
-
-% To sum up our findings, 
-% we observed that various communities exhibit widely varying levels of
-% linguistic complexity \ref{hyp:varying-complexity}. For the best model architecture,
-% perplexity per-word ranges from less than \num{4} to more than \num{93} 
-% (but with only 25\% of communities under 63).
-
-% With indiscernibility, values are distributed evenly over the whole possible
-% range (1 to 510). We find that CCLMs can be used to recognise certain
-% communities based on latent Bayesian classification
-% \ref{hyp:LMCC-works}, but not all.  In general, we observe that the least
-% discernible communities all have a very conversational, general-interest
-% premise. We cannot rule out that these more generic
-% communities exhibit distinctive linguistic patterns, but none of our
-% CCLMs are able to discern them. In contrast, the distinctive patterns
-% of narrow-topic communities are just as recognizable by all our LSTM
-% and Transformer models.
-
-% We find a mild correlation (\cref{tab:ind-corrs}) between the
-% perplexity of the CCLM and the indiscernibility of the corresponding
-% community \ref{hyp:rich-harder-to-identify}, with factors ranging from
-% 0.06 to 0.23. However, The trend is more clear when considering the
-% correlation with information gain and indiscernibility (correlation
-% from 0.39 to 0.46). So this means that, when trying to identify a
-% community, it is not its absolute perplexity that matters, but rather
-% the difference in perplexity with the baseline.
+To sum up our findings, we have defined community-conditioned language
+models (CCLMs). These models are generally able to attune to
+community-specific language, as witnessed by the information gain that
+they exhibit over a baseline, non-conditioned models.
 
 We find that the layer at which the community embedding is taken into
-account ($l_c$) has a weak effect on the perplexity of the CCLM
-\ref{hyp:layer-effect}
+account ($l_c$) has a weak effect on the information gain and the
+perplexity of the CCLMs.
+
 For LSTM models, the perplexity per word, averaged over
 messages from all communities, was between \num{66.01} and \num{66.35}
 (with \num{68.74} for the unconditioned model).
@@ -871,14 +849,51 @@ It would be interesting to investigate these differences in future work, since i
 could reveal differences in the kind of linguistic variation the
 different model architectures capture.
 
-The representation of communities built by CCLM exhibits a clear
-correlation with user co-occurrence patterns
-\ref{hyp:extra-linguistic-correlation}. A natural
-question that may arise is how much this correlation can be explained by
-user-specific linguistic patterns. We plan to control for this variable
-in future work, for example by building author-conditioned language
-models and testing if community vector embeddings can be determined by
-the set of the vector embeddings of its members.
+
+% we observed that various communities exhibit widely varying levels of
+% linguistic complexity \ref{hyp:varying-complexity}. For the best model architecture,
+% perplexity per-word ranges from less than \num{4} to more than \num{93} 
+% (but with only 25\% of communities under 63).
+
+% With indiscernibility, values are distributed evenly over the whole possible
+% range (1 to 510). We find that CCLMs can be used to recognise certain
+% communities based on latent Bayesian classification
+% \ref{hyp:LMCC-works}, but not all.  In general, we observe that the least
+% discernible communities all have a very conversational, general-interest
+% premise. We cannot rule out that these more generic
+% communities exhibit distinctive linguistic patterns, but none of our
+% CCLMs are able to discern them. In contrast, the distinctive patterns
+% of narrow-topic communities are just as recognizable by all our LSTM
+% and Transformer models.
+
+% We find a mild correlation (\cref{tab:ind-corrs}) between the
+% perplexity of the CCLM and the indiscernibility of the corresponding
+% community \ref{hyp:rich-harder-to-identify}, with factors ranging from
+% 0.06 to 0.23. However, The trend is more clear when considering the
+% correlation with information gain and indiscernibility (correlation
+% from 0.39 to 0.46). So this means that, when trying to identify a
+% community, it is not its absolute perplexity that matters, but rather
+% the difference in perplexity with the baseline.
+
+Our main result is that the the representation of communities built by
+CCLM has a positive correlation with user co-occurrence patterns.
+Even though kind of correlation is a core hypothesis of
+socio-linguistics,\todo{what was this effect called?}  we believe that
+this study is the first to test it on topic-organised
+communities. Furthermore, it appears that our method (correlating
+linguistic embeddings and social embeddings) is novel. Indeed, even
+though the procrustes method has been used to correlate two sets of
+linguistic emdeddings \emph{for the same model}, we find no evidence
+of the method being applied to embeddings for widely different models,
+as we have done.
+
+
+% A natural
+% question that may arise is how much this correlation can be explained by
+% user-specific linguistic patterns. We plan to control for this variable
+% in future work, for example by building author-conditioned language
+% models and testing if community vector embeddings can be determined by
+% the set of the vector embeddings of its members.
 
 \bibliography{paper}
 \bibliographystyle{acl_natbib}
