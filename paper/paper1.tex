@@ -7,7 +7,7 @@
 \documentclass[11pt]{article}
 
 % Remove the "review" option to generate the final version.
-\usepackage[review]{emnlp2021}
+\usepackage[review]{acl}
 
 % Standard package includes
 \usepackage{times}
@@ -26,6 +26,12 @@
 % but it will improve the layout of the manuscript,
 % and will typically save some space.
 \usepackage{microtype}
+
+% If the title and author information does not fit in the area allocated, uncomment the following
+%
+%\setlength\titlebox{<dim>}
+%
+% and set <dim> to something 5cm or larger.
 
 \input{preamble}
 
@@ -59,6 +65,7 @@
   \texttt{email@domain} \\}
 
 \date{}
+
 
 
 \begin{document}
@@ -101,16 +108,17 @@
 
 
 \section{Introduction}
+
 Linguistic communication requires that speakers share
 certain linguistic conventions, such as syntactic
 structure, word meanings, and patterns of interaction.
 Speakers assume that these conventions are \emph{common ground} among
 their interlocutors, based on joint membership in a community
-\cite{Stalnaker2002, Clark1996}.  Such a community may be of any size,
-from the very small, like members of a particular friend group, to the
-very large, like speakers of English.  Because it is the source of
-linguistic convention, the \emph{speech community} \citep{Gumperz1972}
-is an important concept in the study of linguistic variation.
+\cite{Stalnaker2002, Clark1996}.  Such a \emph{speech community} \citep{Gumperz1972} 
+may be of any size, from the very small, like members of a particular friend group, 
+to the very large, like speakers of English; however as \citet{Eckert1992}
+point out, it is \emph{communities of practice}---defined by mutual social engagement
+in some common activity---that are the primary locus of linguistic variation.
 
 % Not only is linguistic variation an object of inquiry in its own
 % right, but it is also important to consider it in the development of
@@ -305,7 +313,7 @@ In the following, we use $M$ to refer to messages in the
 combined test set, and $M_j$ for the partition of the test set originating from 
 community $c_j$.
 
-\paragraph{Perplexity}
+\subsection{Perplexity}\label{sec:ppl}
 
 For a given model, let $H(m)$ be the model's cross-entropy loss,
 averaged over tokens in $m$.
@@ -313,7 +321,7 @@ We define the perplexity on a set of messages, $M$,
 to be the exponential of the model's average cross-entropy loss:
 \[\Ppl_M = e^{\avg_{m\in M} H(m)}\]
 
-\paragraph{CCLM Information Gain}
+\paragraph{CCLM Information Gain}\label{sec:ig}
 
 We also consider the average information gain per token of the CCLM over its baseline
 un-conditioned counterpart, with the same sequence encoder architecture.
@@ -435,10 +443,9 @@ For other communities $\IG_{M_j}$ is much higher, meaning that the CCLM performs
 \end{tikzpicture}
 \caption{
   Average model performance by community.
-  The boxes indicate upper and lower quartiles, while the whiskers are placed at the upper and lower maximum, with communities more than $1.5\times IQR$ (inter-quartile range) above the upper quartile considered outliers (represented as dots). The three most extreme outliers are excluded from this view (see \cref{fig:ppl-info-gain}).
+The boxes indicate upper and lower quartiles, while the whiskers are placed at the upper and lower maximum, with communities more than $1.5\times IQR$ (inter-quartile range) above the upper quartile considered outliers (represented as dots). The three most extreme outliers are excluded from this view.}.% \cref{fig:ppl-info-gain}).
    %See also table 1 in the supplementary materials % not very useful for this actually since we sort by indisc and it's only one model anyway.
    %for a tabular version of these results with community names.
-}
 \label{fig:comm-stratified-box}
 \end{figure}
 
@@ -462,7 +469,7 @@ relationship on Reddit.
 To this end, we compare the CCLM-learned community
 embeddings\footnote{
   In this section, we only consider the embeddings from 
-  the \emph{best} (highest informaiton gain) CCLM from each architecture family; 
+  the \emph{best} (highest information gain) CCLM from each architecture family; 
   that is, the LSTM with $l_c=1$ and the Transformer with $l_c=0$, however we
   observed similar results for other values of $l_c$.}
 with the community embedding created by \citet{Kumar2018},
@@ -482,44 +489,54 @@ contents of messages, not authorship data.
 \subsection{Comparing embeddings: cosine similarities}
 \label{sec:storytelling}
 
+\newcommand{\pairwisecossimbarplot}[1]{
+    \nextgroupplot[ybar=0pt,
+      bar width=0.25cm,
+      xticklabels from table={floats/#1}{comms-label},
+      enlargelimits=0.15,
+      yticklabels={,,}
+    ]
+    \addplot[draw=violet,fill=violet!10] table [y=lstm-sim] {floats/#1};
+    \addplot[draw=teal,fill=teal!10] table [y=transformer-sim] {floats/#1};
+    \addplot[draw=red,fill=red!10] table [y=social-sim] {floats/#1};
+}
+
 \begin{figure*}[ht]
 \begin{tikzpicture}
   \begin{groupplot}[group style={
-      group size=2 by 1,
-      horizontal sep=1cm,
+      group size=3 by 1,
+      horizontal sep=0.5cm,
     },
-    height=5cm,width=8cm,
+    height=5cm,width=0.39\textwidth,
     axis x line*=bottom, axis y line*=left,x axis line style={opacity=0},
     ymin=-0.35, ymax=1.00,
     xtick=data,
-    xticklabel style={align=left, anchor=east, rotate=60},
+    xticklabel style={align=right, anchor=east, rotate=60},
     minor tick length=1ex,
+    legend style={font=\tiny,at={(1,1)},anchor=north east}, legend columns=3
     ]
-    \nextgroupplot[ybar,
+    \nextgroupplot[ybar=0pt,
       bar width=0.25cm,
-      xticklabels from table={floats/low_soc_high_ling.csv}{comms-label},
-      ylabel={cosine similarity},
+      xticklabels from table={floats/high_ling_high_soc.csv}{comms-label},
+      enlargelimits=0.15,
     ]
-    \addplot[draw=violet,fill=violet!10] table [y=lstm-sim] {floats/low_soc_high_ling.csv};
-    \addplot[draw=teal,fill=teal!10] table [y=transformer-sim] {floats/low_soc_high_ling.csv};
-    \addplot[draw=red,fill=red!10] table [y=social-sim] {floats/low_soc_high_ling.csv};
-    \nextgroupplot[ybar,
-      bar width=0.25cm,
-      xticklabels from table={floats/low_ling_high_soc.csv}{comms-label},
-      legend style={font=\tiny,at={(1,1)},anchor=south east}, legend columns=3
-    ]
-    \addplot[draw=violet,fill=violet!10] table [y=lstm-sim] {floats/low_ling_high_soc.csv};
-    \addplot[draw=teal,fill=teal!10] table [y=transformer-sim] {floats/low_ling_high_soc.csv};
-    \addplot[draw=red,fill=red!10] table [y=social-sim] {floats/low_ling_high_soc.csv};
+    \addplot[draw=violet,fill=violet!10] table [y=lstm-sim] {floats/high_ling_high_soc.csv};
+    \addplot[draw=teal,fill=teal!10] table [y=transformer-sim] {floats/high_ling_high_soc.csv};
+    \addplot[draw=red,fill=red!10] table [y=social-sim] {floats/high_ling_high_soc.csv};
+    \pairwisecossimbarplot{high_ling_low_soc.csv}{}{}
+    \pairwisecossimbarplot{low_ling_high_soc.csv}{}{}
     \legend{LSTM, Transformer, Social}
   \end{groupplot}
 \end{tikzpicture}
 \caption{
-  Communities with high linguistic similarity but low social similarity (left) and \textit{vice versa} (right). 
-  Linguistic similarity is measured with the embeddings from the best LSTM ($l_c=1$) and Transformer ($l_c=0$)
-  models and social similarity is measured with the embedding from \citet{Kumar2018}.
-}
-\label{fig:embedding-differences-examples}
+  Cosine similarity between pairs of communities, computed for vectors from the
+  best CCLM embeddings (LSTM: $l_c=1$, Transformer: $l_c=0$)
+  and the social embedding from \citet{Kumar2018}.
+  Communities with high linguistic and social similarity \textbf{(left)},
+  high linguistic but low social similarity \textbf{(center)}, and
+  low linguistic but high social similarity \textbf{(right)}.
+  See text for details on the selection criteria.}
+  \label{fig:embedding-differences-examples}
 \end{figure*}
 
 A difficulty is that the social embeddings and linguistic embeddings
@@ -532,30 +549,56 @@ between the two kinds of community representation. To get a more
 concrete sense of what this method yields, we first survey some of the
 most salient community pairs.
 
-\todo{insert some examples with very high correlation}
-
-The examples shown in \cref{fig:embedding-differences-examples} were
-selected by taking the \num{5} most linguistically similar (in the
-LSTM embedding) pairs of communities that had below median social
-similarity (and \textit{vice versa}).\footnote{ Median similarity
+We consider communities from three different selection criteria: 
+Those with high social \emph{and} linguistic similarity 
+(where the sum of the two is highest),
+those with high linguistic and low social similarity
+(where social similarity is below the median and linguistic similarity is highest), and
+those with low linguistic and high social similarity
+(where linguistic similarity is below these median and linguistic similarity is highest).\footnote{We use the LSTM ($l_c=1$) community vectors for these purposes, 
+  but results attain with the best transformer model.}\footnote{Median similarity
   among pairs of communities was \num{0.177} for the social embedding
   and \num{0.010} and \num{0.012} for the LSTM and transformer
   linguistic embeddings, respectively.}
+We do not consider pairs of communities that are different in both ways,
+since these don't offer much in the way of understanding the respective embeddings.
 
-As one would expect, it seems that the communities with similar
-linguistic embeddings but dissimilar social embeddings
-(\cref{fig:embedding-differences-examples}, left) share a similar
-topic, mode of interaction, or language variety, but for various
-reasons, may attract a quite different set of members.  For example,
+Unsuprisingly, the first category (\cref{fig:embedding-differences-examples}, left)yields communities that are qualitatively very similar. 
+The \subreddit{SSBPM} and \subreddit{darksouls} communities are focused
+around discussion of a particular videogame, and are paired
+with communities that discuss a variation of the same game.
+The \subreddit{amiugly} and \subreddit{Rateme} communities are both 
+forums where the posts are selfies and the comments are mostly 
+comments on the person's appearance.
+The two communities paired with \subreddit{reddevils} are 
+likewise comprised of fans of a particular English football club.
+That the three football club communities are so closely related points
+to an important point about the social embedding: Because of the way
+it was trained, it does not have to be the case that communities with
+a similar representation have a high overlap in their membership,
+but rather that the \emph{kinds of members} of the first community
+are also the \emph{kinds of members} who would belong to the second, 
+based on their membership in other communities.
+
+Communities with similar linguistic embeddings but dissimilar social embeddings
+(\cref{fig:embedding-differences-examples}, left) tend to share a similar
+topic, mode of interaction, or language variety, but 
+in all cases we looked at, there is some reason to expect that
+they might nevertheless attract different members.
+For example,
 \subreddit{hiphopheads} and \subreddit{Monstercat} are both topically
 related to music, but the music genres are different, and the later
 has a more geographically local focus (Monstercat is an independent
-electronic music label based in Vancouver).  While both
-\subreddit{MLPLounge} and \subreddit{CasualConversation} are oriented
-towards casual general-topic conversation, the former is geared
-towards members of a niche internet
-sub-culture. % adult fans of the television show My Little Pony. There are other subreddits (mentioned in r/MLPLounge's "about") that are for on-topic discussion of MLP
-Both \subreddit{rocketbeans} and \subreddit{de} are primarily
+electronic music label based in Vancouver). The interactions in both 
+\subreddit{MLPLounge} and \subreddit{CasualConversation} 
+could be described as casual conversation, the former is intended specifically for
+members of a niche internet sub-culture. % adult fans of the children's television show My Little Pony. There are other subreddits (mentioned in r/MLPLounge's "about") that are for on-topic discussion of MLP
+The \subreddit{exmormon} and \subreddit{Catholicism} communities discuss
+the Mormon and Catholic churches, although their members have different 
+relationships towards those organizations---the former is intended for
+former members of the church, whereas the later is geared towards practicing
+Catholics.
+Finally, both \subreddit{rocketbeans} and \subreddit{de} are primarily
 German-language subreddits, but the former is comprised of fans of a
 computer gaming-related YouTube channel, while the later is more
 general-interest.
@@ -655,7 +698,7 @@ transformations), we compute the \emph{minimum} distance between
 
 Here, the orthogonal matrix \(Ω\) gives a map from linguistic embeddings to social embeddings.
 The problem of computing \(d(L,S)\) is known as the orthogonal Procrustes problem~\citep{Gower2004}.\footnote{
-This approach has also been used to compare word embeddings across representations \citep[e.g.,][]{Hamilton2016}.}
+This approach has also been used to compare word embeddings across representations \citep[e.g.,][]{Hamilton2016a}.}
 The solution is
 \[d(L,S) = n - \mathsf {Tr} (Σ)\] where the matrix \(Σ\) is obtained by the singular value
 decomposition (SVD) \(U^TΣV = LS^T\). Additionally the vectors of \(U\) and \(V\) give
@@ -809,6 +852,20 @@ the structure (and variation) in the construction of sequences.  It
 does further suggest, however, that community-level variation can be
 modeled in an unsupervised way.
 
+There are several recent studies that aim to measure \emph{linguistic distinctiveness}
+at the level of speech community, which is an possible interpretation of 
+of community-stratified information gain the CCLM over its unconditioned counterpart \cref{sec:ig}. Whereas the metrics in previous work are based on lexical frequency
+\citep{OConnor2010,Zhang2018,Lucy2021}, CCLM information gain is capable of capturing 
+distinctiveness at other levels of linguistic analysis. Further work is needed to
+investigate exactly what kinds of variation are captured.
+
+%- DelTredici 2017
+%- Einstein 2010
+%- Baman et al 2014/2014a
+%- Martin 2017 (community2vec), Kumar 2018
+%- Huang 2014
+%- Lucy 2021
+
 \section{Discussion and Conclusion}\label{sec:discussion-conclusion}
 
 
@@ -877,15 +934,16 @@ different model architectures capture.
 % community, it is not its absolute perplexity that matters, but rather
 % the difference in perplexity with the baseline.
 
-Our main result is that the the representation of communities built by
+Our main result is that the representation of communities built by
 CCLM has a positive correlation with user co-occurrence patterns.
-Even though kind of correlation is a core hypothesis of
-socio-linguistics,\todo{what was this effect called?}  we believe that
-this study is the first to test it on topic-organised
-communities. Furthermore, it appears that our method (correlating
+Even though such \emph{homophilic} correlation is a core hypothesis of 
+sociolinguistics (see \citet{Kovacs2020}, for example), 
+we believe that this study is the first to test it at 
+the level of communities of practice using computatial methods.
+Furthermore, it appears that our method (correlating
 linguistic embeddings and social embeddings) is novel. Indeed, even
 though the procrustes method has been used to correlate two sets of
-linguistic emdeddings \emph{for the same model}, we find no evidence
+linguistic embeddings \emph{for the same model}, we find no evidence
 of the method being applied to embeddings for widely different models,
 as we have done.
 
@@ -897,8 +955,37 @@ as we have done.
 % models and testing if community vector embeddings can be determined by
 % the set of the vector embeddings of its members.
 
+\section{Ethical considerations}
+
+Our work uses pulicly available data from Reddit,
+collected from the API made available by \citet{Baumgartner2020}.
+Additional considerations apply, however 
+(see \citet{Gliniecka2021} for discussion). Reddit users are not,
+in general, aware of the possiiblity that their data will be used 
+for research purposes, and deleted posts can persist in archive formats.
+We are not reseasing any data or trained models as part of this study,
+since the data is publicly available and our models have low enough
+computational requirements as to pose little barrier for erplication.
+
+In the qualitative discussion offered in \cref{sec:storytelling},
+our comparative characterization of the topic, mode of interaction, 
+and language varieties
+used in the pairs of communities were formed by reading comments from the data our 
+language models were trained on. This included Googling words and phrases that 
+were unfamiliar. 
+Where we make claims about the how the community is ``premised'' or what kinds of 
+members it is ``geared towards'' or ``intended for'', these are based on the text
+of the sidebar on the community's Reddit page.
+While we believe this methodology, aggregated over many pairs of communities, 
+is appropriate for making a qualitative comparison
+of the community features encoded by different representations, 
+to make conclusions about \emph{particular} communities based on such a cursory and
+subjective analysis would be dubious and potentially harmful.
+
 \bibliography{paper}
 \bibliographystyle{acl_natbib}
+
+\include{appendix}
 
 \end{document}
 
