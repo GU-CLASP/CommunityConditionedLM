@@ -1,6 +1,6 @@
 inputs := $(wildcard reddit_tokenized/*.txt)
 
-all: $(inputs:reddit_tokenized/%.txt=reddit_splits/%.train.txt) $(inputs:reddit_tokenized/%.txt=reddit_splits/%.test.txt) $(inputs:reddit_tokenized/%.txt=reddit_splits/%.dev.txt)
+all: $(inputs:reddit_tokenized/%.txt=reddit_splits/%.train.txt) $(inputs:reddit_tokenized/%.txt=reddit_splits/%.test.txt) $(inputs:reddit_tokenized/%.txt=reddit_splits/%.dev.txt) $(inputs:reddit_tokenized/%.txt=unigram_counts/%.count.txt)
 	echo "done"
 
 reddit_shuff/%.txt: reddit_tokenized/%.txt
@@ -20,6 +20,10 @@ reddit_splits/%.dev.txt: reddit_splits/%.test-dev.txt
 
 reddit_splits/%.test.txt: reddit_splits/%.test-dev.txt
 	tail -n 1000 $< > $@
+
+unigram_counts/%.count.txt: reddit_splits/%.train.txt
+	mkdir -p unigram_counts
+	cat $< | tr ' ' '\n' | sort | uniq -c > $@
 
 clean: 
 	rm -rf reddit_shuff
