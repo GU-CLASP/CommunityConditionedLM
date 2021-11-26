@@ -9,7 +9,7 @@ let
            packageOverrides = python-self: python-super: {
              torchtext = python-self.callPackage /opt/nix/torchtext-0.4.0.nix { };
            };};})
-      ((import /opt/nix/nvidia-450.66.nix  ) pkgs_source )  # fix version of nvidia drivers
+      ((import /opt/nix/nvidia-current.nix  ) pkgs_source )  # fix version of nvidia drivers
       (self: super: {
           cudatoolkit = super.cudatoolkit_10; # fix version of cuda
           cudnn = super.cudnn_cudatoolkit_10;})
