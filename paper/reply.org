@@ -33,7 +33,7 @@
     reviewers.
 
 - On downstream tasks
-  - We consider our socio-lingustic to be an applicative task. It is
+  - We consider our socio-lingustic task be applicative and relevant. It is
     our impression that relevance to downstream tasks is not relevant
     for this piece of work.
 
