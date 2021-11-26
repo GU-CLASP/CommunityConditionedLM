@@ -1,0 +1,58 @@
+
+- On Novelty
+  - We are surprised that some reviewers insist that our paper should
+    improve the state of the art in general language modelling. This is
+    not the case: we are interested in the capability of well-known
+    models to capture socially meaningful relationships between communities.
+
+    We have clarified this point in the introduction. (JP) We believe that
+    the references given in the related work section also made this
+    clear.
+    
+  - On the use of LSTM (JP)
+    - We use it because it works better than the Transformer
+    - We believe that this is because the Transformer requires larger
+      dataset to reach peak performance. It also needs more parameters to do so.
+    We have proposed this explanation in the text.
+
+- On methodology (Bill)
+  - The discussion of particular subreddits is meant as an
+    illustration to help understanding the analyses. This discussion
+    is necessarily anectodal, but not constitutive of our results. We
+    have clarified this in the text.
+    
+  - The inclusion of non-english subreddits seems to be a sticking point
+    for some reviewers. We modified the paper to point out the following:
+     - There is no clear distiniction between English/Non-English subreddits.
+       Indeed, English is used in the "non-english" subreddits and most of the
+       "english" subreddits have posts in other languages as well.
+     - The amount of non-english data is marginal (about 2% of the data)
+       and does not qualitatively influence the results.
+    If reviewers feel very strongly about it, we can exclude communities
+    with >X% non-english text, for a value of X provided by the
+    reviewers.
+
+- On downstream tasks
+  - We consider our socio-lingustic to be an applicative task. It is
+    our impression that relevance to downstream tasks is not relevant
+    for this piece of work.
+
+- On clarity of conclusion:
+  - Reviewer iNiE states: "you should try to provide some quantitative
+    analysis, to base your qualitative observations on." This is
+    exactly what we do (TODO: line numbers)
+  - The reviewer also complains about the clarity of a 4-sigma
+    deviation from null hypothesis. This is a very standard and in our
+    opinion clear way to express the significance of results. We'd
+    like to request a more clear description of the suspected
+    unclarity here.
+
+- On availability the dataset: (Bill)
+  - For ethical and legal reasons (GDPR, reddit terms of service) we
+    cannot provide a curated subset of messages from Reddit.
+  - We will provide the code to extract the data upon publication
+    (clarified in the text)
+  - We will provide the produced community embeddings (clarified in
+    the text).
+
+- We have made sure that a native thoroughly proofread our paper.
