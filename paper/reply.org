@@ -10,7 +10,7 @@
     believe that the references given in the related work section also
     made this clear.
     
-  - On the use of LSTM (JP)
+  - On the use of LSTM (JP: DONE)
     - We use it because it works better than the Transformer
     - We believe that this is because the Transformer requires larger
       dataset to reach peak performance. It also needs more parameters to do so.

@@ -214,7 +214,16 @@ communities (\cref{sec:embedding-analysis}).
 
 We experiment with two kinds of model architecture: a simple
 unidirectional LSTM \citep{Hochreiter1997} and a Transformer
-\citep{Vaswani2017}.  In either case, the model is organised as a
+\citep{Vaswani2017}. Even though the transformer is dominating LSTM in
+the state of the art, it achieves its dominance partly thanks to the
+availability of very large data sets \jp{Bill: can you add relevant citations?
+  (BERT, GPT3, etc.)},
+which are not available to us.\footnote{Fine-tuning existing models
+  falls outside our methodology, which consists in fundamentally
+  changing the structure of the network by concatenating
+  community embeddings.}. 
+
+In either case, the model is organised as a
 standard $3$-layer neural sequence encoder, where the input for the
 $t$th timestep of the $n+1$st layer is the $t$th hidden state of the 
 $n$th layer.
@@ -357,6 +366,15 @@ It performs similarly to the model that only integrates the community informatio
 after all all the transformer layers ($l_c=3$),
 but the two middle-layer models actually perform worse than the unconditioned model
 (with $\IG_M < 1$).
+
+We additionally observe that the best LSTM model achieves better
+performance than the best Transformer model. This partly contradicts
+the fact that Transformer-based models are the ones used in
+state-of-the art models for mainstream tasks. We propose that the
+cause is that we are training all models from scratch on a relatively
+small dataset. In this situation, the relatively smaller number of
+parameters of the LSTM means that it can generalise better than the
+Transformer.
 
 \begin{table}
   \small
