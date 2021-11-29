@@ -162,13 +162,19 @@ speech communities, rather than macro-social categories.
 % speech patterns than others.  Here we want to quantify this
 % phenomenon.
 
-For this purpose, we introduce (\cref{sec:cclm}) various 
-Community-Conditioned Language Models (CCLMs for short),
-which learn embedding of the communites they are conditioned on 
-as a side effect of their language modeling objective.
-We test which architectures best make use of the community information and 
-how and in what ways the resulting embeddings are
-correlated with a social network-based representation of communities(\cref{sec:embedding-analysis}).
+For this purpose, we introduce (\cref{sec:cclm}) various
+Community-Conditioned Language Models (CCLMs for short). These models
+are conditioned on a vector representation (or embedding), which
+varies for each community. Hence, they learn \emph{community
+  embeddings}.  Even though we test which architectures best make use
+of the community information, our purpose is not to improve models in
+terms of perplexity. Rather we want to extract the best set of
+community embeddings and test in what ways the resulting embeddings
+predict the social structure of subreddits. For this purpose, we test
+the correlation with a social network-based representation of
+communities (\cref{sec:embedding-analysis}).
+
+
 % , and model the degree to which a
 % given message $m$ is acceptable in a given community $c$, by estimating the probability
 % \(P(m \mid c)\).

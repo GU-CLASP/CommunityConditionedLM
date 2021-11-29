@@ -1,13 +1,14 @@
 
 - On Novelty
   - We are surprised that some reviewers insist that our paper should
-    improve the state of the art in general language modelling. This is
-    not the case: we are interested in the capability of well-known
-    models to capture socially meaningful relationships between communities.
+    improve the state of the art in general language modelling. It
+    does not, but this is not where are contribution lies. Instead we
+    are interested in the capability of well-known models to capture
+    socially meaningful relationships between communities.
 
-    We have clarified this point in the introduction. (JP) We believe that
-    the references given in the related work section also made this
-    clear.
+    We have clarified this point in the introduction. (JP: DONE) We
+    believe that the references given in the related work section also
+    made this clear.
     
   - On the use of LSTM (JP)
     - We use it because it works better than the Transformer
