@@ -16,13 +16,13 @@
       dataset to reach peak performance. It also needs more parameters to do so.
     We have proposed this explanation in the text.
 
-- On methodology (Bill)
-  - The discussion of particular subreddits is meant as an
+- On methodology 
+  - (JP: DONE) The discussion of particular subreddits is meant as an
     illustration to help understanding the analyses. This discussion
     is necessarily anectodal, but not constitutive of our results. We
     have clarified this in the text.
     
-  - The inclusion of non-english subreddits seems to be a sticking point
+  - (Bill) The inclusion of non-english subreddits seems to be a sticking point
     for some reviewers. We modified the paper to point out the following:
      - There is no clear distiniction between English/Non-English subreddits.
        Indeed, English is used in the "non-english" subreddits and most of the
