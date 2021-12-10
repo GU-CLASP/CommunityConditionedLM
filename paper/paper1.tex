@@ -162,13 +162,19 @@ speech communities, rather than macro-social categories.
 % speech patterns than others.  Here we want to quantify this
 % phenomenon.
 
-For this purpose, we introduce (\cref{sec:cclm}) various 
-Community-Conditioned Language Models (CCLMs for short),
-which learn embedding of the communites they are conditioned on 
-as a side effect of their language modeling objective.
-We test which architectures best make use of the community information and 
-how and in what ways the resulting embeddings are
-correlated with a social network-based representation of communities(\cref{sec:embedding-analysis}).
+For this purpose, we introduce (\cref{sec:cclm}) various
+Community-Conditioned Language Models (CCLMs for short). These models
+are conditioned on a vector representation (or embedding), which
+varies for each community. Hence, they learn \emph{community
+  embeddings}.  Even though we test which architectures best make use
+of the community information, our purpose is not to improve models in
+terms of perplexity. Rather we want to extract the best set of
+community embeddings and test in what ways the resulting embeddings
+predict the social structure of subreddits. For this purpose, we test
+the correlation with a social network-based representation of
+communities (\cref{sec:embedding-analysis}).
+
+
 % , and model the degree to which a
 % given message $m$ is acceptable in a given community $c$, by estimating the probability
 % \(P(m \mid c)\).
@@ -208,7 +214,16 @@ correlated with a social network-based representation of communities(\cref{sec:e
 
 We experiment with two kinds of model architecture: a simple
 unidirectional LSTM \citep{Hochreiter1997} and a Transformer
-\citep{Vaswani2017}.  In either case, the model is organised as a
+\citep{Vaswani2017}. Even though the transformer is dominating LSTM in
+the state of the art, it achieves its dominance partly thanks to the
+availability of very large data sets \jp{Bill: can you add relevant citations?
+  (BERT, GPT3, etc.)},
+which are not available to us.\footnote{Fine-tuning existing models
+  falls outside our methodology, which consists in fundamentally
+  changing the structure of the network by concatenating
+  community embeddings.}. 
+
+In either case, the model is organised as a
 standard $3$-layer neural sequence encoder, where the input for the
 $t$th timestep of the $n+1$st layer is the $t$th hidden state of the 
 $n$th layer.
@@ -254,13 +269,24 @@ Our dataset includes messages from \num{510} subreddits,
 the set of all subreddits 
 with at least \num{5000} messages per month for each month
 of the year 2015.
-Most but not all of these communities (with about 10 exceptions) 
-are mostly English-language.
 Each community corpus consist of \num{42000} randomly selected messages from the year 2015.
 For each community, we reserve \num{1000} messages each for development and testing,
 leaving a total of \num{20.4}M messages for training.
 
-Messages were preprocessed as follows. 
+Most of the communities are predominantly English-language.
+Using \texttt{langid.py} \citep{Lui2012}, we observe that a majority of the overall
+comments are classified as English (94.6\% of the test set) and a majority 
+of communities (396 of 510) have more than 95\% of their comments classified as English.\footnote{
+  We performed the classification an the message level and took the language to which \texttt{langid.py}
+  assigned the highest probablity, but it is worth noting that code switching is very common on social media.}
+However, it would be difficult to set a principled cutoff since 12 communities have between
+50 and 95\% of their comments classified as English. 
+Furthermore, relying on a tool like \texttt{langid.py} may bias 
+the dataset away from communities that use a non-hegemonic variety of English.
+For that reason and becasue the amount of non-English data is realtively small,
+we do not attempt to filter the data. 
+
+Messages were preprocessed as follows:
 We excluded the content of block quotes, code blocks, and tables.
 We removed any markup (formatting) commands from the remaining text, 
 extracting only rendered text.
@@ -351,6 +377,15 @@ It performs similarly to the model that only integrates the community informatio
 after all all the transformer layers ($l_c=3$),
 but the two middle-layer models actually perform worse than the unconditioned model
 (with $\IG_M < 1$).
+
+We additionally observe that the best LSTM model achieves better
+performance than the best Transformer model. This partly contradicts
+the fact that Transformer-based models are the ones used in
+state-of-the art models for mainstream tasks. We propose that the
+cause is that we are training all models from scratch on a relatively
+small dataset. In this situation, the relatively smaller number of
+parameters of the LSTM means that it can generalise better than the
+Transformer.
 
 \begin{table}
   \small
@@ -547,7 +582,10 @@ and verify the similarities correlated between linguistic to social
 embeddings.  This gives us a way of characterizing the differences
 between the two kinds of community representation. To get a more
 concrete sense of what this method yields, we first survey some of the
-most salient community pairs.
+most salient community pairs. We stress that this survey is not meant
+as a rigorous statistical analysis, as we shall see. Rather it is
+meant to give a flavor of discrepancies and similarities existing
+between linguistic and social relations.
 
 We consider communities from three different selection criteria: 
 Those with high social \emph{and} linguistic similarity 
