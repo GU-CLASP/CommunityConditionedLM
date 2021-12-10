@@ -1,6 +1,6 @@
 inputs := $(wildcard reddit_tokenized/*.txt)
 
-all: $(inputs:reddit_tokenized/%.txt=reddit_splits/%.train.txt) $(inputs:reddit_tokenized/%.txt=reddit_splits/%.test.txt) $(inputs:reddit_tokenized/%.txt=reddit_splits/%.dev.txt) $(inputs:reddit_tokenized/%.txt=unigram_counts/%.count.txt)
+all: $(inputs:reddit_tokenized/%.txt=reddit_splits/%.train.txt) $(inputs:reddit_tokenized/%.txt=reddit_splits/%.test.txt) $(inputs:reddit_tokenized/%.txt=reddit_splits/%.dev.txt) $(inputs:reddit_tokenized/%.txt=unigram_counts/%.count.txt) $(inputs:reddit_tokenized/%.txt=langid/%.test.txt) 
 	echo "done"
 
 reddit_shuff/%.txt: reddit_tokenized/%.txt
@@ -24,6 +24,13 @@ reddit_splits/%.test.txt: reddit_splits/%.test-dev.txt
 unigram_counts/%.count.txt: reddit_splits/%.train.txt
 	mkdir -p unigram_counts
 	cat $< | tr ' ' '\n' | sort | uniq -c > $@
+
+langid.py:
+	wget https://raw.githubusercontent.com/saffsd/langid.py/master/langid/langid.py
+
+langid/%.test.txt: langid.py reddit_splits/%.test.txt
+	mkdir -p langid
+	python3 -m langid --line < $< > $@
 
 clean: 
 	rm -rf reddit_shuff
