@@ -269,13 +269,24 @@ Our dataset includes messages from \num{510} subreddits,
 the set of all subreddits 
 with at least \num{5000} messages per month for each month
 of the year 2015.
-Most but not all of these communities (with about 10 exceptions) 
-are mostly English-language.
 Each community corpus consist of \num{42000} randomly selected messages from the year 2015.
 For each community, we reserve \num{1000} messages each for development and testing,
 leaving a total of \num{20.4}M messages for training.
 
-Messages were preprocessed as follows. 
+Most of the communities are predominantly English-language.
+Using \texttt{langid.py} \citep{Lui2012}, we observe that a majority of the overall
+comments are classified as English (94.6\% of the test set) and a majority 
+of communities (396 of 510) have more than 95\% of their comments classified as English.\footnote{
+  We performed the classification an the message level and took the language to which \texttt{langid.py}
+  assigned the highest probablity, but it is worth noting that code switching is very common on social media.}
+However, it would be difficult to set a principled cutoff since 12 communities have between
+50 and 95\% of their comments classified as English. 
+Furthermore, relying on a tool like \texttt{langid.py} may bias 
+the dataset away from communities that use a non-hegemonic variety of English.
+For that reason and becasue the amount of non-English data is realtively small,
+we do not attempt to filter the data. 
+
+Messages were preprocessed as follows:
 We excluded the content of block quotes, code blocks, and tables.
 We removed any markup (formatting) commands from the remaining text, 
 extracting only rendered text.

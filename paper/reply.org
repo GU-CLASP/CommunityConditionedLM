@@ -22,16 +22,9 @@
     is necessarily anectodal, but not constitutive of our results. We
     have clarified this in the text.
     
-  - (Bill) The inclusion of non-english subreddits seems to be a sticking point
-    for some reviewers. We modified the paper to point out the following:
-     - There is no clear distiniction between English/Non-English subreddits.
-       Indeed, English is used in the "non-english" subreddits and most of the
-       "english" subreddits have posts in other languages as well.
-     - The amount of non-english data is marginal (about 2% of the data)
-       and does not qualitatively influence the results.
-    If reviewers feel very strongly about it, we can exclude communities
-    with >X% non-english text, for a value of X provided by the
-    reviewers.
+  -  We added statistics on language (English/non-English) and explained
+     our rationale for not attempting to filter the data by language.
+     (TODO: line numbers)
 
 - On downstream tasks
   - We consider our socio-lingustic task be applicative and relevant. It is
@@ -57,3 +50,12 @@
     the text).
 
 - We have made sure that a native thoroughly proofread our paper.
+
+- References to add: (Bill)
+  - Community identity and user engagement in a multi-community landscape 
+    (defines two notions of community distinctiveness: token type and
+    word sense based; relates to community membership features)
+  - Characterizing English Variation across Social Media Communities 
+    with BERT (2021 TACL paper)
+  - Computational Sociolinguistics: A Survey (add to introduction; make focus 
+    of our paper more clear in relation to this survey)
