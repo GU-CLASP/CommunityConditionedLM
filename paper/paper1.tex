@@ -276,8 +276,11 @@ leaving a total of \num{20.4}M messages for training.
 
 Using \texttt{langid.py} \citep{Lui2012}, we observe that a majority of the overall
 messages are classified as English (94.6\% of the test set) and X of \num{510} communities %TODO
-have more than half of their messages classified as English.\footnote{See \cref{sec:ethics} for futher
-  discussion.}
+have more than half of their messages classified as English.
+Given the small amount of non-English data, 
+we decided that the bias introduced by attempting to filter message
+by language outweighted the potential benefits of doing so.\footnote{
+  See \cref{sec:ethics} for futher discussion.}
 
 Messages were preprocessed as follows:
 We excluded the content of block quotes, code blocks, and tables and
@@ -1013,12 +1016,12 @@ posts will persist.
 
 The paper does not include any text that could be linked back to 
 personally identifiable information.
-We do release our trained community embeddings, but the dimensionality 
-is low enough that we believe it would be impossible to reproduce 
-personally identifiable information from them.
+We do release our trained community embeddings, but they have 
+low dimensionality and pose a low risk for exposing personally
+identifiable information.
 
 \paragraph{Language identification}
-As discussed in section \cref{sec:data}, we decided not to filter our data for non-English 
+As mentioned in section \cref{sec:data}, we decided not to filter our data for non-English 
 comments.
 Although our focus in this paper is intra-language variation, 
 language identification has the potential to introduce bias by reinforcing hegemonic
