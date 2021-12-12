@@ -13,7 +13,7 @@
   - On the use of LSTM (JP: DONE)
     - We use it because it works better than the Transformer
     - We believe that this is because the Transformer requires larger
-      dataset to reach peak performance. It also needs more parameters to do so.
+      dataset and more parameters to reach peak performance. 
     We have proposed this explanation in the text.
 
 - On methodology 
@@ -43,13 +43,14 @@
 
 - On availability the dataset: (Bill)
   - For ethical and legal reasons (GDPR, reddit terms of service) we
-    cannot provide a curated subset of messages from Reddit.
-  - We will provide the code to extract the data upon publication
+    cannot provide a curated subset of messages from Reddit, however
+    our submitted code includes scripts to extract the data from
+    pushshift.io, and will be made available upon publication
     (clarified in the text)
   - We will provide the produced community embeddings (clarified in
     the text).
 
-- We have made sure that a native thoroughly proofread our paper.
+- We have made sure to thoroughly proofread our paper.
 
 - References to add: (Bill)
   - Community identity and user engagement in a multi-community landscape 
