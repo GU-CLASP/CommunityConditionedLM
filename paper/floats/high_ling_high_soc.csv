@@ -1,0 +1,6 @@
+i	lstm-sim	transformer-sim	social-sim	comms-label
+0	 0.9623	 0.9586	 0.9718	\subreddit{SSBPM}\\\subreddit{SSBM}
+1	 0.9615	 0.9761	 0.9707	\subreddit{amiugly}\\\subreddit{Rateme}
+2	 0.9875	 0.9828	 0.9388	\subreddit{reddevils}\\\subreddit{chelseafc}
+3	 0.9564	 0.9703	 0.9577	\subreddit{darksouls}\\\subreddit{DarkSouls2}
+4	 0.9813	 0.9531	 0.9295	\subreddit{reddevils}\\\subreddit{Gunners}
