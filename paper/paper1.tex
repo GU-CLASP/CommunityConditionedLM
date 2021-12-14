@@ -315,7 +315,8 @@ We experimented with every possible value for $l_c$ in a three-layer model ($l_c
 
 We trained the models until the validation loss stopped decreasing for
 two epochs in a row, and used the weights from the epoch with the
-smallest validation loss for testing.  
+smallest validation loss for testing. 
+Each training epoch took approximately 1.5 hours of GPU time.
 
 %In general, transformer models
 %were trained for about half as long as the LSTM models (\cref{tab:model-results}, 
