@@ -25,10 +25,7 @@ unigram_counts/%.count.txt: reddit_splits/%.train.txt
 	mkdir -p unigram_counts
 	cat $< | tr ' ' '\n' | sort | uniq -c > $@
 
-langid.py:
-	wget https://raw.githubusercontent.com/saffsd/langid.py/master/langid/langid.py
-
-langid/%.test.txt: langid.py reddit_splits/%.test.txt
+langid/%.test.txt: reddit_splits/%.test.txt
 	mkdir -p langid
 	python3 -m langid --line < $< > $@
 
