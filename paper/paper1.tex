@@ -77,7 +77,7 @@
   across 510 online communities.
   We probe the community representations learned by the conditional language model
   and find that they are highly correlated with a social network-based 
-  representation that doesn't use any linguistic input.
+  representation that does not use any linguistic input.
 \end{abstract}
 
 
@@ -120,12 +120,6 @@ to the very large, like speakers of English; however as \citet{Eckert1992}
 point out, it is \emph{communities of practice}---defined by mutual social engagement
 in a common activity---that are the primary locus of linguistic variation.
 
-% Not only is linguistic variation an object of inquiry in its own
-% right, but it is also important to consider it in the development of
-% robust, equitable language technology.  Previous work has shown that
-% by taking demographic information into account, models can achieve
-% better performance on various standard NLP tasks
-% \citep{Hovy2015,Yang2017}. \jp{Move this to related work so we can get to the point quicker.}
 Variation is an important object of study in sociolinguistics,
 and is naturally suited for computational analysis \citep{Nguyen2016}.
 Most previous computational work on linguistic variation 
@@ -279,7 +273,7 @@ messages are classified as English (94.6\% of the test set) and X of \num{510} c
 have more than half of their messages classified as English.
 Given the small amount of non-English data, 
 we decided that the bias introduced by attempting to filter message
-by language outweighted the potential benefits of doing so.\footnote{
+by language outweighted the potential benefits.\footnote{
   See \cref{sec:ethics} for futher discussion.}
 
 Messages were preprocessed as follows:
@@ -420,7 +414,7 @@ where $M_j$ is the set of messages originating from community $c_j$
 We observe a lot of variation in baseline perplexity
 across communities, with $\Ppl_{M_j}$ ranging from \num{3.67} to
 \num{93.58} for the best conditional LSTM model 
-(\cref{fig:comm-stratified-box}; also see supplementary materials for perplexity by community). %TODO keep? 
+(\cref{fig:comm-stratified-box}; also see supplementary materials for perplexity by community). 
 The conditioned models also perform differently across different communities---%
 even among the best models, some communities have $\IG_{M_j} < 1$,
 meaning that the CCLM performs worse than the unconditioned baseline for 
@@ -589,7 +583,7 @@ meant to give a flavor of discrepancies and similarities existing
 between linguistic and social relations.
 
 We consider communities from three different selection criteria: 
-Those with high social \emph{and} linguistic similarity 
+Those with high linguistic \emph{and} social similarity 
 (where the sum of the two is highest),
 those with high linguistic and low social similarity
 (where social similarity is below the median and linguistic similarity is highest), and
@@ -612,7 +606,7 @@ comments on the person's appearance.
 The two communities paired with \subreddit{reddevils} are 
 likewise comprised of fans of a particular English football club.
 That the three football club communities are so closely related points
-to an important point about the social embedding: Because of the way
+to an important point about the social embedding: because of the way
 it was trained, it does not have to be the case that communities with
 a similar representation have a high overlap in membership,
 but rather that members from the first community look similar
@@ -652,7 +646,7 @@ trends in how the communities are premised.  The
 \subreddit{progresspics} and \subreddit{TalesFromRetail} are premised,
 in part, on seeking support from other people with similar
 experiences; \subreddit{legaladvice}, \subreddit{Cooking}, and
-\subreddit{loseit} all have a knowledge-sharing component to them;
+\subreddit{loseit} all involve sharing knowledge on a particular topic;
 \subreddit{running} and \subreddit{Coffee} are hobby-focused; and
 \subreddit{self} (often) and \subreddit{askscience} (by premise) are
 places people ask and answer questions.  It may be that there are
@@ -782,7 +776,7 @@ new community $k$, we can estimate its social embedding by \(ΩL_k\),
 and the cosine similarity with its true social embedding \(S_k\) is
 expected to be \(0.39\) = \((431.39 - 232.18) / 510\) --- accounting for
 over-fitting effects by taking the average distance rather than the
-maximum. % JP: TODO is the number from the table. this should probably be rewritten
+maximum. 
 In sum, it is clear that the CCLM embeddings predict some aspect the social-network embeddings--- but far from all of it.
 
 To finish, we also give a sense of \emph{how} the correlation is manifested overall, by
@@ -841,28 +835,6 @@ from the mean distance of our random embedding samples.} \label{tab:embedding-co
 %      - Concatenations ???
 
 
-%\begin{figure*}[t]
-%\begin{tikzpicture}
-  %\begin{groupplot}[
-    %group style={group size=2 by 1},
-    %yticklabels={,,}, xticklabels={,,},
-    %legend style={anchor=north, legend columns=1, font=\sffamily\tiny},
-  %]
-    %\nextgroupplot
-    %\commscatter{lstm-3-1-pca1}{lstm-3-1-pca2}
-    %\nextgroupplot
-    %\commscatter{transformer-3-3_pca1}{transformer-3-3_pca2}
-    %\legend{General interest,Videogames,Technology,Sports,Female-focused,Other}
-  %\end{groupplot}
-%\end{tikzpicture}
-%\caption{Plot of embeddings along the 2 principal dimensions of correlation between .... TODO of an LSTM (left, $c=1$) and transformer (right, $c=3$) model.
-%Color correspond the 5-means clustering of .... TODO}
-%\label{fig:comm-pca}
-%\end{figure*}
-
-
-
-
 \section{Related work}\label{sec:related-work}
 
 We have presented results using conditional neural language models
@@ -902,6 +874,12 @@ distinctiveness at multiple levels of linguistic analysis.
 However, further work is needed to
 investigate exactly what kinds of variation are captured.
 
+While the focus of the paper is theoretical,
+computational models of variation can also support 
+robust, equitable language technology.  Previous work has shown that
+speaker demographics can improve performance on standard NLP tasks
+\citep{Hovy2015,Yang2017}. %\jp{Move this to related work so we can get to the point quicker.} 
+
 %- DelTredici 2017
 %- Einstein 2010
 %- Baman et al 2014/2014a
@@ -915,10 +893,10 @@ investigate exactly what kinds of variation are captured.
 To sum up our findings, we have defined community-conditioned language
 models (CCLMs). These models are generally able to attune to
 community-specific language, as witnessed by the information gain that
-they exhibit over a baseline, non-conditioned models.
+they exhibit over baseline unconditioned models.
 
-We find that the layer at which the community embedding is taken into
-account ($l_c$) has a weak effect on the information gain and the
+We find that the layer depth of the community embedding 
+($l_c$) has a weak effect on the information gain and the
 perplexity of the CCLMs.
 
 For LSTM models, the perplexity per word, averaged over
@@ -929,7 +907,7 @@ but this seems to be mainly due to the poor performance of the models where
 the community embedding is inserted between transformer layers
 ($l_c=2$ and $3$ both test above the unconditioned transformer's 
 average perplexity of \num{79.13}).
-This could have something to do with the community embedding and linear layer
+This could be due to the community embedding and linear layers
 interrupting the delicate layer normalisation between transformer encoder layers.
 
 The pattern of information gain by community is similar across
@@ -993,7 +971,6 @@ linguistic embeddings \emph{for the same model}, we find no evidence
 of the method being applied to embeddings for widely different models,
 as we have done.
 
-
 % A natural
 % question that may arise is how much this correlation can be explained by
 % user-specific linguistic patterns. We plan to control for this variable
@@ -1026,14 +1003,15 @@ comments.
 Although our focus in this paper is intra-language variation, 
 language identification has the potential to introduce bias by reinforcing hegemonic
 language classes and the boundaries between them.
-In our case, filtering out messages classified as non-English would bias the 
-dataset away from non-standard and code-switched language varieties,
+In our case, filtering out messages classified as non-English would 
+introduce bias by disproportionately removing messages in
+non-standard and code-switched language varieties,
 which are of interest in the current work.
 
 Nevertheless, the representations learned by our model are (necessarily)
-relative to the set of communities we chose. 
+relative to the other communities in the dataset. 
 Thus the learned representations for non-English communities tend to be more similar to each other 
-than to other communities that use mostly English, even if their predominant languages are not the same.
+than to other communities that use mostly English, even if their predominant language is not the same.
 This would probably not be the case if the distribution of messages 
 was more varied across hegemonic language classes; our work cannot be used to conclude,
 for example, that there is more variation within English than between Dutch and German.
