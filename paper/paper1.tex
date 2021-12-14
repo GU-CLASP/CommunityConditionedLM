@@ -77,7 +77,7 @@
   across 510 online communities.
   We probe the community representations learned by the conditional language model
   and find that they are highly correlated with a social network-based 
-  representation that doesn't use any linguistic input.
+  representation that does not use any linguistic input.
 \end{abstract}
 
 
@@ -114,28 +114,23 @@ certain linguistic conventions, such as syntactic
 structure, word meanings, and patterns of interaction.
 Speakers assume that these conventions are \emph{common ground} among
 their interlocutors, based on joint membership in a community
-\cite{Stalnaker2002, Clark1996}.  Such a \emph{speech community} \citep{Gumperz1972} 
-may be of any size, from the very small, like members of a particular friend group, 
+\cite{Stalnaker2002, Clark1996}.  Such \emph{speech communities} \citep{Gumperz1972} 
+range in size from the very small, like members of a friend group, 
 to the very large, like speakers of English; however as \citet{Eckert1992}
 point out, it is \emph{communities of practice}---defined by mutual social engagement
-in some common activity---that are the primary locus of linguistic variation.
+in a common activity---that are the primary locus of linguistic variation.
 
-% Not only is linguistic variation an object of inquiry in its own
-% right, but it is also important to consider it in the development of
-% robust, equitable language technology.  Previous work has shown that
-% by taking demographic information into account, models can achieve
-% better performance on various standard NLP tasks
-% \citep{Hovy2015,Yang2017}. \jp{Move this to related work so we can get to the point quicker.}
+Variation is an important object of study in sociolinguistics,
+and is naturally suited for computational analysis \citep{Nguyen2016}.
 Most previous computational work on linguistic variation 
 has considered variation at the level of macro-social categories, such as gender
 \citep{Burger2011,Ciot2013,Bamman2014}, age \citep{Nguyen2013}, and
-geographic location \citep{Eisenstein2010,Bamman2014a}.
-Recent exceptions are \citet{DelTredici2017} who use a modified
+geographic location \citep{Eisenstein2010,Bamman2014a}.%
+\footnote{Recent exceptions are \citet{DelTredici2017} who use a modified
 skip-gram model to show that lexical semantic variation occurs even across 
 different communities organised around the same topic and 
 \citet{Lucy2021}, who use contextualised word representations to
-investigate community-level variation in word sense distributions.
-
+investigate community-level variation in word sense distributions.}
 In the present work, we investigate linguistic variation
 in online communities on the social media website Reddit. 
 In contrast to previous work, we investigate variation across 
@@ -166,10 +161,10 @@ For this purpose, we introduce (\cref{sec:cclm}) various
 Community-Conditioned Language Models (CCLMs for short). These models
 are conditioned on a vector representation (or embedding), which
 varies for each community. Hence, they learn \emph{community
-  embeddings}.  Even though we test which architectures best make use
+  embeddings}.  Although we test which architectures best make use
 of the community information, our purpose is not to improve models in
-terms of perplexity. Rather we want to extract the best set of
-community embeddings and test in what ways the resulting embeddings
+terms of perplexity, but rather we want to extract the best set of
+community embeddings and test how the resulting embeddings
 predict the social structure of subreddits. For this purpose, we test
 the correlation with a social network-based representation of
 communities (\cref{sec:embedding-analysis}).
@@ -214,14 +209,13 @@ communities (\cref{sec:embedding-analysis}).
 
 We experiment with two kinds of model architecture: a simple
 unidirectional LSTM \citep{Hochreiter1997} and a Transformer
-\citep{Vaswani2017}. Even though the transformer is dominating LSTM in
-the state of the art, it achieves its dominance partly thanks to the
-availability of very large data sets \jp{Bill: can you add relevant citations?
-  (BERT, GPT3, etc.)},
+\citep{Vaswani2017}. Although Transformer-based language models are considered
+state of the art, they achieve dominance partly thanks to the
+availability of very large data sets \citep[e.g.,][]{Devlin2019,Brown2020},
 which are not available to us.\footnote{Fine-tuning existing models
-  falls outside our methodology, which consists in fundamentally
-  changing the structure of the network by concatenating
-  community embeddings.}. 
+  is not compatible with our methodology, since we would fundamentally
+  change the structure of the network by concatenating
+  community embeddings.} 
 
 In either case, the model is organised as a
 standard $3$-layer neural sequence encoder, where the input for the
@@ -231,10 +225,10 @@ As usual, the input to the first layer, is a sequence of tokens,
 encoded with a trainable embedding layer over a pre-determined vocabulary.
 At the other end, word tokens are predicted using a softmax projection 
 layer. What we have described so far does not take community into account
-and as such we call them \emph{uncodnitioned models}, but the same
+and as such we call them \emph{unconditioned models}, but the same
 encoder architecture also forms the core of our conditioned models.
 
-In the conditional models, we add a \emph{community embedding} parameter.
+In the CCLMs, we add a \emph{community embedding} parameter.
 This parameter is concatenated (at each time step) with the hidden layer of the
 sequence encoder, at some layer $l_c \leq n$, and passed through a
 linear layer which projects the resulting vector back to the original
@@ -245,14 +239,14 @@ community embedding is concatenated with the token embedding.  For
 this reason, we set the hidden size of the sequence encoder and the
 size of the token embedding to be equal for all models.
 
-%TODO: Diagram of model?
 
-\subsection{Data sets}
+\subsection{Data sets}\label{sec:data}
 
 We investigate linguistic variation across various communities 
 from the social media website Reddit.\footnote{Comments were obtained
   from the archive at \url{https://pushshift.io/}.
-  \cite{Baumgartner2020}.}
+  \cite{Baumgartner2020}. Code for reproducing our dataset, as well as
+ our pre-trained community embeddings are available at URL.} %TODO ADD URL for camera ready
 %
 Reddit is divided into forums called \textit{subreddits}, 
 which are typically organised around a topic of interest. 
@@ -269,56 +263,51 @@ Our dataset includes messages from \num{510} subreddits,
 the set of all subreddits 
 with at least \num{5000} messages per month for each month
 of the year 2015.
-Each community corpus consist of \num{42000} randomly selected messages from the year 2015.
-For each community, we reserve \num{1000} messages each for development and testing,
+Ignoring empty and deleted comments, we randomly sampled
+\num{42000} messages from 2015 for each community.
+We reserved \num{1000} messages from each community for development and testing,
 leaving a total of \num{20.4}M messages for training.
 
-Most of the communities are predominantly English-language.
 Using \texttt{langid.py} \citep{Lui2012}, we observe that a majority of the overall
-comments are classified as English (94.6\% of the test set) and a majority 
-of communities (396 of 510) have more than 95\% of their comments classified as English.\footnote{
-  We performed the classification an the message level and took the language to which \texttt{langid.py}
-  assigned the highest probablity, but it is worth noting that code switching is very common on social media.}
-However, it would be difficult to set a principled cutoff since 12 communities have between
-50 and 95\% of their comments classified as English. 
-Furthermore, relying on a tool like \texttt{langid.py} may bias 
-the dataset away from communities that use a non-hegemonic variety of English.
-For that reason and becasue the amount of non-English data is realtively small,
-we do not attempt to filter the data. 
+messages are classified as English (94.6\% of the test set) and X of \num{510} communities %TODO
+have more than half of their messages classified as English.
+Given the small amount of non-English data, 
+we decided that the bias introduced by attempting to filter message
+by language outweighted the potential benefits.\footnote{
+  See \cref{sec:ethics} for futher discussion.}
 
 Messages were preprocessed as follows:
-We excluded the content of block quotes, code blocks, and tables.
-We removed any markup (formatting) commands from the remaining text, 
+We excluded the content of block quotes, code blocks, and tables and
+removed markup (formatting) commands, 
 extracting only rendered text.
-We tokenized the messages using the default English model for the SpaCy tokenizer 
+Messages were tokenized using the default English model for the SpaCy tokenizer 
 Version 2.2.3 \citep{Honnibal2017}.
 
 
 \subsection{Training scheme}
 
-We use a vocabulary size of \num{40000} tokens, including a special
-out-of-vocabulary token.  The vocabulary consists of the most frequent
-tokens across all communities.
+The models use a vocabulary of \num{40000} tokens (including a special
+out-of-vocabulary token), consisting of the most frequent tokens
+across all communities.
 
-For the LSTM architecture, we trained the models on a simple left-to-right language
-modeling task with cross-entropy loss.  Because
+We trained the models on a simple 
+auto-regressive language modeling task with cross-entropy loss.  Because
 the transformer operates on all tokens in the sequence at once, the
-language modeling was achieved by masking and incrementally un-masking
-input tokens in a left-to-right fashion (so we have an
-auto-regressive model).  We used the AdamW
+inputs to the model were masked and incrementally un-masked.
+We used the AdamW
 \citep{Loshchilov2019} optimisation algorithm, with an initial
 learning rate of \num{0.001}, with no extra control on the decay
 of learning rate.
 %
-We used a batch size of \num{256} and a maximum sequence length of
+The batch size was \num{256} and the maximum sequence length set to
 \num{64} tokens, truncating longer messages (16.8\% of messages were
 longer than \num{64} tokens).  During training, a dropout rate of
 $0.1$ was applied between encoder layers and after each linear layer.
 
-All experiments use models with \num{3} sequence encoder layers,
+All experiments use models with \num{3} encoder layers,
 each with hidden (and token embedding) size of \num{256}. 
 The transformer models had \num{8} attention heads per layer.\footnote{
-  This number of attention heads was chosen in part to give the LSTM and transformer
+  This number of attention heads was chosen to give the LSTM and transformer
   models a comparable number of parameters 
   (\num{22171203} and \num{21779523}, respectively).}
 The conditional models were given a community embedding with \num{16} dimensions. 
@@ -326,9 +315,11 @@ We experimented with every possible value for $l_c$ in a three-layer model ($l_c
 
 We trained the models until the validation loss stopped decreasing for
 two epochs in a row, and used the weights from the epoch with the
-smallest validation loss for testing.  In general, transformer models
-were trained for about half as long as the LSTM models (\cref{tab:model-results}, 
-test epoch).
+smallest validation loss for testing.  
+
+%In general, transformer models
+%were trained for about half as long as the LSTM models (\cref{tab:model-results}, 
+%test epoch).
 
 \section{CCLM Performance}
 
@@ -423,7 +414,7 @@ where $M_j$ is the set of messages originating from community $c_j$
 We observe a lot of variation in baseline perplexity
 across communities, with $\Ppl_{M_j}$ ranging from \num{3.67} to
 \num{93.58} for the best conditional LSTM model 
-(\cref{fig:comm-stratified-box}; also see supplementary materials for perplexity by community). %TODO keep? 
+(\cref{fig:comm-stratified-box}; also see supplementary materials for perplexity by community). 
 The conditioned models also perform differently across different communities---%
 even among the best models, some communities have $\IG_{M_j} < 1$,
 meaning that the CCLM performs worse than the unconditioned baseline for 
@@ -436,7 +427,7 @@ For other communities $\IG_{M_j}$ is much higher, meaning that the CCLM performs
   outliers. There are \subreddit{counting}, \subreddit{friendsafari}, and \subreddit{Fireteams}, 
   the later two of which are places where people coordinate to play video games
   together. The messages in these communites adhere to highly regular formats, 
-  which are presumably conventional to the communities.}
+  which are presumably conventional to the community.}
 %
 %The variation in information gain across communities is not 
 %related to perplexity, however (\cref{fig:ppl-info-gain}).
@@ -478,7 +469,7 @@ For other communities $\IG_{M_j}$ is much higher, meaning that the CCLM performs
 \end{tikzpicture}
 \caption{
   Average model performance by community.
-The boxes indicate upper and lower quartiles, while the whiskers are placed at the upper and lower maximum, with communities more than $1.5\times IQR$ (inter-quartile range) above the upper quartile considered outliers (represented as dots). The three most extreme outliers are excluded from this view.}.% \cref{fig:ppl-info-gain}).
+The boxes indicate upper and lower quartiles, while the whiskers are placed at the upper and lower maximum, with communities more than $1.5\times IQR$ (inter-quartile range) above the upper quartile considered outliers (represented as dots). The three most extreme outliers are excluded from this view.}% \cref{fig:ppl-info-gain}).
    %See also table 1 in the supplementary materials % not very useful for this actually since we sort by indisc and it's only one model anyway.
    %for a tabular version of these results with community names.
 \label{fig:comm-stratified-box}
@@ -489,17 +480,20 @@ tested, communities where conditioning has the least effect tend to be
 organised around more general interest topics, such as 
 \subreddit{relationships} and \subreddit{advice}, where the subject
 matter is relevant to a broad range of people.  Conditioning the model
-on community has the most benefit for narrower special-interest
+on community appears to have the most benefit for narrower special-interest
 subreddits, such as those organised around a certain videogame, sports
-team, or subculture.  This makes sense intuitively, since communities
-with more niche topics would tend to have more specialised vocabulary
-and other linguistic patterns.
+team, or subculture.  This supports the idea that communities of practice
+are the primary locus of linguistic variation.
+%makes sense intuitively, since communities
+%with more niche topics would tend to have more specialised vocabulary
+%and other linguistic patterns.
 
 \section{Comparison of CCLM community embeddings with a social network embedding}\label{sec:embedding-analysis}
 
-In this section we investigate whether (and how much) community
-embeddings obtained from the CCLMs correlate with the community-member
-relationship on Reddit.
+
+
+In this section we investigate the degree to which CCLM community
+embeddings correlate with the community-member relationship on Reddit.
 
 To this end, we compare the CCLM-learned community
 embeddings\footnote{
@@ -507,7 +501,8 @@ embeddings\footnote{
   the \emph{best} (highest information gain) CCLM from each architecture family; 
   that is, the LSTM with $l_c=1$ and the Transformer with $l_c=0$, however we
   observed similar results for other values of $l_c$.}
-with the community embedding created by \citet{Kumar2018},
+with the community embedding created by \citet{Kumar2018},\footnote{
+  Available at \url{https://snap.stanford.edu/data/web-RedditEmbeddings.html}}
 which were generated using using a negative-sampling optimization
 algorithm, with the message author-community co-occurrence matrix as ground
 truth, using data from January 2014 to April 2017.
@@ -588,7 +583,7 @@ meant to give a flavor of discrepancies and similarities existing
 between linguistic and social relations.
 
 We consider communities from three different selection criteria: 
-Those with high social \emph{and} linguistic similarity 
+Those with high linguistic \emph{and} social similarity 
 (where the sum of the two is highest),
 those with high linguistic and low social similarity
 (where social similarity is below the median and linguistic similarity is highest), and
@@ -601,7 +596,7 @@ those with low linguistic and high social similarity
 We do not consider pairs of communities that are different in both ways,
 since these don't offer much in the way of understanding the respective embeddings.
 
-Unsuprisingly, the first category (\cref{fig:embedding-differences-examples}, left)yields communities that are qualitatively very similar. 
+Unsuprisingly, the first category (\cref{fig:embedding-differences-examples}, left) yields communities that are qualitatively very similar. 
 The \subreddit{SSBPM} and \subreddit{darksouls} communities are focused
 around discussion of a particular videogame, and are paired
 with communities that discuss a variation of the same game.
@@ -611,12 +606,12 @@ comments on the person's appearance.
 The two communities paired with \subreddit{reddevils} are 
 likewise comprised of fans of a particular English football club.
 That the three football club communities are so closely related points
-to an important point about the social embedding: Because of the way
+to an important point about the social embedding: because of the way
 it was trained, it does not have to be the case that communities with
-a similar representation have a high overlap in their membership,
-but rather that the \emph{kinds of members} of the first community
-are also the \emph{kinds of members} who would belong to the second, 
-based on their membership in other communities.
+a similar representation have a high overlap in membership,
+but rather that members from the first community look similar
+to members from the second community in terms of their \emph{overall}
+community membership profile.
 
 Communities with similar linguistic embeddings but dissimilar social embeddings
 (\cref{fig:embedding-differences-examples}, left) tend to share a similar
@@ -638,7 +633,7 @@ former members of the church, whereas the later is geared towards practicing
 Catholics.
 Finally, both \subreddit{rocketbeans} and \subreddit{de} are primarily
 German-language subreddits, but the former is comprised of fans of a
-computer gaming-related YouTube channel, while the later is more
+computer gaming YouTube channel, while the later is more
 general-interest.
 
 Differences at the other end of the spectrum
@@ -651,7 +646,7 @@ trends in how the communities are premised.  The
 \subreddit{progresspics} and \subreddit{TalesFromRetail} are premised,
 in part, on seeking support from other people with similar
 experiences; \subreddit{legaladvice}, \subreddit{Cooking}, and
-\subreddit{loseit} all have a knowledge-sharing component to them;
+\subreddit{loseit} all involve sharing knowledge on a particular topic;
 \subreddit{running} and \subreddit{Coffee} are hobby-focused; and
 \subreddit{self} (often) and \subreddit{askscience} (by premise) are
 places people ask and answer questions.  It may be that there are
@@ -696,16 +691,16 @@ different approach for computing the correlation between community
 embeddings in the next section.
 
 
-\subsection{Comparing embeddings: procrustes method}
+\subsection{Comparing embeddings: Procrustes method}
 \label{sec:statistical-evidence}
 
 
 
 The anecdotal evidence suggests that for some communities, proximity
-in linguistic patterns do match social proximity… and for others it
+in linguistic patterns do match social proximity and for others it
 does not. Unfortunately, it seems hard, if not impossible, to draw a
-general conclusion from this way. In this section, we propose a
-systematic approach thanks to which we can quantify the correlation
+general conclusion from this mode of analysis. In this section, we propose a
+systematic approach with which we can quantify the correlation
 between social proximity and linguistic proximity, and measure its
 statistical significance.
 
@@ -739,12 +734,12 @@ The problem of computing \(d(L,S)\) is known as the orthogonal Procrustes proble
 This approach has also been used to compare word embeddings across representations \citep[e.g.,][]{Hamilton2016a}.}
 The solution is
 \[d(L,S) = n - \mathsf {Tr} (Σ)\] where the matrix \(Σ\) is obtained by the singular value
-decomposition (SVD) \(U^TΣV = LS^T\). Additionally the vectors of \(U\) and \(V\) give
+decomposition (SVD) \(U^TΣV = LS^T\). The vectors of \(U\) and \(V\) give
 the directions of correlation respectively of \(L\) and \(S\). That is, each
 singular value \(\sigma_i\) (the elements of the diagonal matrix \(Σ\)), give a measure of how much
 correlation there is between the directions \(U_i\) and \(V_i\).
 
-As common when doing SVD, we can arrange \(U\), \(V\) and \(Σ\) such
+As is common when doing SVD, we arrange \(U\), \(V\) and \(Σ\) such
 that \(σ_i > σ_j\) iff \(i < j\). Doing so, the largest singular value
 \(σ_0\) corresponds to the principal directions of correlation
 (\(U_0\), \(V_0\)), \(σ_1\) to the second principal direction, etc.
@@ -770,8 +765,8 @@ Doing so, we observed that \(d(L,S)\) exhibits a mean of
 Thus if the real \(d(L,S)\) is below the mean by several standard
 deviations, we can safely assume that there is statistically
 significant correlation between \(L\) and \(S\). A 4-sigma difference
-has less than one percent chance of occurring randomly. In our case:
-we observe a difference between 61 and 68 standard deviations
+has less than one percent chance of occurring randomly. In our case,
+we observe a difference of between 61 and 68 standard deviations
 (\cref{tab:embedding-correlations}). This definitely indicates a
 significant correlation.  Furthermore, by coming back to the
 definition of \(d(L,S)\), we know that, on average, the cosine
@@ -781,7 +776,7 @@ new community $k$, we can estimate its social embedding by \(ΩL_k\),
 and the cosine similarity with its true social embedding \(S_k\) is
 expected to be \(0.39\) = \((431.39 - 232.18) / 510\) --- accounting for
 over-fitting effects by taking the average distance rather than the
-maximum. % JP: TODO is the number from the table. this should probably be rewritten
+maximum. 
 In sum, it is clear that the CCLM embeddings predict some aspect the social-network embeddings--- but far from all of it.
 
 To finish, we also give a sense of \emph{how} the correlation is manifested overall, by
@@ -840,28 +835,6 @@ from the mean distance of our random embedding samples.} \label{tab:embedding-co
 %      - Concatenations ???
 
 
-%\begin{figure*}[t]
-%\begin{tikzpicture}
-  %\begin{groupplot}[
-    %group style={group size=2 by 1},
-    %yticklabels={,,}, xticklabels={,,},
-    %legend style={anchor=north, legend columns=1, font=\sffamily\tiny},
-  %]
-    %\nextgroupplot
-    %\commscatter{lstm-3-1-pca1}{lstm-3-1-pca2}
-    %\nextgroupplot
-    %\commscatter{transformer-3-3_pca1}{transformer-3-3_pca2}
-    %\legend{General interest,Videogames,Technology,Sports,Female-focused,Other}
-  %\end{groupplot}
-%\end{tikzpicture}
-%\caption{Plot of embeddings along the 2 principal dimensions of correlation between .... TODO of an LSTM (left, $c=1$) and transformer (right, $c=3$) model.
-%Color correspond the 5-means clustering of .... TODO}
-%\label{fig:comm-pca}
-%\end{figure*}
-
-
-
-
 \section{Related work}\label{sec:related-work}
 
 We have presented results using conditional neural language models
@@ -891,11 +864,21 @@ does further suggest, however, that community-level variation can be
 modeled in an unsupervised way.
 
 There are several recent studies that aim to measure \emph{linguistic distinctiveness}
-at the level of speech community, which is an possible interpretation of 
-of community-stratified information gain the CCLM over its unconditioned counterpart \cref{sec:ig}. Whereas the metrics in previous work are based on lexical frequency
-\citep{OConnor2010,Zhang2018,Lucy2021}, CCLM information gain is capable of capturing 
-distinctiveness at other levels of linguistic analysis. Further work is needed to
+at the level of speech community \citep{OConnor2010,Zhang2018,Lucy2021}, 
+which is an possible interpretation of the community-stratified information gain 
+of the CCLM over its unconditioned counterpart \cref{sec:ig}. 
+Whereas the metrics in previous work are based on lexical frequency
+(and in the case of \citet{Lucy2021}, word sense distributions),
+CCLM information gain is capable of capturing 
+distinctiveness at multiple levels of linguistic analysis. 
+However, further work is needed to
 investigate exactly what kinds of variation are captured.
+
+While the focus of the paper is theoretical,
+computational models of variation can also support 
+robust, equitable language technology.  Previous work has shown that
+speaker demographics can improve performance on standard NLP tasks
+\citep{Hovy2015,Yang2017}. %\jp{Move this to related work so we can get to the point quicker.} 
 
 %- DelTredici 2017
 %- Einstein 2010
@@ -910,10 +893,10 @@ investigate exactly what kinds of variation are captured.
 To sum up our findings, we have defined community-conditioned language
 models (CCLMs). These models are generally able to attune to
 community-specific language, as witnessed by the information gain that
-they exhibit over a baseline, non-conditioned models.
+they exhibit over baseline unconditioned models.
 
-We find that the layer at which the community embedding is taken into
-account ($l_c$) has a weak effect on the information gain and the
+We find that the layer depth of the community embedding 
+($l_c$) has a weak effect on the information gain and the
 perplexity of the CCLMs.
 
 For LSTM models, the perplexity per word, averaged over
@@ -924,25 +907,28 @@ but this seems to be mainly due to the poor performance of the models where
 the community embedding is inserted between transformer layers
 ($l_c=2$ and $3$ both test above the unconditioned transformer's 
 average perplexity of \num{79.13}).
-This could have something to do with the community embedding and linear layer
+This could be due to the community embedding and linear layers
 interrupting the delicate layer normalisation between transformer encoder layers.
 
 The pattern of information gain by community is similar across
-architectures.  Communities that benefit most from the conditioned
+architectures;  communities that benefit most from the conditioned
 model behave that way for both the LSTM and transformer.  However,
 there are some differences.  For example, many of the communities with the biggest 
 difference in information gain between the $l_c=0$ and $l_c=3$ LSTMs 
-seem to be organised around trading collectables or organising virtual meetups
-(\emph{friendsafari},
-\emph{Fireteams},
-\emph{RandomActsOfGaming},
-\emph{randomactsofcsgo},
-\emph{Pokemongiveaway},
-\emph{ACTrade},
-\emph{SVExchange})
-Why was the model where the community information was incorporated before
-the LSTM able to take better advantage of it for these communities in particular? 
-It would be interesting to investigate these differences in future work, since it
+are organised around trading collectables or organising virtual meetups
+(e.g.,
+%\subreddit{friendsafari},
+%\subreddit{Fireteams},
+%\subreddit{RandomActsOfGaming},
+%\subreddit{randomactsofcsgo},
+\subreddit{Pokemongiveaway},
+\subreddit{ACTrade}, and
+\subreddit{SVExchange}).  
+These communities tended to have highly conventionalized ways negotiating trades
+and coordinating meetups.
+%Why was the model where the community information was incorporated before
+%the LSTM able to take better advantage of it for these communities in particular? 
+It would be interesting to investigate these differences further in future work, since it
 could reveal differences in the kind of linguistic variation the
 different model architectures capture.
 
@@ -972,19 +958,18 @@ different model architectures capture.
 % community, it is not its absolute perplexity that matters, but rather
 % the difference in perplexity with the baseline.
 
-Our main result is that the representation of communities built by
-CCLM has a positive correlation with user co-occurrence patterns.
+Our main result is that community representations learned by
+CCLMs are positively correlation with user co-occurrence patterns.
 Even though such \emph{homophilic} correlation is a core hypothesis of 
 sociolinguistics (see \citet{Kovacs2020}, for example), 
 we believe that this study is the first to test it at 
-the level of communities of practice using computatial methods.
+the level of communities of practice using computational methods.
 Furthermore, it appears that our method (correlating
 linguistic embeddings and social embeddings) is novel. Indeed, even
-though the procrustes method has been used to correlate two sets of
+though the Procrustes method has been used to correlate two sets of
 linguistic embeddings \emph{for the same model}, we find no evidence
 of the method being applied to embeddings for widely different models,
 as we have done.
-
 
 % A natural
 % question that may arise is how much this correlation can be explained by
@@ -993,18 +978,45 @@ as we have done.
 % models and testing if community vector embeddings can be determined by
 % the set of the vector embeddings of its members.
 
-\section{Ethical considerations}
+\section{Ethical considerations}\label{sec:ethics}
 
-Our work uses pulicly available data from Reddit,
+\paragraph{Data privacy}
+Our work uses publicly available data from Reddit,
 collected from the API made available by \citet{Baumgartner2020}.
 Additional considerations apply, however 
 (see \citet{Gliniecka2021} for discussion). Reddit users are not,
-in general, aware of the possiiblity that their data will be used 
+in general, aware of the possibility that their data will be used 
 for research purposes, and deleted posts can persist in archive formats.
-We are not reseasing any data or trained models as part of this study,
-since the data is publicly available and our models have low enough
-computational requirements as to pose little barrier for erplication.
+We do not release any data, since the it is already publicly available 
+and duplicating the dataset increases the likelihood that deleted 
+posts will persist.
 
+The paper does not include any text that could be linked back to 
+personally identifiable information.
+We do release our trained community embeddings, but they have 
+low dimensionality and pose a low risk for exposing personally
+identifiable information.
+
+\paragraph{Language identification}
+As mentioned in section \cref{sec:data}, we decided not to filter our data for non-English 
+comments.
+Although our focus in this paper is intra-language variation, 
+language identification has the potential to introduce bias by reinforcing hegemonic
+language classes and the boundaries between them.
+In our case, filtering out messages classified as non-English would 
+introduce bias by disproportionately removing messages in
+non-standard and code-switched language varieties,
+which are of interest in the current work.
+
+Nevertheless, the representations learned by our model are (necessarily)
+relative to the other communities in the dataset. 
+Thus the learned representations for non-English communities tend to be more similar to each other 
+than to other communities that use mostly English, even if their predominant language is not the same.
+This would probably not be the case if the distribution of messages 
+was more varied across hegemonic language classes; our work cannot be used to conclude,
+for example, that there is more variation within English than between Dutch and German.
+
+\paragraph{Subjective analysis}
 In the qualitative discussion offered in \cref{sec:storytelling},
 our comparative characterization of the topic, mode of interaction, 
 and language varieties
