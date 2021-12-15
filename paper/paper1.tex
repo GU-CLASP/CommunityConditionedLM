@@ -696,12 +696,12 @@ embeddings in the next section.
 \subsection{Comparing embeddings: Procrustes method}
 \label{sec:statistical-evidence}
 
+% The anecdotal evidence suggests that for some communities, proximity
+% in linguistic patterns do match social proximity and for others it
+% does not. Unfortunately, it seems hard, if not impossible, to draw a
+% general conclusion from this mode of analysis.
 
-
-The anecdotal evidence suggests that for some communities, proximity
-in linguistic patterns do match social proximity and for others it
-does not. Unfortunately, it seems hard, if not impossible, to draw a
-general conclusion from this mode of analysis. In this section, we propose a
+In this section, we propose a
 systematic approach with which we can quantify the correlation
 between social proximity and linguistic proximity, and measure its
 statistical significance.
@@ -716,18 +716,20 @@ equal to the Frobenius distance between \(L\) and \(S\):
 
 \[||L-S||_F = \sum_i (L_i - S_i)\]
 
-The problem with this approach is that even if several dimensions of
-\(L\) and \(S\) are correlated, they will not coincide in the
-\emph{representation}. That is, applying a simple rotation (orthogonal
-transformation) on either matrix widely changes the \(||L-S||_F\)
-correlation metric. Another way to consider the same problem is that,
-applying such a rotation does \emph{not} change the cosine similarities
-considered in the previous section.
+The problem with the above metric is that even if several dimensions
+of \(L\) and \(S\) are correlated, they will not coincide in the
+\emph{representation} of embeddings. That is, applying a simple
+rotation (orthogonal transformation) on either matrix widely changes
+the \(||L-S||_F\) correlation metric.
+
+% Another way to consider the same problem is that,
+% applying such a rotation does \emph{not} change the cosine similarities
+% considered in the previous section.
 
 To make the metric independent of the representation (up to orthogonal
-transformations), we compute the \emph{minimum} distance between
-\(L_i\) and \(S_i\), for any orthogonal matrix \(\Omega\) applied to
-\(L\):
+transformations, which preserve cosine similarities), we compute the
+\emph{minimum} distance between \(L_i\) and \(S_i\), for any
+orthogonal matrix \(\Omega\) applied to \(L\):
 
 \[d(L,S) = \mathsf{argmin}_\Omega ||ΩL-S||_F\]
 
@@ -858,7 +860,7 @@ Unlike our model, topics are inferred in an unsupervised way,
 raising the question of whether communities could be identified from 
 unlabeled data as well.
 
-Along these lines, \citet{OConnor2010} uses a Bayesian generative
+A piece of work with similar goals as ours is that of \citet{OConnor2010}, which uses a Bayesian generative
 model to infer communities from variation in text data.  In contrast
 to our work, this model treats words as independent events, ignoring
 the structure (and variation) in the construction of sequences.  It
@@ -868,7 +870,7 @@ modeled in an unsupervised way.
 There are several recent studies that aim to measure \emph{linguistic distinctiveness}
 at the level of speech community \citep{OConnor2010,Zhang2018,Lucy2021}, 
 which is an possible interpretation of the community-stratified information gain 
-of the CCLM over its unconditioned counterpart \cref{sec:ig}. 
+of the CCLM over its unconditioned counterpart (\cref{sec:ig}). 
 Whereas the metrics in previous work are based on lexical frequency
 (and in the case of \citet{Lucy2021}, word sense distributions),
 CCLM information gain is capable of capturing 
@@ -876,7 +878,7 @@ distinctiveness at multiple levels of linguistic analysis.
 However, further work is needed to
 investigate exactly what kinds of variation are captured.
 
-While the focus of the paper is theoretical,
+While the focus of this paper is sociolinguistic aspects,
 computational models of variation can also support 
 robust, equitable language technology.  Previous work has shown that
 speaker demographics can improve performance on standard NLP tasks
