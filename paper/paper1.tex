@@ -35,7 +35,8 @@
 
 \input{preamble}
 
-\title{Community-conditioned language models for linguistic variation}
+\title{Vector Representations of Linguistic Communities and Associated Models}
+ % Representations -conditioned language models for linguistic variation
 
 % Author information can be set in various styles:
 % For several authors from the same institution:
@@ -66,14 +67,13 @@
 
 \date{}
 
-
-
 \begin{document}
 \maketitle
 \begin{abstract}
-  Community-level linguistic variation is a core concept in sociolinguistics,
-  but more tools are needed to study variation from a computational perspective.
-  In this paper, we use conditional language models to investigate linguistic variation
+  Community-level linguistic variation is a core concept in sociolinguistics.
+  % but more tools are needed to study variation from a computational perspective.
+  In this paper, we use computational methods to investigate how much linguistic variation corresponds with social connections between communities.
+  Technically, use conditional language models to investigate linguistic variation
   across 510 online communities.
   We probe the community representations learned by the conditional language model
   and find that they are highly correlated with a social network-based 
@@ -116,12 +116,12 @@ Speakers assume that these conventions are \emph{common ground} among
 their interlocutors, based on joint membership in a community
 \cite{Stalnaker2002, Clark1996}.  Such \emph{speech communities} \citep{Gumperz1972} 
 range in size from the very small, like members of a friend group, 
-to the very large, like speakers of English; however as \citet{Eckert1992}
+to the very large, like speakers of English. However, as \citet{Eckert1992}
 point out, it is \emph{communities of practice}---defined by mutual social engagement
 in a common activity---that are the primary locus of linguistic variation.
 
 Variation is an important object of study in sociolinguistics,
-and is naturally suited for computational analysis \citep{Nguyen2016}.
+and is naturally amenable to computational analysis \citep{Nguyen2016}.
 Most previous computational work on linguistic variation 
 has considered variation at the level of macro-social categories, such as gender
 \citep{Burger2011,Ciot2013,Bamman2014}, age \citep{Nguyen2013}, and
@@ -133,7 +133,7 @@ different communities organised around the same topic and
 investigate community-level variation in word sense distributions.}
 In the present work, we investigate linguistic variation
 in online communities on the social media website Reddit. 
-In contrast to previous work, we investigate variation across 
+This contrasts with previous work: we investigate variation across 
 speech communities, rather than macro-social categories.
 
 
@@ -161,11 +161,11 @@ For this purpose, we introduce (\cref{sec:cclm}) various
 Community-Conditioned Language Models (CCLMs for short). These models
 are conditioned on a vector representation (or embedding), which
 varies for each community. Hence, they learn \emph{community
-  embeddings}.  Although we test which architectures best make use
-of the community information, our purpose is not to improve models in
+  embeddings}.  Even though we report which architectures make best use
+of the community information, our primary purpose is not to improve models in
 terms of perplexity, but rather we want to extract the best set of
 community embeddings and test how the resulting embeddings
-predict the social structure of subreddits. For this purpose, we test
+predict the social structure of subreddits. Technically, we test
 the correlation with a social network-based representation of
 communities (\cref{sec:embedding-analysis}).
 
@@ -210,12 +210,12 @@ communities (\cref{sec:embedding-analysis}).
 We experiment with two kinds of model architecture: a simple
 unidirectional LSTM \citep{Hochreiter1997} and a Transformer
 \citep{Vaswani2017}. Although Transformer-based language models are considered
-state of the art, they achieve dominance partly thanks to the
+state-of-the-art, they achieve dominance partly thanks to the
 availability of very large data sets \citep[e.g.,][]{Devlin2019,Brown2020},
 which are not available to us.\footnote{Fine-tuning existing models
-  is not compatible with our methodology, since we would fundamentally
+  is not compatible with our methodology, because we fundamentally
   change the structure of the network by concatenating
-  community embeddings.} 
+  community embeddings with hidden states at various levels.} Thus the LSTM is a worthy model to test for us.
 
 In either case, the model is organised as a
 standard $3$-layer neural sequence encoder, where the input for the
@@ -277,7 +277,7 @@ by language outweighted the potential benefits.\footnote{
   See \cref{sec:ethics} for futher discussion.}
 
 Messages were preprocessed as follows:
-We excluded the content of block quotes, code blocks, and tables and
+we excluded the content of block quotes, code blocks, and tables and
 removed markup (formatting) commands, 
 extracting only rendered text.
 Messages were tokenized using the default English model for the SpaCy tokenizer 
@@ -476,14 +476,14 @@ The boxes indicate upper and lower quartiles, while the whiskers are placed at t
 \label{fig:comm-stratified-box}
 \end{figure}
 
-We observe empirically that across all the models we
+We observe that across all the models we
 tested, communities where conditioning has the least effect tend to be
 organised around more general interest topics, such as 
 \subreddit{relationships} and \subreddit{advice}, where the subject
 matter is relevant to a broad range of people.  Conditioning the model
 on community appears to have the most benefit for narrower special-interest
 subreddits, such as those organised around a certain videogame, sports
-team, or subculture.  This supports the idea that communities of practice
+team, or subculture.  These empirical observations corroborate the idea that communities of practice
 are the primary locus of linguistic variation.
 %makes sense intuitively, since communities
 %with more niche topics would tend to have more specialised vocabulary
@@ -570,12 +570,12 @@ contents of messages, not authorship data.
   \label{fig:embedding-differences-examples}
 \end{figure*}
 
-A difficulty is that the social embeddings and linguistic embeddings
-range over completely unrelated spaces, so one cannot use the usual
-cosine similarity metric \emph{across} this boundary. One can,
+When comparing social embeddings and linguistic embeddings, a difficulty is that they
+range over completely unrelated spaces. Thus one cannot use the usual
+cosine similarity metric \emph{between} these spaces. One can,
 however, use cosine similarity between \emph{pairs} of communities,
-and verify the similarities correlated between linguistic to social
-embeddings.  This gives us a way of characterizing the differences
+and verify that the similarities are correlated between linguistic and social
+embeddings.  This gives a way of characterizing the differences
 between the two kinds of community representation. To get a more
 concrete sense of what this method yields, we first survey some of the
 most salient community pairs. We stress that this survey is not meant
@@ -660,14 +660,15 @@ quite different.  Testing this hypothesis would require a more focused
 study design and ideally consider communities from multiple social
 networks (online or otherwise).
 
-We simultaneously have examples of high correlation between social and
-linguistic embeddings, but also of low correlation. This is
-essentially anecdotal evidence: we must resort to statistical tools to
-extract the general trends.
-A straightforward, but ultimately flawed,
-way to measure how similar the two spaces are is to consider each pair
-of communities \((i,j)\), and compute the correlation between the
-cosine similarities of both embeddings.
+In sum, empirical observation simultaneously reveals examples of high
+and low correlation between social and linguistic embeddings.  To
+quantify correlation and extract the general trends, we must resort to
+statistical tools, as we do below.
+
+A straightforward (but ultimately flawed) way to measure how similar
+the two spaces are would be to generalise the above method, by
+consider each pair of communities \((i,j)\), and compute the
+correlation between the cosine similarities of both embeddings.
 
 That is, we can compute the Pearson correlation factor of the data set:
 \[C = \{(x = L_i · L_j, y = S_i · S_j) \text {~for~} i,j ∈
