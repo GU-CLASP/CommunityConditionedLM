@@ -29,7 +29,7 @@ def train(model, batches, vocab_size, criterion, optimizer, log):
         train_loss += loss.item()
         if batch_no % 1000 == 0 and batch_no > 0:
             cur_loss = train_loss / 1000
-            log.info(f"{batch_no:5d}/{len(batches):5d} batches | loss {cur_loss:5.2f} | ppl {math.exp(cur_loss):0.2f}")
+            log.info(f"{batch_no:5d}/{len(batches):5d} batches | loss {cur_loss:5.2f}")
             train_loss = 0
     return model
 
@@ -37,7 +37,8 @@ def evaluate(model, batches, vocab_size, criterion):
     model.eval()
     batches.init_epoch()
     eval_losses = []
-    for batch in batches:
+    num_correct = 0
+    for i, batch in enumerate(batches):
         with torch.no_grad():
             batch_size_ = len(batch)
             y = batch.community 
@@ -45,7 +46,9 @@ def evaluate(model, batches, vocab_size, criterion):
             y_hat = model(x)
             loss = criterion(y_hat, y).mean()
             eval_losses += [loss.item()]
-    return eval_losses
+            num_correct += (torch.max(y_hat, dim=-1)[1] == y).sum().item()
+    eval_acc = num_correct / (i+1)
+    return eval_losses, eval_acc
 
 
 @click.command()
@@ -55,7 +58,7 @@ def evaluate(model, batches, vocab_size, criterion):
 @click.option('--rebuild-vocab/--no-rebuild-vocab', default=False)
 @click.option('--vocab-size', default=40000)
 @click.option('--lower-case/--no-lower-case', default=False)
-@click.option('--hidden-size', default=128)
+@click.option('--hidden-size', default=512)
 @click.option('--dropout', default=0.1)
 @click.option('--batch-size', default=128)
 @click.option('--max-seq-len', default=64)
@@ -70,7 +73,7 @@ def cli(model_dir, data_dir, resume_training, rebuild_vocab,
         batch_size, max_seq_len, lr, max_epochs, file_limit, gpu_id):
 
     model_dir = Path(model_dir)
-    model_name = f"lstm_classifier_maxfirst"
+    model_name = f"lstm_classifier"
 
     save_dir = model_dir/model_name
     util.mkdir(save_dir)
@@ -91,10 +94,7 @@ def cli(model_dir, data_dir, resume_training, rebuild_vocab,
     log.info(f"Vocab size: {vocab_size}")
     log.info(f"Hidden size: {hidden_size}")
 
-    model = LSTMClassifier(
-            vocab_size, comm_vocab_size,
-            hidden_size, 2,
-            dropout)
+    model = LSTMClassifier(vocab_size, comm_vocab_size, hidden_size, dropout)
 
     total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     log.info(f"Built model with {total_params} parameters.")
@@ -118,7 +118,7 @@ def cli(model_dir, data_dir, resume_training, rebuild_vocab,
         shuffle=False,
         train=False)
 
-    criterion = nn.NLLLoss(ignore_index=text_pad_idx, reduction='none')
+    criterion = nn.CrossEntropyLoss(ignore_index=text_pad_idx, reduction='none')
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
 
     if resume_training and os.path.exists(save_dir/'saved-epoch.txt'):
@@ -141,7 +141,7 @@ def cli(model_dir, data_dir, resume_training, rebuild_vocab,
         log.debug(f'Starting epoch {epoch} training.')
         model = train(model, train_iterator, vocab_size, criterion, optimizer, log)
         log.debug(f'Starting epoch {epoch} validation.')
-        val_loss = evaluate(model, val_iterator, vocab_size, criterion)
+        val_loss, val_acc = evaluate(model, val_iterator, vocab_size, criterion)
         val_loss = sum(val_loss) / len(val_loss)
         val_ppl = math.exp(val_loss)
         if val_ppls == [] or val_ppl < min(val_ppls):
@@ -150,7 +150,7 @@ def cli(model_dir, data_dir, resume_training, rebuild_vocab,
             with open(save_dir/'saved-epoch.txt', 'w') as f:
                 f.write(f'{epoch:03d}')
         val_ppls.append(val_ppl)
-        log.info(f"Epoch {epoch:3d} | val loss {val_loss:5.2f} | ppl {val_ppl}")
+        log.info(f"Epoch {epoch:3d} | val loss {val_loss:5.2f} | ppl {val_ppl:7.2f} | acc {val_acc:5.2f}")
         if (val_ppls[-1] > min(val_ppls) and val_ppls[-2] > min(val_ppls)) or epoch == max_epochs:
             log.info(f'Stopping early after epoch {epoch}.')
             break

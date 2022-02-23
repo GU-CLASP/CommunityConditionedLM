@@ -74,7 +74,7 @@ data_dir = 'data/reddit_splits'
 model_family_dir = 'model/reddit'
 max_seq_len = 64
 
-unigram_counts_file = 'model/reddit/unigram-cond/unigram_counts.pickle.cheating'
+unigram_counts_file = 'model/reddit/unigram-cond/unigram_counts.pickle'
 
 fields = data.load_fields(model_family_dir)
 
@@ -86,28 +86,35 @@ vocab_size = len(vocab)
 dev_data = data.load_data(data_dir, fields, 'dev', max_seq_len, None)
 dev_data = [(ex.community, [w if w in vocab else '<unk>' for w in ex.text]) for ex in dev_data]
 
-print("Counting unigrams per community...")
-unigram_counts = defaultdict(Counter)
-comm_N = Counter()
-for i, c in enumerate(comms):
-    with open(f'data/unigram_counts/{c}.count.txt') as f:
-        print(f"{i+1}/{len(comms)}", end='\r')
-        for line in f.readlines():
-            line = line.lstrip().split()
-            if len(line) == 1:
-                w = '<unk>'
-                count = line[0]
-            else:
-                count, w = line
-            count = int(count)
-            comm_N[c] += count
-            if w in vocab:
-                unigram_counts[c][w] = count
-            else:
-                unigram_counts[c]['<unk>'] += count
+if not os.path.exists(unigram_counts_file):
+    print("Counting unigrams per community...")
+    unigram_counts = defaultdict(Counter)
+    comm_N = Counter()
+    for i, c in enumerate(comms):
+        with open(f'data/unigram_counts/{c}.count.txt') as f:
+            print(f"{i+1}/{len(comms)}", end='\r')
+            for line in f.readlines():
+                line = line.lstrip().split()
+                if len(line) == 1:
+                    w = '<unk>'
+                    count = line[0]
+                else:
+                    count, w = line
+                count = int(count)
+                comm_N[c] += count
+                if w in vocab:
+                    unigram_counts[c][w] = count
+                else:
+                    unigram_counts[c]['<unk>'] += count
 
-with open('model/reddit/unigram-cond/unigram_counts.pickle', 'wb') as f:
-    pickle.dump(unigram_counts, f)
+    with open(unigram_counts_file, 'wb') as f:
+        pickle.dump(unigram_counts, f)
+else:
+    with open(unigram_counts_file, 'rb') as f:
+        unigram_counts = pickle.load(f)
+        comm_N = Counter()
+        for c in comms:
+            comm_N[c] = sum(unigram_counts[c].values())
 
 # community_totals = {comm: sum(unigram_counts[comm].values()) for comm in comms + ['<comm_totals>']}
 # unigram_freqs = {comm: {word: unigram_counts[comm][word] / community_totals[comm]

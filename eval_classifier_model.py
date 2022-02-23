@@ -13,11 +13,6 @@ from pathlib import Path
 import csv
 from IPython import embed
 
-def make_seq_mask(seq_lens):
-    max_len = seq_lens.max().item()
-    return (torch.arange(max_len).to(seq_lens.device).expand(len(seq_lens), max_len) < seq_lens.unsqueeze(1)).float()
-
-
 @click.command()
 @click.argument('model_dir', type=click.Path(exists=True))
 @click.argument('data_dir', type=click.Path(exists=True))
@@ -27,6 +22,12 @@ def make_seq_mask(seq_lens):
 @click.option('--gpu-id', type=int, default=None,
         help="ID of the GPU, if traning with CUDA")
 def cli(model_dir, data_dir, max_seq_len, file_limit, gpu_id):
+
+    # model_dir = "model/reddit/lstm_classifier"
+    # data_dir = "data/reddit_splits"
+    # gpu_id = 0
+    # max_seq_len = 64
+    # file_limit = None
 
     model_dir = Path(model_dir)
     device = torch.device(f'cuda:{gpu_id}' if gpu_id is not None else 'cpu')
@@ -43,7 +44,7 @@ def cli(model_dir, data_dir, max_seq_len, file_limit, gpu_id):
     pad_idx = fields['text'].vocab.stoi['<pad>']
     log.info(f"Loaded {len(test_data)} test examples.")
 
-    model = LSTMClassifier(vocab_size, comm_vocab_size, 512, 2, 0.1)
+    model = LSTMClassifier(vocab_size, comm_vocab_size, 512)
     model.load_state_dict(torch.load(model_dir/'model.bin'))
     model.to(device)
     model.eval()
@@ -57,43 +58,49 @@ def cli(model_dir, data_dir, max_seq_len, file_limit, gpu_id):
         shuffle=True,
         train=False)
 
-    results_files = [model_dir/f"cc_probs{suffix}.csv" for suffix in ('', '_e', '_1', '_2')]
-    fs = [open(filename, 'w') for filename in results_files]
+    analytics = ['entropy', 'cross_entropy', 'pred']
+    layers =  ['embed', 'lstm1', 'lstm2', 'all']
+    meta_fields = ['community', 'example_id', 'length']
+    data_fields = list(range(1, max_seq_len+2)) # take data point at each token in sequence excluding <start> but including <end>
 
-    y_e_means =  torch.zeros(510).to(device)
-    y_1_means =  torch.zeros(510).to(device)
-    y_2_means =  torch.zeros(510).to(device)
+    def make_writer(f):
+        writer = csv.DictWriter(f, fieldnames=meta_fields + data_fields)
+        writer.writeheader()
+        return writer
+
+    results_files = {l: {a: open(model_dir/f"{a}_{l}.csv", 'w') for a in analytics} for l in layers}
+    writers = {l: {a: make_writer(results_files[l][a]) for a in analytics} for l in layers}
 
     with torch.no_grad():
-        meta_fields = ['community', 'example_id']
         data_fields = comms
-        writers = (csv.DictWriter(f, fieldnames=meta_fields+data_fields) for f in fs)
-        for writer in writers:
-            writer.writeheader()
-        for i, batch in enumerate(test_iterator):
-            y_e, y_1, y_2 = model.depth_stratified_preds(batch.text[0])
+        for batch_no, batch in enumerate(test_iterator):
+            batch_max_len = batch.text[1].max().item()
+            activations = model.depth_stratified_activations(batch.text[0])
+            batch_results = {l: {a: [
+                dict(zip(meta_fields, item)) for item in zip(
+                batch.community.tolist(),
+                batch.example_id.tolist(),
+                batch.text[1].tolist()
+            )] for a in analytics} for l in layers}
+            for i in range(1, batch_max_len+1): # skip evaluating only the start token
+                for y, l in zip(activations, layers):
+                    prob_dist = F.softmax(y[0:i+1].max(dim=0)[0], dim=-1)
+                    entropy = (-prob_dist * prob_dist.log()).sum(dim=-1)
+                    pred_probs, preds = prob_dist.max(dim=-1)
+                    for j in range(batch.batch_size):
+                        if i < batch.text[1][j]:
+                            cross_entropy = -(prob_dist[j][batch.community[j]].log())
+                            batch_results[l]['entropy'][j][i] = f'{entropy[j].item():0.4f}'
+                            batch_results[l]['cross_entropy'][j][i] = f'{cross_entropy.item():0.4f}'
+                            batch_results[l]['pred'][j][i] = preds[j].item()
+            for l in layers:
+                for a in analytics:
+                    writers[l][a].writerows(batch_results[l][a])
+            log.info(f"Completed {batch_no+1}/{len(test_iterator)}")
 
-            mask = make_seq_mask(batch.text[1]).T.unsqueeze(-1).expand(-1, -1, 510).to(device)
-
-            y_e_means += (y_e * mask.float()).pow(2).mean(0).mean(0)
-            y_1_means += (y_1 * mask.float()).pow(2).mean(0).mean(0)
-            y_2_means += (y_2 * mask.float()).pow(2).mean(0).mean(0)
-
-            # batch_results = [
-                # dict(zip(meta_fields, meta_values)) for meta_values in zip(
-                    # [comms[i] for i in batch.community.tolist()],
-                    # batch.example_id.tolist()
-                # )
-            # ]
-            # preds  = model.depth_stratified_preds(batch.text[0])
-            # for y, writer in zip(preds, writers):
-                # for j, probs_item in enumerate(y.exp()):
-                    # batch_results[j].update(dict(zip(comms, probs_item.tolist())))
-                # writer.writerows(batch_results)
-            log.info(f"Completed {i+1}/{len(test_iterator)}")
-
-    for f in fs:
-        f.close()
+    for l in layers:
+        for a in analytics:
+            results_files[l][a].close()
 
 if __name__ == '__main__':
     cli(obj={})
