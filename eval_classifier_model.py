@@ -30,11 +30,13 @@ def cli(model_dir, data_dir, max_seq_len, file_limit, gpu_id):
     # file_limit = None
 
     model_dir = Path(model_dir)
+    model_name = 'lstm_classifier'
+    save_dir = model_dir/model_name
     device = torch.device(f'cuda:{gpu_id}' if gpu_id is not None else 'cpu')
-    log = util.create_logger('test', os.path.join(model_dir, 'testing.log'), True)
+    log = util.create_logger('test', os.path.join(save_dir, 'testing.log'), True)
 
     log.info(f"Loading data from {data_dir}.")
-    fields = data.load_fields('model/reddit')
+    fields = data.load_fields(model_dir, use_eosbos=False)
     fields['text'].include_lengths = True
     test_data = data.load_data(data_dir, fields, 'test', max_seq_len, file_limit)
 
@@ -45,7 +47,7 @@ def cli(model_dir, data_dir, max_seq_len, file_limit, gpu_id):
     log.info(f"Loaded {len(test_data)} test examples.")
 
     model = LSTMClassifier(vocab_size, comm_vocab_size, 512)
-    model.load_state_dict(torch.load(model_dir/'model.bin'))
+    model.load_state_dict(torch.load(save_dir/'model.bin'))
     model.to(device)
     model.eval()
     log.debug(str(model))
@@ -68,14 +70,14 @@ def cli(model_dir, data_dir, max_seq_len, file_limit, gpu_id):
         writer.writeheader()
         return writer
 
-    results_files = {l: {a: open(model_dir/f"{a}_{l}.csv", 'w') for a in analytics} for l in layers}
+    results_files = {l: {a: open(save_dir/f"{a}_{l}.csv", 'w') for a in analytics} for l in layers}
     writers = {l: {a: make_writer(results_files[l][a]) for a in analytics} for l in layers}
 
     with torch.no_grad():
         data_fields = comms
         for batch_no, batch in enumerate(test_iterator):
             batch_max_len = batch.text[1].max().item()
-            activations = model.depth_stratified_activations(batch.text[0])
+            activations = model(batch.text[0], batch.text[1], agg_seq=None)
             batch_results = {l: {a: [
                 dict(zip(meta_fields, item)) for item in zip(
                 batch.community.tolist(),
