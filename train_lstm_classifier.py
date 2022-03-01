@@ -13,24 +13,26 @@ from pathlib import Path
 from IPython import embed
 
 
-def train(model, batches, vocab_size, criterion, optimizer, log):
+def train(model, batches, vocab_size, criterion, optimizer, log, fields):
     model.train()
     batches.init_epoch()
-    train_loss = 0
+    batch_loss, batch_entropy = [], []
     for batch_no, batch in enumerate(batches):
         optimizer.zero_grad()
         batch_size_ = len(batch)
         y = batch.community 
-        x = batch.text
-        y_hat = model(x)
+        x, x_lens = batch.text
+        # print(y.tolist())
+        y_hat = model(x, x_lens)
         loss = criterion(y_hat, y).mean()
         loss.backward()
         optimizer.step()
-        train_loss += loss.item()
-        if batch_no % 1000 == 0 and batch_no > 0:
-            cur_loss = train_loss / 1000
-            log.info(f"{batch_no:5d}/{len(batches):5d} batches | loss {cur_loss:5.2f}")
-            train_loss = 0
+        batch_loss.append(loss.item())
+        batch_entropy += (-y_hat * y_hat.log()).sum(dim=-1).tolist()
+        if batch_no % 100 == 0 and batch_no > 0:
+            log.info(f"{batch_no:5d}/{len(batches):5d} batches | avg. batch loss {sum(batch_loss)/len(batch_loss):5.4f} | {sum(batch_entropy)/len(batch_entropy):5.4f}")
+            batch_loss = []
+            batch_entropy = []
     return model
 
 def evaluate(model, batches, vocab_size, criterion):
@@ -42,33 +44,31 @@ def evaluate(model, batches, vocab_size, criterion):
         with torch.no_grad():
             batch_size_ = len(batch)
             y = batch.community 
-            x = batch.text
-            y_hat = model(x)
-            loss = criterion(y_hat, y).mean()
-            eval_losses += [loss.item()]
+            x, x_lens = batch.text
+            y_hat = model(x, x_lens)
+            loss = criterion(y_hat, y)
+            eval_losses += loss.tolist()
             num_correct += (torch.max(y_hat, dim=-1)[1] == y).sum().item()
-    eval_acc = num_correct / (i+1)
-    return eval_losses, eval_acc
+    return eval_losses, num_correct 
 
 
 @click.command()
 @click.argument('model_dir', type=click.Path(exists=True))
 @click.argument('data_dir', type=click.Path(exists=True))
 @click.option('--resume-training/--no-resume-training', default=False)
-@click.option('--rebuild-vocab/--no-rebuild-vocab', default=False)
 @click.option('--vocab-size', default=40000)
 @click.option('--lower-case/--no-lower-case', default=False)
 @click.option('--hidden-size', default=512)
 @click.option('--dropout', default=0.1)
 @click.option('--batch-size', default=128)
 @click.option('--max-seq-len', default=64)
-@click.option('--lr', default=0.001)
+@click.option('--lr', default=0.002)
 @click.option('--max-epochs', type=int, default=None)
 @click.option('--file-limit', type=int, default=None,
         help="Number of examples per file (community).")
 @click.option('--gpu-id', type=int, default=None,
         help="ID of the GPU, if traning with CUDA")
-def cli(model_dir, data_dir, resume_training, rebuild_vocab,
+def cli(model_dir, data_dir, resume_training,
         vocab_size, lower_case, hidden_size, dropout,
         batch_size, max_seq_len, lr, max_epochs, file_limit, gpu_id):
 
@@ -81,9 +81,14 @@ def cli(model_dir, data_dir, resume_training, rebuild_vocab,
     log.info(f"Model will be saved to {save_dir}.")
 
     log.info(f"Loading data from {data_dir}.")
-    fields = data.load_fields(model_dir, data_dir, vocab_size)
+    fields = data.load_fields(model_dir, data_dir, vocab_size, 
+            lower_case=lower_case, use_eosbos=False)
+
+    fields['text'].include_lengths = True
+
     train_data = data.load_data(data_dir, fields, 'train',
             max_seq_len, file_limit, lower_case)
+
     vocab_size = len(fields['text'].vocab.itos)
     comm_vocab_size = len(fields['community'].vocab.itos)
     text_pad_idx = fields['text'].vocab.stoi['<pad>']
@@ -93,7 +98,6 @@ def cli(model_dir, data_dir, resume_training, rebuild_vocab,
 
     log.info(f"Vocab size: {vocab_size}")
     log.info(f"Hidden size: {hidden_size}")
-
     model = LSTMClassifier(vocab_size, comm_vocab_size, hidden_size, dropout)
 
     total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -118,7 +122,7 @@ def cli(model_dir, data_dir, resume_training, rebuild_vocab,
         shuffle=False,
         train=False)
 
-    criterion = nn.CrossEntropyLoss(ignore_index=text_pad_idx, reduction='none')
+    criterion = nn.CrossEntropyLoss(reduction='none')
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
 
     if resume_training and os.path.exists(save_dir/'saved-epoch.txt'):
@@ -139,10 +143,11 @@ def cli(model_dir, data_dir, resume_training, rebuild_vocab,
     while True:
         epoch += 1
         log.debug(f'Starting epoch {epoch} training.')
-        model = train(model, train_iterator, vocab_size, criterion, optimizer, log)
+        model = train(model, train_iterator, vocab_size, criterion, optimizer, log, fields)
         log.debug(f'Starting epoch {epoch} validation.')
-        val_loss, val_acc = evaluate(model, val_iterator, vocab_size, criterion)
+        val_loss, val_correct = evaluate(model, val_iterator, vocab_size, criterion)
         val_loss = sum(val_loss) / len(val_loss)
+        val_acc = val_correct / len(dev_data)
         val_ppl = math.exp(val_loss)
         if val_ppls == [] or val_ppl < min(val_ppls):
             log.debug(f'Saving epoch {epoch} model.')
