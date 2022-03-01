@@ -38,6 +38,7 @@ in stdenv.mkDerivation {
       enumitem
       environ # ???
       fancyhdr # fancy headers
+      footmisc
       filehook
       fontaxes
       hyperref
