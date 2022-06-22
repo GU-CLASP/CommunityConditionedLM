@@ -14,29 +14,58 @@ def exp_normalize(x, axis):
     y = (x - b).exp()
     return y / y.sum(axis).unsqueeze(axis).expand(expand_dims)
 
-class LSTMClassifier(nn.Module):
-    def __init__(self, n_tokens, n_comms, hidden_size, dropout=0.2):
+class UnitaryRNN(nn.Module):
+    def __init__(self, embedding_size):
+        super().__init__()
+        n = 32
+        self.n = n
+        # for creating the upper tringulars
+        self.ix_mat = torch.zeros(n,n).long()
+        for i in range(0,n):
+            for j in range(i+1,n):
+                self.ix_mat[i,j] = (i* (2*n - i - 3))//2 + j - 1 + 1
+
+    def forward(self, text, text_lens):
+
+        device = text.device
+        x = torch.cat([torch.zeros(text.shape[:-1]).to(device).unsqueeze(-1), text], dim=-1)
+        tri = torch.index_select(x, -1, self.ix_mat.flatten().to(device)).reshape((*text.shape[:-1],self.n,self.n))
+        tri = tri - tri.transpose(-2, -1)
+        exp_mat = torch.matrix_exp(tri)
+
+        h = torch.zeros(self.n).to(device)
+        h[0] = 1
+        h = h.repeat(text.shape[1]).reshape(text.shape[1], self.n)
+        for i in range(text.shape[0]):
+            h = torch.einsum('bij,bi->bj', exp_mat[i], h)
+        return h
+
+class SequenceClassifier(nn.Module):
+    def __init__(self, n_tokens, n_comms, embedding_size, hidden_size, n_layers, dropout=0.2):
         super().__init__()
         self.drop = nn.Dropout(dropout)
-        self.token_embed = nn.Embedding(n_tokens, hidden_size)
-        self.lstm = nn.LSTM(hidden_size, hidden_size, 1, dropout=dropout)
-        self.classifier = nn.Linear(hidden_size, n_comms, bias=True)
+        self.token_embed = nn.Embedding(n_tokens, embedding_size)
+        # self.lstm = nn.LSTM(embedding_size, hidden_size, n_layers, dropout=dropout)
+        self.seq = UnitaryRNN(embedding_size)
+        self.classifier = nn.Linear(32, n_comms, bias=True)
 
     def forward(self, text, text_lens, agg_seq='final'):
+        agg_seq = None
         x_embed = self.token_embed(text)
-        x_hidden, _ = self.lstm(self.drop(x_embed))
+        x_hidden = self.seq(self.drop(x_embed), text_lens)
 
         # we could consider other sequence aggregators such as 
         # max/average pool, taking a random token (in training), etc.
         if agg_seq == 'final':
             x_agg = x_hidden[text_lens-1, torch.arange(text.size(1))]
+            embed
+            raise
         elif agg_seq == 'random_token':
             random_tokens = (torch.rand(text_lens.shape).to(text_lens.device)*(text_lens-1).float()).long()
             x_agg = x_hidden[random-tokens, torch.arange(text.size(1))]
         elif not agg_seq:
             x_agg = x_hidden
-
-        y_hat = self.classifier(self.drop(x_agg))
+        y_hat = self.classifier(x_agg)
         return F.softmax(y_hat, dim=-1)
 
 

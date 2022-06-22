@@ -1,7 +1,9 @@
 { bootstrap ? import <nixpkgs> {} }:
 
 let
-    pkgs_source = fetchTarball "https://github.com/NixOS/nixpkgs/archive/dfa8e8b9bc4a18bab8f2c55897b6054d31e2c71b.tar.gz";
+    #pkgs_source = fetchTarball "https://github.com/NixOS/nixpkgs/archive/dfa8e8b9bc4a18bab8f2c55897b6054d31e2c71b.tar.gz";
+    #pkgs_source = fetchTarball "https://github.com/NixOS/nixpkgs/archive/refs/tags/22.05.tar.gz";
+    pkgs_source = fetchTarball "https://github.com/NixOS/nixpkgs/archive/refs/tags/21.11.tar.gz";
     overlays = [
       (self: super:  # define our local packages
          {
@@ -37,7 +39,7 @@ let
 in
   pkgs.stdenv.mkDerivation {
     name = "sh-env";
-    buildInputs = [pyEnv pkgs.htop];
+    buildInputs = [pyEnv pkgs.htop pkgs.ranger];
     shellHook = ''
       export LANG=en_US.UTF-8
       export PYTHONIOENCODING=UTF-8

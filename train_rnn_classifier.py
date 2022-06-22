@@ -1,6 +1,6 @@
 import click
 import data
-from classifier_model import LSTMClassifier
+from classifier_model import SequenceClassifier
 import torch
 import torch.nn as nn
 import torchtext as tt
@@ -11,6 +11,41 @@ import util
 import os
 from pathlib import Path
 from IPython import embed
+from torch.nn.modules.loss import _WeightedLoss
+
+class LabelSmoothCrossEntropyLoss(_WeightedLoss):
+    def __init__(self, weight=None, reduction='mean', smoothing=0.0):
+        super().__init__(weight=weight, reduction=reduction)
+        self.smoothing = smoothing
+        self.weight = weight
+        self.reduction = reduction
+
+    @staticmethod
+    def _smooth_one_hot(targets: torch.Tensor, n_classes: int, smoothing=0.0):
+        assert 0 <= smoothing < 1
+        with torch.no_grad():
+            targets = torch.empty(size=(targets.size(0), n_classes),
+                                  device=targets.device) \
+                .fill_(smoothing / (n_classes - 1)) \
+                .scatter_(1, targets.data.unsqueeze(1), 1. - smoothing)
+        return targets
+
+    def forward(self, inputs, targets):
+        targets = LabelSmoothCrossEntropyLoss._smooth_one_hot(targets, inputs.size(-1),
+                                                              self.smoothing)
+        lsm = F.log_softmax(inputs, -1)
+
+        if self.weight is not None:
+            lsm = lsm * self.weight.unsqueeze(0)
+
+        loss = -(targets * lsm).sum(-1)
+
+        if self.reduction == 'sum':
+            loss = loss.sum()
+        elif self.reduction == 'mean':
+            loss = loss.mean()
+
+        return loss
 
 
 def train(model, batches, vocab_size, criterion, optimizer, log, fields):
@@ -29,7 +64,7 @@ def train(model, batches, vocab_size, criterion, optimizer, log, fields):
         optimizer.step()
         batch_loss.append(loss.item())
         batch_entropy += (-y_hat * y_hat.log()).sum(dim=-1).tolist()
-        if batch_no % 100 == 0 and batch_no > 0:
+        if batch_no % 1 == 0 and batch_no > 0:
             log.info(f"{batch_no:5d}/{len(batches):5d} batches | avg. batch loss {sum(batch_loss)/len(batch_loss):5.4f} | {sum(batch_entropy)/len(batch_entropy):5.4f}")
             batch_loss = []
             batch_entropy = []
@@ -58,7 +93,9 @@ def evaluate(model, batches, vocab_size, criterion):
 @click.option('--resume-training/--no-resume-training', default=False)
 @click.option('--vocab-size', default=40000)
 @click.option('--lower-case/--no-lower-case', default=False)
+@click.option('--embedding-size', default=512)
 @click.option('--hidden-size', default=512)
+@click.option('--num-layers', default=2)
 @click.option('--dropout', default=0.1)
 @click.option('--batch-size', default=128)
 @click.option('--max-seq-len', default=64)
@@ -69,7 +106,7 @@ def evaluate(model, batches, vocab_size, criterion):
 @click.option('--gpu-id', type=int, default=None,
         help="ID of the GPU, if traning with CUDA")
 def cli(model_dir, data_dir, resume_training,
-        vocab_size, lower_case, hidden_size, dropout,
+        vocab_size, lower_case, embedding_size, hidden_size, num_layers, dropout,
         batch_size, max_seq_len, lr, max_epochs, file_limit, gpu_id):
 
     model_dir = Path(model_dir)
@@ -83,8 +120,9 @@ def cli(model_dir, data_dir, resume_training,
     log.info(f"Loading data from {data_dir}.")
     fields = data.load_fields(model_dir, data_dir, vocab_size, 
             lower_case=lower_case, use_eosbos=False)
-
     fields['text'].include_lengths = True
+    lower_case = all(w.lower() == w for w in fields['text'].vocab.itos) # really don't want to fuck this up again...
+    log.info(f"Using lower-case vocab: {lower_case!s}.")
 
     train_data = data.load_data(data_dir, fields, 'train',
             max_seq_len, file_limit, lower_case)
@@ -98,7 +136,7 @@ def cli(model_dir, data_dir, resume_training,
 
     log.info(f"Vocab size: {vocab_size}")
     log.info(f"Hidden size: {hidden_size}")
-    model = LSTMClassifier(vocab_size, comm_vocab_size, hidden_size, dropout)
+    model = SequenceClassifier(vocab_size, comm_vocab_size, embedding_size, hidden_size, num_layers, dropout)
 
     total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     log.info(f"Built model with {total_params} parameters.")
@@ -112,17 +150,16 @@ def cli(model_dir, data_dir, resume_training,
         device=device,
         batch_size=batch_size,
         sort_key=lambda x: len(x.text),
-        shuffle=True,
         train=True)
     val_iterator = tt.data.BucketIterator(
         dev_data,
         device=device,
         batch_size=batch_size,
         sort_key=lambda x: len(x.text),
-        shuffle=False,
         train=False)
 
     criterion = nn.CrossEntropyLoss(reduction='none')
+    eval_criterion = nn.CrossEntropyLoss(reduction='none')
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
 
     if resume_training and os.path.exists(save_dir/'saved-epoch.txt'):
@@ -145,7 +182,7 @@ def cli(model_dir, data_dir, resume_training,
         log.debug(f'Starting epoch {epoch} training.')
         model = train(model, train_iterator, vocab_size, criterion, optimizer, log, fields)
         log.debug(f'Starting epoch {epoch} validation.')
-        val_loss, val_correct = evaluate(model, val_iterator, vocab_size, criterion)
+        val_loss, val_correct = evaluate(model, val_iterator, vocab_size, eval_criterion)
         val_loss = sum(val_loss) / len(val_loss)
         val_acc = val_correct / len(dev_data)
         val_ppl = math.exp(val_loss)
