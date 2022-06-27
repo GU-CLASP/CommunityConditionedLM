@@ -65,7 +65,7 @@ def train(model, batches, vocab_size, criterion, optimizer, log, fields):
         batch_loss.append(loss.item())
         batch_entropy += (-y_hat * y_hat.log()).sum(dim=-1).tolist()
         if batch_no % 1 == 0 and batch_no > 0:
-            log.info(f"{batch_no:5d}/{len(batches):5d} batches | avg. batch loss {sum(batch_loss)/len(batch_loss):5.4f} | {sum(batch_entropy)/len(batch_entropy):5.4f}")
+            log.info(f"{batch_no:5d}/{len(batches):5d} batches | avg. batch loss {sum(batch_loss)/len(batch_loss):5.4f} | batch entropy {sum(batch_entropy)/len(batch_entropy):5.4f}")
             batch_loss = []
             batch_entropy = []
     return model
@@ -93,11 +93,12 @@ def evaluate(model, batches, vocab_size, criterion):
 @click.option('--resume-training/--no-resume-training', default=False)
 @click.option('--vocab-size', default=40000)
 @click.option('--lower-case/--no-lower-case', default=False)
-@click.option('--embedding-size', default=512)
-@click.option('--hidden-size', default=512)
-@click.option('--num-layers', default=2)
+@click.option('--embedding-size', default=128)
+@click.option('--hidden-size', default=32)
+# @click.option('--num-layers', default=2)
+@click.option('--rnn-type', type=click.Choice(['LSTM', 'Unitary']))
 @click.option('--dropout', default=0.1)
-@click.option('--batch-size', default=128)
+@click.option('--batch-size', default=16)
 @click.option('--max-seq-len', default=64)
 @click.option('--lr', default=0.002)
 @click.option('--max-epochs', type=int, default=None)
@@ -106,7 +107,7 @@ def evaluate(model, batches, vocab_size, criterion):
 @click.option('--gpu-id', type=int, default=None,
         help="ID of the GPU, if traning with CUDA")
 def cli(model_dir, data_dir, resume_training,
-        vocab_size, lower_case, embedding_size, hidden_size, num_layers, dropout,
+        vocab_size, lower_case, embedding_size, hidden_size, dropout, rnn_type,
         batch_size, max_seq_len, lr, max_epochs, file_limit, gpu_id):
 
     model_dir = Path(model_dir)
@@ -136,7 +137,8 @@ def cli(model_dir, data_dir, resume_training,
 
     log.info(f"Vocab size: {vocab_size}")
     log.info(f"Hidden size: {hidden_size}")
-    model = SequenceClassifier(vocab_size, comm_vocab_size, embedding_size, hidden_size, num_layers, dropout)
+    model = SequenceClassifier(vocab_size, comm_vocab_size, embedding_size, hidden_size, dropout, 
+            seq_encoder=rnn_type, agg_seq='max_pool')
 
     total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     log.info(f"Built model with {total_params} parameters.")
