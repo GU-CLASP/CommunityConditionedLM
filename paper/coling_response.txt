@@ -1,0 +1,60 @@
+# Review #2
+
+> > Please clarify whether your use of Orthogonal
+> > Procrustes in the process of measuring the correlation of
+> > language-based embeddings with social-network-based ones also has
+> > this pitfall. Wouldn\'t finding the minimum distance between
+> > transformed L and S lead to overestimating the correlation between
+> > them?
+
+The situation is different from that of aligning diachronic word vector spaces in two releavnt ways. First, we are comparing two different represenations (of different underlying data, learned with different algorithms). The analagous problem to what Gonen et al. describe would be if we have a community that is actually quite different "socially" and "linguistically" that pulls the alignment in the "wrong" direction for communities that are similar. But different  with respect to what? We can only compare based on the treds across representations for the rest of the communites, which is exactly what Orthagonal Procrustes does. Secondly, the number of rows is much smaller (hundreds of communities vs. tens of thousands of words) relative to the size of the embedding. This means that there are more degrees of freedom in finding the optimal rotation matrix.
+
+> > It is unclear to me if the comparison of
+> > language-based embeddings to social-network-based ones is meant to
+> > be validation for how well language-based embeddings represent a
+> > community, or as a way of answering the substantive question of how
+> > language and social interactions can align or diverge in online
+> > spaces. I think the former would be incorrect to assume:
+> > language-based embeddings should not be evaluated against social
+> > ones, due to the existence of communities with similar topics but
+> > very different audiences (e.g. r/malefashionadvice and
+> > r/femalefashionadvice). Clarification of the intentions behind the
+> > experiments in section 4.1 is needed.
+
+Then intention of section 4.1 is rather the later. As you point out, communities which appear quite similar based on their use of language may actually be quite different in terms of their social composition (and vice versa). The empirical analysis of pairs of communities in each of these configurations is meant to give a better idea of how to interpret similarity or difference in the linguistic vs. social emebedding spaces. This will be clarified in the final draft.
+
+> > In the paper you experiment with two types of models: an LSTM and a
+> > transformer-based model. These two seem like they have similar
+> > performance based on Figure 1. It might be useful to report the
+> > difference in training speed and model size. 
+
+We report the number of parameters for each model in footnote 4. The training times were also similar.
+
+> > Why did you sample 42000 messages? 42000 seems like an arbitrary
+> > cutoff.
+
+This number was chosen because after removing duplicate messages, the smallest number of messages in a given month for a given community was just over 3500. Sampling 3500 for each month of 2015 gets us 42 000. We wanted the total number of messages to be the same for each community so as not to bias the language models towards one community or another. We will clarify this in the final version
+
+> > Why did you use data from 2015? I only ask this out of curiosity
+> > because your submission is in 2022, and Pushshift has more recent
+> > data.
+
+There was no very motivated reason for this choice. (although the suggestion of comparing default and non-default subreddits is very interesting and makes this convenient in retrospect)
+
+> > What is the purpose of Figure 3? How is it different from Figure 4?
+> > What is the main takeaway from this figure?
+
+The intention of figure 3 is to show how the aligned spaces look---that they are broadly correlated, but there are clear differences between them. Coloring the points by k-means clustering on the social embedding is meant to make this comparison visually more apparent. The content of each of the clusters distracts a bit from that point and there wasn't space in the main paper, but we thought some readers may be curious, so we reproduced the figure in the appendix.
+
+
+# Review 3
+
+The linguistic features were those features extracted by the LSTM and Transformer models with an autoregressive (next word prediction) language modeling taks. Beyond standard preprocessing steps, no additional feature engineering was performed.
+
+# General response to Reviewers.
+
+Thank you for your helpful comments and careful reading.
+
+# Response to Chairs
+
+We were somewhat perplexed by the review of Reviewer #3. They ask what linguistic features were taken into account, but this was clearly described in the text (Section 2: Community-conditioned language models). We are doubtful about the thouroughness of the review and do not understand the basis on which the overall recomendation was made. We ask that the chairs consider disregarding this review in their final decision.
