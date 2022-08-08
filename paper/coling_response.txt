@@ -11,11 +11,11 @@ The situation is different from that of aligning diachronic word
 vector spaces. Gonen et al. rightly point out that spaces are
 *expected* to be different at different times, and therefore mapping
 one space to another with a global method might be misleading, in that
-it erases the global shift in the word respresentation space. We
+it erases the global shift in the word representation space. We
 merely measure the correlation between linguistic (L) and social (S)
 representation of communities. We have no interest in a global shift
 between L and S. In fact, such a shift is meaningless for different
-ways to construct a reprentation for a single time point.
+ways to construct a representation for a single time point.
 
 > It is unclear to me if the comparison of
 > language-based embeddings to social-network-based ones is meant to
@@ -35,7 +35,7 @@ may actually be quite different in terms of their social composition
 (and vice versa). The empirical analysis of pairs of communities in
 each of these configurations is meant to give a better idea of how to
 interpret similarity or difference in the linguistic vs. social
-emebedding spaces. This will be clarified in the final draft.
+embedding spaces. This will be clarified in the final draft.
 
 > In the paper you experiment with two types of models: an LSTM and a
 > transformer-based model. These two seem like they have similar
@@ -87,7 +87,11 @@ Thank you for your helpful comments and careful reading.
 We were somewhat perplexed by the review of Reviewer #3. They ask what
 linguistic features were taken into account, but this was clearly
 described in the text (Section 2: Community-conditioned language
-models). We are doubtful about the thouroughness of the review and do
+models). We are doubtful about the thoroughness of the review and do
 not understand the basis on which the overall recommendation was
 made. We kindly request that the chairs consider disregarding this
 review in their final decision.
+
+LocalWords:  embeddings diachronic Gonen et al malefashionadvice LSTM
+LocalWords:  femalefashionadvice Pushshift subreddits
+LocalWords:  autoregressive preprocessing
