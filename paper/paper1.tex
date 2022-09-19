@@ -65,19 +65,11 @@
   Affiliation / Address line 3 \\
   \texttt{email@domain} \\}
 
-\date{}
-
 \begin{document}
+
 \maketitle
 \begin{abstract}
-  Community-level linguistic variation is a core concept in sociolinguistics.
-  % but more tools are needed to study variation from a computational perspective.
-  In this paper, we use computational methods to investigate the degree to which  
-  linguistic variation corresponds with social connections between communities.
-  Technically, we use conditional language models to learn vector representations
-  for 510 online communities.
-  We find that they are highly correlated with a social network-based 
-  representation that does not use any linguistic input.
+Community-level linguistic variation is a core concept in sociolinguistics. In this paper, we use conditioned neural language models to learn vector representations for 510 online communities. We use these representations to measure linguistic variation between communities and investigate the degree to which linguistic variation corresponds with social connections between communities. We find that our sociolinguistic embeddings are highly correlated with a social network-based representation that does not use any linguistic input.
 \end{abstract}
 
 
@@ -126,16 +118,8 @@ Most previous computational work on linguistic variation
 has considered variation at the level of macro-social categories, such as gender
 \citep{Burger2011,Ciot2013,Bamman2014}, age \citep{Nguyen2013}, and
 geographic location \citep{Eisenstein2010,Bamman2014a}.%
-\footnote{Recent exceptions are \citet{DelTredici2017} who use a modified
-skip-gram model to show that lexical semantic variation occurs even across 
-different communities organised around the same topic and 
-\citet{Lucy2021}, who use contextualised word representations to
-investigate community-level variation in word sense distributions.}
-In the present work, we investigate linguistic variation
-in online communities on the social media website Reddit. 
-This contrasts with previous work: we investigate variation across 
-speech communities, rather than macro-social categories.
-
+In the present work, however, we investigate linguistic variation
+across online communities in the social media website Reddit. 
 
 %\jp{
   %Some examples (perhaps include if there is space):
@@ -160,15 +144,24 @@ speech communities, rather than macro-social categories.
 For this purpose, we introduce (\cref{sec:cclm}) various
 Community-Conditioned Language Models (CCLMs for short). These models
 are conditioned on a vector representation (or embedding), which
-varies for each community. Hence, they learn \emph{community
-  embeddings}.  Even though we report which architectures make best use
-of the community information, our primary purpose is not to improve models in
-terms of perplexity, but rather we want to extract the best set of
-community embeddings and test how the resulting embeddings
-predict the social structure of subreddits. Technically, we test
-the correlation with a social network-based representation of
+varies by community. Hence, they learn \emph{community
+  embeddings}.  
+We report which architectures make best use
+of the community information (\cref{sec:performance}), 
+however our our primary purpose is not to improve language models in
+terms of perplexity, but rather to extract 
+community embeddings that capture linguistic similarities between
+communities and test how the resulting embeddings
+correspond to the social structure of subreddits. To that end, we test
+the how well the community embeddings correlate with a social network-based representation of
 communities (\cref{sec:embedding-analysis}).
 
+The contributions of this work are twofold. 
+First, we develop a language model-based
+community embedding that we show is correlated with (but still different from) 
+an embedding based on community membership alone.
+Second, the method we describe for testing the correlation between two embeddings
+from different models is, to our knowledge, novel to computational linguistics.
 
 % , and model the degree to which a
 % given message $m$ is acceptable in a given community $c$, by estimating the probability
@@ -207,8 +200,8 @@ communities (\cref{sec:embedding-analysis}).
 
 \section{Community-conditioned language models (CCLMs)}\label{sec:cclm}
 
-We experiment with two kinds of model architecture: a simple
-unidirectional LSTM \citep{Hochreiter1997} and a Transformer
+We experiment with two kinds of model architecture: simple
+unidirectional LSTM \citep{Hochreiter1997} and a masked Transformer
 \citep{Vaswani2017}. Although Transformer-based language models are considered
 state-of-the-art, they achieve dominance partly thanks to the
 availability of very large data sets \citep[e.g.,][]{Devlin2019,Brown2020},
@@ -228,7 +221,8 @@ layer. What we have described so far does not take community into account
 and as such we call them \emph{unconditioned models}, but the same
 encoder architecture also forms the core of our conditioned models.
 
-In the CCLMs, we add a \emph{community embedding} parameter.
+In the CCLMs, we add a \emph{community embedding} parameter, 
+which varies depending on the community of origin of the input sample. 
 This parameter is concatenated (at each time step) with the hidden layer of the
 sequence encoder, at some layer $l_c \leq n$, and passed through a
 linear layer which projects the resulting vector back to the original
@@ -286,17 +280,17 @@ Version 2.2.3 \citep{Honnibal2017}.
 
 \subsection{Training scheme}
 
-The models use a vocabulary of \num{40000} tokens (including a special
+Models used a vocabulary of \num{40000} tokens (including a special
 out-of-vocabulary token), consisting of the most frequent tokens
 across all communities.
 
 We trained the models on a simple 
 auto-regressive language modeling task with cross-entropy loss.  Because
-the transformer operates on all tokens in the sequence at once, the
+the Transformer operates on all tokens in the sequence at once, the
 inputs to the model were masked and incrementally un-masked.
 We used the AdamW
 \citep{Loshchilov2019} optimisation algorithm, with an initial
-learning rate of \num{0.001}, with no extra control on the decay
+learning rate of \num{0.001} and no extra control on the decay
 of learning rate.
 %
 The batch size was \num{256} and the maximum sequence length set to
@@ -306,8 +300,8 @@ $0.1$ was applied between encoder layers and after each linear layer.
 
 All experiments use models with \num{3} encoder layers,
 each with hidden (and token embedding) size of \num{256}. 
-The transformer models had \num{8} attention heads per layer.\footnote{
-  This number of attention heads was chosen to give the LSTM and transformer
+The Transformer models had \num{8} attention heads per layer.\footnote{
+  This number of attention heads was chosen to give the LSTM and Transformer
   models a comparable number of parameters 
   (\num{22171203} and \num{21779523}, respectively).}
 The conditional models were given a community embedding with \num{16} dimensions. 
@@ -322,7 +316,7 @@ Each training epoch took approximately 1.5 hours of GPU time.
 %were trained for about half as long as the LSTM models (\cref{tab:model-results}, 
 %test epoch).
 
-\section{CCLM Performance}
+\section{CCLM Performance}\label{sec:performance}
 
 In this section, we report the performance of the conditioned and un-conditioned
 models on the held out test set.
@@ -353,9 +347,9 @@ in exponential space (as a ratio of perplexities):
 %
 Unsurprisingly, the conditioned models mostly have lower perplexity 
 than their respective unconditioned baseline models, 
-meaning information gain above one (\cref{tab:model-results}).
-While the absolute performance ($\Ppl_{M_j}$) of the LSTM models is better,
-the best transformer models have somewhat higher information gain
+(i.e., $\IG_M > 1$, \cref{tab:model-results}).
+While the absolute performance ($\Ppl_{M}$) of the LSTM models is better,
+the best Transformer models have somewhat higher information gain
 than their LSTM counterparts.
 
 The effect of $l_c$, the depth of the community embedding,
@@ -363,21 +357,23 @@ is also different across architectures.
 For the LSTM encoder, 
 the best model concatenates the community embedding after the first encoder layer ($l_c=1$),
 but all of the conditioned models perform similarly well.
-For the transformer, the best model incorporates the community information
+For the Transformer, the best model incorporates the community information
 first, concatenating it directly to the word vectors ($l_c=0$).
 It performs similarly to the model that only integrates the community information
-after all all the transformer layers ($l_c=3$),
+after all all the Transformer layers ($l_c=3$),
 but the two middle-layer models actually perform worse than the unconditioned model
 (with $\IG_M < 1$).
 
-We additionally observe that the best LSTM model achieves better
-performance than the best Transformer model. This partly contradicts
-the fact that Transformer-based models are the ones used in
-state-of-the art models for mainstream tasks. We propose that the
-cause is that we are training all models from scratch on a relatively
-small dataset. In this situation, the relatively smaller number of
-parameters of the LSTM means that it can generalise better than the
-Transformer.
+%We additionally observe that the best LSTM model achieves better
+%performance than the best Transformer model. 
+%This partly contradicts
+%the fact that Transformer-based models are the ones used in
+%state-of-the art models for mainstream tasks. 
+%We propose that the
+%cause is that we are training all models from scratch on a relatively
+%small dataset. In this situation, the relatively smaller number of
+%parameters of the LSTM means that it can generalise better than the
+%Transformer.
 
 \begin{table}
   \small
@@ -415,7 +411,7 @@ where $M_j$ is the set of messages originating from community $c_j$
 We observe a lot of variation in baseline perplexity
 across communities, with $\Ppl_{M_j}$ ranging from \num{3.67} to
 \num{93.58} for the best conditional LSTM model 
-(\cref{fig:comm-stratified-box}; also see supplementary materials for perplexity by community). 
+(\cref{fig:comm-stratified-box}; also see \cref{sec:community-level-results} for detailed community-level results). 
 The conditioned models also perform differently across different communities---%
 even among the best models, some communities have $\IG_{M_j} < 1$,
 meaning that the CCLM performs worse than the unconditioned baseline for 
@@ -494,7 +490,7 @@ are the primary locus of linguistic variation.
 
 
 In this section we investigate the degree to which CCLM community
-embeddings correlate with the community-member relationship on Reddit.
+embeddings correlate with the social network structure of Reddit.
 
 To this end, we compare the CCLM-learned community
 embeddings\footnote{
@@ -505,14 +501,14 @@ embeddings\footnote{
 with the community embedding created by \citet{Kumar2018},\footnote{
   Available at \url{https://snap.stanford.edu/data/web-RedditEmbeddings.html}}
 which were generated using using a negative-sampling optimization
-algorithm, with the message author-community co-occurrence matrix as ground
+algorithm, with the author-community co-occurrence matrix as ground
 truth, using data from January 2014 to April 2017.
 We refer the reader
 to \citet{Kumar2018}
 for details, but the important point is that no linguistic
 information is used to create these embeddings: they only reflect the social
-relationship between communities, via 
-the user-community membership relation. In contrast, CCLM community embeddings depend in no
+relationship between communities via community membership. 
+In contrast, CCLM community embeddings depend in no
 way on which user is the author of any given message: we only use the
 contents of messages, not authorship data.
 %
@@ -590,9 +586,9 @@ those with high linguistic and low social similarity
 (where social similarity is below the median and linguistic similarity is highest), and
 those with low linguistic and high social similarity
 (where linguistic similarity is below these median and linguistic similarity is highest).\footnote{We use the LSTM ($l_c=1$) community vectors for these purposes, 
-  but results attain with the best transformer model.}\footnote{Median similarity
+  but results attain with the best Transformer model.}\footnote{Median similarity
   among pairs of communities was \num{0.177} for the social embedding
-  and \num{0.010} and \num{0.012} for the LSTM and transformer
+  and \num{0.010} and \num{0.012} for the LSTM and Transformer
   linguistic embeddings, respectively.}
 We do not consider pairs of communities that are different in both ways,
 since these don't offer much in the way of understanding the respective embeddings.
@@ -606,13 +602,13 @@ forums where the posts are selfies and the comments are mostly
 comments on the person's appearance.
 The two communities paired with \subreddit{reddevils} are 
 likewise comprised of fans of a particular English football club.
-That the three football club communities are so closely related points
-to an important point about the social embedding: because of the way
-it was trained, it does not have to be the case that communities with
-a similar representation have a high overlap in membership,
-but rather that members from the first community look similar
-to members from the second community in terms of their \emph{overall}
-community membership profile.
+%That the three football club communities are so closely related points
+%to an important point about the social embedding: because of the way
+%it was trained, it does not have to be the case that communities with
+%a similar representation have a high overlap in membership,
+%but rather that members from the first community look similar
+%to members from the second community in terms of their \emph{overall}
+%community membership profile.
 
 Communities with similar linguistic embeddings but dissimilar social embeddings
 (\cref{fig:embedding-differences-examples}, left) tend to share a similar
@@ -678,7 +674,7 @@ community \(i\).  (Thus \(L\) is the matrix of (normed) linguistic
 embeddings and \(S\) the matrix of (normed) social embeddings.)
 
 The analysis shows positive correlation for both the LSTM ($r=0.438$)
-and transformer ($r=0.452$) linguistic embeddings.\footnote{ By
+and Transformer ($r=0.452$) linguistic embeddings.\footnote{ By
   comparison, the correlation between the two linguistic embeddings is
   \num{0.759}.}  The correlations are significant with $p<0.001$ in
 all cases.  However, we note that the number of pairs grows with the
@@ -867,9 +863,15 @@ the structure (and variation) in the construction of sequences.  It
 does further suggest, however, that community-level variation can be
 modeled in an unsupervised way.
 
-There are several recent studies that aim to measure \emph{linguistic distinctiveness}
-at the level of speech community \citep{OConnor2010,Zhang2018,Lucy2021}, 
-which is an possible interpretation of the community-stratified information gain 
+Perhaps the most topically methodologically similar work to ours 
+is that of \citet{DelTredici2017}, who use a modified
+skip-gram model to show that lexical semantic variation occurs even across 
+different communities organised around the same topic.
+Their approach does not result in community level representations, however.
+
+There are several other recent studies that aim to measure \emph{linguistic distinctiveness}
+at the level of speech community \citep{OConnor2010,Zhang2018,Lucy2021}.
+Distinctiveness is one possible interpretation of the community-stratified information gain 
 of the CCLM over its unconditioned counterpart (\cref{sec:ig}). 
 Whereas the metrics in previous work are based on lexical frequency
 (and in the case of \citet{Lucy2021}, word sense distributions),
@@ -893,7 +895,6 @@ speaker demographics can improve performance on standard NLP tasks
 
 \section{Discussion and Conclusion}\label{sec:discussion-conclusion}
 
-
 To sum up our findings, we have defined community-conditioned language
 models (CCLMs). These models are generally able to attune to
 community-specific language, as witnessed by the information gain that
@@ -906,17 +907,17 @@ perplexity of the CCLMs.
 For LSTM models, the perplexity per word, averaged over
 messages from all communities, was between \num{66.01} and \num{66.35}
 (with \num{68.74} for the unconditioned model).
-For transformer models, it varies a bit more, between \num{75.66} and \num{83.53},
+For Transformer models, it varies a bit more, between \num{75.66} and \num{83.53},
 but this seems to be mainly due to the poor performance of the models where
-the community embedding is inserted between transformer layers
-($l_c=2$ and $3$ both test above the unconditioned transformer's 
+the community embedding is inserted between Transformer layers
+($l_c=2$ and $3$ both test above the unconditioned Transformer's 
 average perplexity of \num{79.13}).
-This could be due to the community embedding and linear layers
-interrupting the delicate layer normalisation between transformer encoder layers.
+%This could be due to the community embedding and linear layers
+%interrupting the delicate layer normalisation between transformer encoder layers.
 
 The pattern of information gain by community is similar across
 architectures;  communities that benefit most from the conditioned
-model behave that way for both the LSTM and transformer.  However,
+model behave that way for both the LSTM and Transformer.  However,
 there are some differences.  For example, many of the communities with the biggest 
 difference in information gain between the $l_c=0$ and $l_c=3$ LSTMs 
 are organised around trading collectables or organising virtual meetups
@@ -1033,11 +1034,10 @@ of the sidebar on the community's Reddit page.
 While we believe this methodology, aggregated over many pairs of communities, 
 is appropriate for making a qualitative comparison
 of the community features encoded by different representations, 
-to make conclusions about \emph{particular} communities based on such a cursory and
-subjective analysis would be dubious and potentially harmful.
+to make conclusions about \emph{particular} communities based on such 
+an analysis would be dubious and potentially harmful.
 
 \bibliography{paper}
-\bibliographystyle{acl_natbib}
 
 \include{appendix}
 
