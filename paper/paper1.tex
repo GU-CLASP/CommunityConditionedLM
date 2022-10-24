@@ -7,7 +7,7 @@
 \documentclass[11pt]{article}
 
 % Remove the "review" option to generate the final version.
-\usepackage[review]{acl}
+\usepackage{acl}
 
 % Standard package includes
 \usepackage{times}
@@ -35,7 +35,7 @@
 
 \input{preamble}
 
-\title{Vector Representations of Linguistic Communities and Associated Models}
+\title{Conditional Language Models for Community-Level Linguistic Variation}
  % Representations -conditioned language models for linguistic variation
 
 % Author information can be set in various styles:
@@ -54,16 +54,22 @@
 %         Author 2 \\ Address line \\ ... \\ Address line \And
 %         Author 3 \\ Address line \\ ... \\ Address line}
 
-\author{First Author \\
-  Affiliation / Address line 1 \\
-  Affiliation / Address line 2 \\
-  Affiliation / Address line 3 \\
-  \texttt{email@domain} \\\And
-  Second Author \\
-  Affiliation / Address line 1 \\
-  Affiliation / Address line 2 \\
-  Affiliation / Address line 3 \\
-  \texttt{email@domain} \\}
+%\author{Bill Noble\\
+  %Affiliation / Address line 1 \\
+  %Affiliation / Address line 2 \\
+  %Affiliation / Address line 3 \\
+  %\texttt{email@domain} \\\And
+  %Second Author \\
+  %Affiliation / Address line 1 \\
+  %Affiliation / Address line 2 \\
+  %Affiliation / Address line 3 \\
+  %\texttt{email@domain} \\}
+
+\author{Bill Noble \and Jean-Philippe Bernardy\\
+  Centre for Linguistic Theory and Studies in Probability (CLASP) \\
+  Dept. of Philosophy, Linguistics and Theory of Science\\
+  University of Gothenburg \\
+\texttt{\{bill.noble@, jean.philippe.bernardy@\}.gu.se}}
 
 \begin{document}
 
@@ -109,8 +115,8 @@ their interlocutors, based on joint membership in a community
 \cite{Stalnaker2002, Clark1996}.  Such \emph{speech communities} \citep{Gumperz1972} 
 range in size from the very small, like members of a friend group, 
 to the very large, like speakers of English. However, as \citet{Eckert1992}
-point out, it is \emph{communities of practice}---defined by mutual social engagement
-in a common activity---that are the primary locus of linguistic variation.
+point out, it is \emph{communities of practice}\,---\,defined by mutual social engagement
+in a common activity\,---\,that are the primary locus of linguistic variation.
 
 Variation is an important object of study in sociolinguistics,
 and is naturally amenable to computational analysis \citep{Nguyen2016}.
@@ -305,7 +311,8 @@ The Transformer models had \num{8} attention heads per layer.\footnote{
   models a comparable number of parameters 
   (\num{22171203} and \num{21779523}, respectively).}
 The conditional models were given a community embedding with \num{16} dimensions. 
-We experimented with every possible value for $l_c$ in a three-layer model ($l_c\in\{0,1,2,3\}$).
+We experimented with every possible value for $l_c$, the depth of the
+community embedding, in a three-layer model ($l_c\in\{0,1,2,3\}$).
 
 We trained the models until the validation loss stopped decreasing for
 two epochs in a row, and used the weights from the epoch with the
@@ -412,7 +419,7 @@ We observe a lot of variation in baseline perplexity
 across communities, with $\Ppl_{M_j}$ ranging from \num{3.67} to
 \num{93.58} for the best conditional LSTM model 
 (\cref{fig:comm-stratified-box}; also see \cref{sec:community-level-results} for detailed community-level results). 
-The conditioned models also perform differently across different communities---%
+The conditioned models also perform differently across different communities\,---\,%
 even among the best models, some communities have $\IG_{M_j} < 1$,
 meaning that the CCLM performs worse than the unconditioned baseline for 
 messages from that community.
@@ -431,10 +438,12 @@ For other communities $\IG_{M_j}$ is much higher, meaning that the CCLM performs
 
 
 
-\newcommand{\modelboxplot}[3]{
+\newcommand{\modelboxplot}[4]{
   \addplot+[
     boxplot={draw position=#3, box extend=0.3}, 
-    draw=#2, mark=*, mark options={fill=#2, scale=0.5}, solid, fill=#2!10,
+    draw=#2, mark=*, mark options={fill=#2, scale=0.5}, solid, 
+    pattern=#4,
+    pattern color=#2,
     area legend] 
     table [y=#1] {floats/comm.csv};
 }
@@ -449,8 +458,8 @@ For other communities $\IG_{M_j}$ is much higher, meaning that the CCLM performs
     ]
     \addplot[thin, red, samples=2] coordinates {(1,-0.5)(1,3.5)};
     \foreach \lc in {0, ..., 3}{
-      \modelboxplot{lstm-3-\lc-ig}{violet}{\lc+0.2}
-      \modelboxplot{transformer-3-\lc-ig}{teal}{\lc-0.2}
+      \modelboxplot{lstm-3-\lc-ig}{violet}{\lc+0.2}{crosshatch dots}
+      \modelboxplot{transformer-3-\lc-ig}{teal}{\lc-0.2}{grid}
     \legend{,LSTM, Transformer}
     }
   \end{axis}
@@ -460,8 +469,8 @@ For other communities $\IG_{M_j}$ is much higher, meaning that the CCLM performs
     boxplot/draw direction=x, axis x line*=bottom, hide y axis,
     xlabel=$\Ppl_{M_j}$,
     ]
-    \modelboxplot{lstm-3-ppl}{violet}{0.2}
-    \modelboxplot{transformer-3-ppl}{teal}{-.2}
+    \modelboxplot{lstm-3-ppl}{violet}{0.2}{crosshatch dots}
+    \modelboxplot{transformer-3-ppl}{teal}{-.2}{grid}
   \end{axis}
 \end{tikzpicture}
 \caption{
@@ -523,8 +532,8 @@ contents of messages, not authorship data.
       enlargelimits=0.15,
       yticklabels={,,}
     ]
-    \addplot[draw=violet,fill=violet!10] table [y=lstm-sim] {floats/#1};
-    \addplot[draw=teal,fill=teal!10] table [y=transformer-sim] {floats/#1};
+    \addplot[draw=violet,pattern color=violet!30, pattern=crosshatch dots] table [y=lstm-sim] {floats/#1};
+    \addplot[draw=teal,pattern color=teal!30, pattern=grid] table [y=transformer-sim] {floats/#1};
     \addplot[draw=red,fill=red!10] table [y=social-sim] {floats/#1};
 }
 
@@ -547,8 +556,8 @@ contents of messages, not authorship data.
       xticklabels from table={floats/high_ling_high_soc.csv}{comms-label},
       enlargelimits=0.15,
     ]
-    \addplot[draw=violet,fill=violet!10] table [y=lstm-sim] {floats/high_ling_high_soc.csv};
-    \addplot[draw=teal,fill=teal!10] table [y=transformer-sim] {floats/high_ling_high_soc.csv};
+    \addplot[draw=violet,pattern color=violet!30,pattern=crosshatch dots] table [y=lstm-sim] {floats/high_ling_high_soc.csv};
+    \addplot[draw=teal,pattern color=teal!30,pattern=grid] table [y=transformer-sim] {floats/high_ling_high_soc.csv};
     \addplot[draw=red,fill=red!10] table [y=social-sim] {floats/high_ling_high_soc.csv};
     \pairwisecossimbarplot{high_ling_low_soc.csv}{}{}
     \pairwisecossimbarplot{low_ling_high_soc.csv}{}{}
@@ -625,7 +634,7 @@ could be described as casual conversation, the former is intended specifically f
 members of a niche internet sub-culture. % adult fans of the children's television show My Little Pony. There are other subreddits (mentioned in r/MLPLounge's "about") that are for on-topic discussion of MLP
 The \subreddit{exmormon} and \subreddit{Catholicism} communities discuss
 the Mormon and Catholic churches, although their members have different 
-relationships towards those organizations---the former is intended for
+relationships towards those organizations\,---\,the former is intended for
 former members of the church, whereas the later is geared towards practicing
 Catholics.
 Finally, both \subreddit{rocketbeans} and \subreddit{de} are primarily
@@ -636,7 +645,7 @@ general-interest.
 Differences at the other end of the spectrum
 (\cref{fig:embedding-differences-examples}, right) are somewhat harder
 to interpret.  It is mostly easy to see why these communities would
-have different linguistic embeddings---%
+have different linguistic embeddings\,---\,%
 in all cases the topics are quite different.  The reason they have
 similar social embeddings is less obvious, but we can discern some
 trends in how the communities are premised.  The
@@ -648,7 +657,7 @@ experiences; \subreddit{legaladvice}, \subreddit{Cooking}, and
 \subreddit{self} (often) and \subreddit{askscience} (by premise) are
 places people ask and answer questions.  It may be that there are
 different patterns in the \emph{social function} that people attribute
-to this particular social media website---%
+to this particular social media website\,---\,%
 people who use Reddit in one way are more likely to belong to
 communities that are premised on the same kind of social function,
 even if the topics (and indeed language) of those communities are
@@ -682,7 +691,7 @@ square of the number of communities (with 510 communities, we have
 129795) pairs), meaning that standard statistical tests on Pearson
 correlation will assure us of statistical significance in all but the
 weakest of correlations. A further flaw is that the data points in
-\(C\) are \emph{not} distributed independently---far from it in fact,
+\(C\) are \emph{not} distributed independently\,---\,far from it in fact,
 since each data point is generated from \num{2} of \num{510}
 independent variables. We consider this last flaw fatal, and take a
 different approach for computing the correlation between community
@@ -714,7 +723,7 @@ equal to the Frobenius distance between \(L\) and \(S\):
 
 The problem with the above metric is that even if several dimensions
 of \(L\) and \(S\) are correlated, they will not coincide in the
-\emph{representation} of embeddings. That is, applying a simple
+\emph{representation} of embeddings. That is, re-aligning the embeddings by applying a simple
 rotation (orthogonal transformation) on either matrix widely changes
 the \(||L-S||_F\) correlation metric.
 
@@ -736,7 +745,7 @@ The solution is
 \[d(L,S) = n - \mathsf {Tr} (Σ)\] where the matrix \(Σ\) is obtained by the singular value
 decomposition (SVD) \(U^TΣV = LS^T\). The vectors of \(U\) and \(V\) give
 the directions of correlation respectively of \(L\) and \(S\). That is, each
-singular value \(\sigma_i\) (the elements of the diagonal matrix \(Σ\)), give a measure of how much
+singular value \(\sigma_i\) (the elements of the diagonal matrix \(Σ\)), gives a measure of how much
 correlation there is between the directions \(U_i\) and \(V_i\).
 
 As is common when doing SVD, we arrange \(U\), \(V\) and \(Σ\) such
@@ -751,12 +760,12 @@ considered.
 
 Now, to test if \(d(L,S)\) corresponds to a significant correlation,
 it suffices to check if its value is significantly larger than the same
-value for random linguistic embeddings \(L\). Even though this is the
-distribution of \(d(L,S)\) for random embeddings is difficult to
-compute analytically, one can instead evaluate it using a Monte Carlo
+value for random linguistic embeddings \(L'\). The 
+distribution of \(d(L',S)\) for random embeddings is difficult to
+compute analytically, but we can instead evaluate it using a Monte Carlo
 method.
 
-Doing so, we observed that \(d(L,S)\) exhibits a mean of
+Doing so, we observed that \(d(L',S)\) exhibits a mean of
 \(μ_d=431.39\) and a (Bessel's-corrected) standard deviation
 \(s_d=2.90\) in their distance from the social embedding,
 \(S\). % luckily it seems that sample stdev is often written with an $s$ to differentiate from population stdev
@@ -774,10 +783,10 @@ similarity between \(ΩL\) and \(S\) is \(0.45 = \) (\(510 - 232.18 / 510\)).  I
 further means that if we obtain a linguistic embedding \(L_k\) for a
 new community $k$, we can estimate its social embedding by \(ΩL_k\),
 and the cosine similarity with its true social embedding \(S_k\) is
-expected to be \(0.39\) = \((431.39 - 232.18) / 510\) --- accounting for
+expected to be \(0.39\) = \((431.39 - 232.18) / 510\)\,---\,accounting for
 over-fitting effects by taking the average distance rather than the
 maximum. 
-In sum, it is clear that the CCLM embeddings predict some aspect the social-network embeddings--- but far from all of it.
+In sum, it is clear that the CCLM embeddings predict some aspect the social-network embeddings\,---\,but far from all of it.
 
 To finish, we also give a sense of \emph{how} the correlation is manifested overall, by
 analysis of the two principal components of correlation in the
@@ -863,9 +872,9 @@ the structure (and variation) in the construction of sequences.  It
 does further suggest, however, that community-level variation can be
 modeled in an unsupervised way.
 
-Perhaps the most topically methodologically similar work to ours 
-is that of \citet{DelTredici2017}, who use a modified
-skip-gram model to show that lexical semantic variation occurs even across 
+\citet{DelTredici2017}, use a modified
+skip-gram model to community-level linguistic variation.
+They show that lexical semantic variation occurs even across 
 different communities organised around the same topic.
 Their approach does not result in community level representations, however.
 
@@ -1036,6 +1045,12 @@ is appropriate for making a qualitative comparison
 of the community features encoded by different representations, 
 to make conclusions about \emph{particular} communities based on such 
 an analysis would be dubious and potentially harmful.
+
+\section*{Acknowledgements}
+
+This work was supported by grant 2014-39 from the Swedish Research Council (VR) for the establishment of the Centre for Linguistic Theory and Studies in Probability (CLASP) at the University of Gothenburg.
+
+
 
 \bibliography{paper}
 
