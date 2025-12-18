@@ -13,8 +13,13 @@ from pathlib import Path
 import csv
 from IPython import embed
 
+def entropy(t, dim):
+    nats = t * t.log()
+    nats[torch.isnan(nats)] = 0 # inf * 0 treated as 0 
+    return -(nats).sum(dim=dim)
+
 @click.command()
-@click.argument('model_architecture', type=str)
+@click.argument('model_architecture', type=click.Choice(['unigram', 'lstm']))
 @click.argument('model_dir', type=click.Path(exists=True))
 @click.argument('data_dir', type=click.Path(exists=True))
 @click.option('--batch-size', default=1024)
@@ -40,6 +45,9 @@ def cli(model_architecture, model_dir, data_dir, batch_size, max_seq_len, file_l
     log.info(f"Loading data from {data_dir}.")
     fields = data.load_fields(model_dir, use_eosbos=False)
     fields['text'].include_lengths = True
+    lower_case = all(w.lower() == w for w in fields['text'].vocab.itos) # really don't want to fuck this up again...
+    log.info(f"Using lower-case vocab: {lower_case!s}.")
+
     test_data = data.load_data(data_dir, fields, 'test', max_seq_len, file_limit)
 
     vocab_size = len(fields['text'].vocab.itos)
@@ -48,19 +56,26 @@ def cli(model_architecture, model_dir, data_dir, batch_size, max_seq_len, file_l
     pad_idx = fields['text'].vocab.stoi['<pad>']
     log.info(f"Loaded {len(test_data)} test examples.")
 
-    if model_architecture == 'lstm_classifier':
-        model = LSTMClassifier(vocab_size, comm_vocab_size, 512)
+    state_dict = torch.load(save_dir/'model.bin')
+
+    if model_architecture == 'lstm':
+        embedding_size = state_dict['token_embed.weight'].size(1)
+        hidden_size = state_dict['lstm.weight_hh_l0'].size(1)
+        n_layers = len([k for k in state_dict.keys() if k.startswith('lstm.weight_hh_l')])
+        model = LSTMClassifier(vocab_size, comm_vocab_size, embedding_size, hidden_size, n_layers)
         eval_func = lambda x, x_lens: model(x, x_lens, agg_seq=None)
-    elif model_architecture == 'unigram-cond':
+    elif model_architecture == 'unigram':
         model = NaiveBayesUnigram(vocab_size, comm_vocab_size)
         eval_func = lambda x, x_lens: model.infer_comm_incremental(x, x_lens)
     else:
         raise ValueError(f"Unknown architecture: {model_architecture}")
 
-    model.load_state_dict(torch.load(save_dir/'model.bin'))
+    model.load_state_dict(state_dict)
     model.to(device)
     model.eval()
     log.debug(str(model))
+    embed()
+    raise
 
     test_iterator = tt.data.BucketIterator(
         test_data,
@@ -86,22 +101,31 @@ def cli(model_architecture, model_dir, data_dir, batch_size, max_seq_len, file_l
         for batch_no, batch in enumerate(test_iterator):
             if batch_no % 1 == 0 and batch_no > 0:
                 log.info(f"{batch_no:5d}/{len(test_iterator):5d} batches")
-            batch_max_len = batch.text[1].max().item()
-            prob_dist = eval_func(batch.text[0], batch.text[1])
+            batch_text, batch_text_lens = batch.text
+
+            batch_max_len = batch_text_lens.max().item()
+            batch_comms = batch.community.unsqueeze(0).expand(batch_text.size(0), -1)
+
+            prob_dist = eval_func(batch_text, batch_text_lens)
+
+            entr = entropy(prob_dist, dim=-1)
+            cross_entr = F.cross_entropy(
+                    prob_dist.flatten(0,1).log(), batch_comms.flatten(), 
+                    reduction='none').reshape(batch_max_len, batch.batch_size)
+            pred_probs, preds = prob_dist.max(dim=-1)
+
             batch_results = {a: [
                 dict(zip(meta_fields, item)) for item in zip(
                 batch.community.tolist(),
                 batch.example_id.tolist(),
-                batch.text[1].tolist()
+                batch_text_lens.tolist()
             )] for a in analytics}
+
             for i in range(batch_max_len): 
-                entropy = (-prob_dist * prob_dist.log()).sum(dim=-1)
-                pred_probs, preds = prob_dist.max(dim=-1)
                 for j in range(batch.batch_size):
                     if i < batch.text[1][j]:
-                        cross_entropy = -(prob_dist[i][j][batch.community[j]].log())
-                        batch_results['cross_entropy'][j][i] = f'{cross_entropy.item():0.4f}'
-                        batch_results['entropy'][j][i] = f'{entropy[i][j].item():0.4f}'
+                        batch_results['cross_entropy'][j][i] = f'{cross_entr[i][j].item():0.4f}'
+                        batch_results['entropy'][j][i] = f'{entr[i][j].item():0.4f}'
                         batch_results['pred'][j][i] = preds[i][j].item()
             for a in analytics:
                 writers[a].writerows(batch_results[a])
